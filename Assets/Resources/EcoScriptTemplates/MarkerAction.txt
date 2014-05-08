@@ -1,0 +1,65 @@
+void LoadProgress(bool initScene) {
+	// for markers that are permanently visible, put them on map at load time
+//	AddGameMarkers (AREA);
+}
+
+void HandleClick (Coordinate c) {
+	Data data = progression.GetData (AREA);
+	
+	// get the current value at the location of the marker
+	int val = data.Get (c);
+	if (val == 1) {
+		// was off, set to on
+		data.Set (c, 2);
+		action.uiList[0].estimatedTotalCostForYear += action.uiList[0].cost;
+	}
+	else if (val == 2) {
+		// was on, set to off
+		data.Set (c, 1);
+		action.uiList[0].estimatedTotalCostForYear -= action.uiList[0].cost;
+	}
+}
+
+private SparseBitMap8 backup;
+private long backupEstimate;
+
+void ActionSelected (UserInteraction ui) {
+	// we keep a backup of the data to be able to reset
+	// it if user cancels action
+	backup = new SparseBitMap8 (scene);
+	backup.CopyFrom (progression.GetData<SparseBitMap8>(AREA));
+	backupEstimate = action.uiList[0].estimatedTotalCostForYear;
+	// put the markers on the map
+	AddGameMarkers (AREA, new string[] { "markeroff", "markeron" }, HandleClick);
+}
+
+/**
+ * user stops adding/removing markers
+ */
+void ActionDeselected (UserInteraction ui, bool cancel) {
+	// remove the markers off the map
+	RemoveGameMarkers (AREA);
+	if (cancel) {
+		action.uiList[0].estimatedTotalCostForYear = backupEstimate;
+		backup.CopyTo (progression.GetData<SparseBitMap8>(AREA));
+	}
+	backup = null;
+}
+
+void PrepareSuccession() {
+}
+
+void DoSuccession() {
+	budget -= action.uiList[0].estimatedTotalCostForYear;
+	action.uiList[0].estimatedTotalCostForYear = 0;
+	SparseBitMap8 markers = progression.GetData<SparseBitMap8>(AREA);
+	markers.ProcessNotZero (delegate (int x, int y, int val, object ignore) {
+		if (val == 2) {
+			markers.Set (x, y, 1); // we set marker off again...
+			// marker was on, so do something useful here...
+		}
+	}, null);
+}
+
+void FinalizeSuccession() {
+}

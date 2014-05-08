@@ -1,0 +1,33 @@
+/**
+ * Actual succession handling, will be done in order of how actions
+ * are defined in editor
+ */
+void DoSuccession() {
+}
+
+/**
+ * called after all succession handling is completed
+ */
+void FinalizeSuccession() {
+	// remove the estimated yearly cost from budget
+	budget -= action.uiList[0].estimatedTotalCostForYear;
+
+	// we clear the estimated cost for year
+	// and we set the dialog to unchecked again
+	// if the action should be continuously until
+	// user unchecks delete next two lines
+	action.uiList[0].estimatedTotalCostForYear = 0;
+	action.isSelected = false;
+}
+
+/**
+ * Called when user confirms dialog action
+ */
+void DialogChecked() {
+}
+
+/**
+ * Called when user cancels dialog action
+ */
+void DialogUnchecked() {
+}

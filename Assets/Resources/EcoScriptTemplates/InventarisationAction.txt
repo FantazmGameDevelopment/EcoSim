@@ -1,0 +1,48 @@
+void DoSuccession() {
+	// AREA will be defined to the name of the selection area
+	// for this inventarisation. If data is set we are doing
+	// an inventarisation...
+	if (scene.progression.HasData (AREA)) {
+		Data selection = progression.GetData (AREA);
+		
+		// the data we are analysing...
+		Data analyse = progression.GetData ("mydata");
+		
+		// the resulting dataset
+		// value 0 is used for all cells not selected in
+		// the AREA map (not selected by user).
+		SparseBitMap8 result = new SparseBitMap8 (scene);
+		
+		int tileCount = 0; // we'll count the number of tiles selected
+		foreach (Coordinate vc in selection.EnumerateNotZero ()) {
+			tileCount ++;
+			int value = analyse.Get (vc);
+			// somehow map the values of the data we analyse
+			// to the result set...
+			switch (value) {
+				case 0 : result.Set (vc, 1); break;
+				case 1 :
+				case 2 : result.Set (vc, 2); break;
+				default : result.Set (vc, 3); break;
+			}
+		}
+		
+		// make the report available. We use the name of the
+		// first UI element (the button in game interface
+		// for this inventarisation).
+		AddInventarisation (action.uiList[0].name, result);
+		
+		// user has to pay for the number of tiles selected.
+		budget -= tileCount * action.uiList[0].cost;
+	}
+}
+
+void FinalizeSuccession() {
+	// destroy the selection area, otherwise we will redo the
+	// inventarisation next year!
+	scene.progression.DeleteData (AREA);
+}
+
+bool CanSelectTile (int x, int y, UserInteraction ui) {
+	return true;
+}

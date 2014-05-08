@@ -1,0 +1,49 @@
+void PrepareSuccession() {
+}
+
+// we assume here that we use a Bitmap2 for canals
+// and thus have only values 0..3
+public int[] distanceConversion = new int[] { 0, 4, 6, 8 };
+
+// convert distance value to effective waterheight change
+// needs n values, where n is height number in distanceConversion
+// array
+public float[] heightEffect = new float[] { 0f, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f };
+
+void DoSuccession() {
+	if (progression.GetData (Progression.CANAL_ID).hasChanged) {
+		CalculateWater ();
+	}
+}
+
+void CalculateWater() {
+	Data canals = progression.GetData (Progression.CANAL_ID);
+		
+	BitMap8 distanceMap = progression.GetData<BitMap8>("canaldistance");
+	distanceMap.Clear ();
+	foreach (ValueCoordinate vc in canals.EnumerateNotZero ()) {
+		distanceMap.Set (vc, distanceConversion [vc.v]);
+	}
+	while (distanceMap.Propagate ()) {
+		// keeps being called until propagate is ready...
+	}
+	HeightMap land = progression.GetData<HeightMap>(Progression.HEIGHTMAP_ID);
+	HeightMap staticWater = progression.GetData<HeightMap>(Progression.WATERHEIGHTMAP_ID);
+	HeightMap calculated = progression.GetData<HeightMap>(Progression.CALCULATED_WATERHEIGHTMAP_ID);
+	calculated.CopyFrom (staticWater);
+	
+	// the canals will push water levels lower if needed.
+	// for this we look at all cells that have a distanceMap value != 0
+	// the new water height will be the minimum of the current waterheight
+	// and the land height - height delta forced by canal (distanceMap)
+	distanceMap.ProcessNotZero(delegate (int x, int y, int val, object ignore) {
+		if (val > 0) {
+			float expectedWaterHeight = land.GetHeight (x, y) - heightEffect[val];
+			float waterHeight = calculated.GetHeight (x, y);
+			if (expectedWaterHeight < waterHeight) {
+				// canal will lower water!
+				calculated.SetHeight (x, y, expectedWaterHeight);
+			}
+		}
+	}, null);
+}

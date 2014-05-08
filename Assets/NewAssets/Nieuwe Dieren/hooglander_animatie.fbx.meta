@@ -1,0 +1,133 @@
+fileFormatVersion: 2
+guid: e045d80be439f9e49b85f94af7ecc5d7
+ModelImporter:
+  serializedVersion: 16
+  fileIDToRecycleName:
+    100000: grond
+    100002: hals_1
+    100004: hals_2
+    100006: hals_3
+    100008: hals_4
+    100010: //RootNode
+    100012: kont
+    100014: kop
+    100016: l_elleboog
+    100018: l_heup
+    100020: l_hiel
+    100022: l_knie
+    100024: l_pols
+    100026: l_schouder
+    100028: l_schouderblad
+    100030: l_teen
+    100032: l_teen_voor
+    100034: l_voet
+    100036: l_voet_voor
+    100038: neus
+    100040: r_elleboog
+    100042: r_heup
+    100044: r_hiel
+    100046: r_knie
+    100048: r_pols
+    100050: r_schouder
+    100052: r_schouderblad
+    100054: r_teen
+    100056: r_teen_voor
+    100058: r_voet
+    100060: r_voet_voor
+    100062: rug
+    100064: staart
+    100066: stuitje
+    400000: grond
+    400002: hals_1
+    400004: hals_2
+    400006: hals_3
+    400008: hals_4
+    400010: //RootNode
+    400012: kont
+    400014: kop
+    400016: l_elleboog
+    400018: l_heup
+    400020: l_hiel
+    400022: l_knie
+    400024: l_pols
+    400026: l_schouder
+    400028: l_schouderblad
+    400030: l_teen
+    400032: l_teen_voor
+    400034: l_voet
+    400036: l_voet_voor
+    400038: neus
+    400040: r_elleboog
+    400042: r_heup
+    400044: r_hiel
+    400046: r_knie
+    400048: r_pols
+    400050: r_schouder
+    400052: r_schouderblad
+    400054: r_teen
+    400056: r_teen_voor
+    400058: r_voet
+    400060: r_voet_voor
+    400062: rug
+    400064: staart
+    400066: stuitje
+    4300000: hooglander
+    7400000: grazen
+    7400002: loopje
+    7400004: herkauw
+    9500000: //RootNode
+    11100000: //RootNode
+    13700000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: .00999999978
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 1
+  additionalBone: 0
+  userData: 
