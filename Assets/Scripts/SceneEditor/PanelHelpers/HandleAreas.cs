@@ -7,50 +7,24 @@ using Ecosim.SceneData.PlantRules;
 
 namespace Ecosim.SceneEditor.Helpers
 {
-	public class HandlePlants : PanelHelper
+	public class HandleAreas : ParameterPaintPanel
 	{
-		private readonly MapsPanel parent;
-		private Scene scene;
-		private EditorCtrl ctrl;
-
-		private int brushWidth;
-		private enum EBrushMode
-		{
-			Area,
-			Circle
-		};
-		private EBrushMode brushMode;
-		private GridTextureSettings gridSettings255;
-
-		private EditData edit;
-		private Data data;
-		private Data backupCopy;
-
-		private GUIStyle tabNormal;
-		private GUIStyle tabSelected;
-
-		private int maxParamValue = 0;
-		private int paramStrength = 255;
-		private string paramStrengthStr = "255";
-
-		private string[] plantNames;
-		private PlantType activePlantType;
-
+		//private string[] plantNames;
+		//private PlantType activePlantType;
+		
 		//private int activeParameter = 0;
-
-		public HandlePlants (EditorCtrl ctrl, MapsPanel parent, Scene scene)
+		
+		public HandleAreas (EditorCtrl ctrl, MapsPanel parent, Scene scene) : base(ctrl, parent, scene)
 		{
-			this.parent = parent;
-			this.ctrl = ctrl;
-			
-			this.scene = parent.scene;
-			tabNormal = ctrl.listItem;
-			tabSelected = ctrl.listItemSelected;
-
-			Setup ();
+			this.maxParamValue = 10;
 		}
 
-		string[] GetPlantNames()
+		protected override void Setup (string editDataParamName)
+		{
+			base.Setup ("areas");
+		}
+		
+		/*string[] GetPlantNames()
 		{
 			List<string> pList = new List<string>();
 			if (scene != null) {
@@ -60,7 +34,7 @@ namespace Ecosim.SceneEditor.Helpers
 			}
 			return pList.ToArray();
 		}
-
+		
 		PlantType GetPlantType (string name) 
 		{
 			if (scene != null) {
@@ -70,79 +44,58 @@ namespace Ecosim.SceneEditor.Helpers
 			}
 			return null;
 		}
-
+		
 		int GetPlantNameIndex (string[] names, string name)
 		{
 			for (int i = 0; i < names.Length; i++) {
 				if (names[i] == name) return i;
 			}
 			return 0;
-		}
+		}*/
 		
-		void Setup ()
-		{
-			plantNames = GetPlantNames();
-			if (plantNames.Length > 0) {
-				activePlantType = GetPlantType (plantNames[0]);
-				SetupPlantEditData ();
-			}
-
-			gridSettings255 = new GridTextureSettings (false, 0, 16, "MapGrid255", true, "ActiveMapGrid255");
-
-			edit = EditData.CreateEditData ("plantsparam", data, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				if ((!ctrl) || (maxParamValue == 1)) {
-					return shift ? 0 : paramStrength;
-				} else {
-					return Mathf.RoundToInt ((shift ? 0 : (strength * paramStrength)) + ((1 - strength) * currentVal) + 0.49f);
-				}
-			}, gridSettings255);
-
-			edit.AddRightMouseHandler (delegate(int x, int y, int v) {
-				paramStrength = v;
-				paramStrengthStr = paramStrength.ToString ();
-			});
-
-			edit.SetModeBrush (brushWidth);
-			brushMode = EBrushMode.Circle;
-			backupCopy = new BitMap8 (scene);
-		}
-
-		void SetupPlantEditData ()
+		/*void SetupPlantEditData ()
 		{
 			if (activePlantType == null) {
 				backupCopy.Clear ();
 				return;
 			}
-
+			
 			if (scene.progression.GetData (activePlantType.dataName) == null)
 				scene.progression.AddData (activePlantType.dataName, new BitMap8 (scene));
 			data = scene.progression.GetData (activePlantType.dataName);
-
+			
 			maxParamValue = activePlantType.maxPerTile;
 			paramStrength = maxParamValue;
 			paramStrengthStr = paramStrength.ToString();
-
+			
 			if (edit != null) edit.SetData (data);
 			if (backupCopy != null) data.CopyTo (backupCopy);
-		}
-
+		}*/
+		
 		public bool Render (int mx, int my)
 		{
-			if (scene.plantTypes.Length != plantNames.Length) {
+			this.RenderBrushMode ();
+			GUILayout.Space (16);
+			this.RenderSaveRestoreApply ();
+			GUILayout.FlexibleSpace ();
+			GUILayout.Space (8);
+			this.RenderFromImage ("test");
+
+			/*if (scene.plantTypes.Length != plantNames.Length) {
 				plantNames = GetPlantNames();
 			}
-
+			
 			if (plantNames.Length == 0) {
 				GUILayout.Label ("No plants found.");
 				return false;
 			}
-
+			
 			GUILayout.BeginHorizontal(); // Plant type
 			{
 				if (GUILayout.Button (activePlantType.name, GUILayout.ExpandWidth (true)))// GUILayout.Width(240)))
 				{
 					ctrl.StartSelection (plantNames, GetPlantNameIndex(plantNames, activePlantType.name),
-					newIndex => {
+					                     newIndex => {
 						bool newPlant = true;
 						if (activePlantType != null) {
 							newPlant = (plantNames[newIndex] != activePlantType.name);
@@ -153,12 +106,12 @@ namespace Ecosim.SceneEditor.Helpers
 						}
 					});
 				}
-
+				
 				//GUILayout.Label ("Range: 0-" + maxParamValue, GUILayout.Width(100));
 				//GUILayout.FlexibleSpace ();
 			}
-			GUILayout.EndHorizontal(); //~Plant type*/
-
+			GUILayout.EndHorizontal(); //~Plant type
+			
 			GUILayout.BeginHorizontal(); // Brush mode
 			{
 				GUILayout.Label ("Brush mode", GUILayout.Width (100));
@@ -181,7 +134,7 @@ namespace Ecosim.SceneEditor.Helpers
 				{
 					if (paramStrength > activePlantType.maxPerTile)
 						paramStrength = activePlantType.maxPerTile;
-
+					
 					int newParamStrength = Mathf.RoundToInt (GUILayout.HorizontalSlider (paramStrength, 1, maxParamValue, GUILayout.Width (160)));
 					if (newParamStrength != paramStrength) {
 						newParamStrength = Mathf.Clamp (newParamStrength, 1, maxParamValue);
@@ -218,9 +171,9 @@ namespace Ecosim.SceneEditor.Helpers
 				}
 				GUILayout.EndHorizontal (); //~Brush width
 			}
-
+			
 			GUILayout.Space (16);
-
+			
 			GUILayout.BeginHorizontal (); // Save, restore etc
 			{
 				if (GUILayout.Button ("Save to clipboard", GUILayout.Width (100))) {
@@ -238,7 +191,7 @@ namespace Ecosim.SceneEditor.Helpers
 				}
 			}
 			GUILayout.EndHorizontal (); //~Save, restore etc
-
+			
 			GUILayout.FlexibleSpace ();
 			GUILayout.Space (8);
 			if (parent.texture != null) 
@@ -264,9 +217,11 @@ namespace Ecosim.SceneEditor.Helpers
 				GUILayout.EndHorizontal ();
 			}
 			parent.RenderLoadTexture ();
+			return false;*/
+
 			return false;
 		}
-
+		
 		public void Disable ()
 		{
 			if (edit != null)
@@ -276,7 +231,7 @@ namespace Ecosim.SceneEditor.Helpers
 		
 		public void Update ()
 		{
-
+			
 		}
 	}
 }

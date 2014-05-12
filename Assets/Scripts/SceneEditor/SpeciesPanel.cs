@@ -11,12 +11,13 @@ namespace Ecosim.SceneEditor
 			public PlantState (PlantType plant)
 			{
 				this.plant = plant;
-				maxPerTileStr = this.plant.maxPerTile.ToString();
+				this.maxPerTileStr = this.plant.maxPerTile.ToString();
+				this.isFoldedOpen = false;
 			}
 			
-			public bool isFoldedOpen = false;
+			public bool isFoldedOpen;
 			public PlantType plant;
-			public string maxPerTileStr = "";
+			public string maxPerTileStr;
 		}
 
 		/// <summary>
@@ -37,6 +38,8 @@ namespace Ecosim.SceneEditor
 		ExtraPanel extraPanel;
 		Vector2 scrollPos;
 		Vector2 scrollPosExtra;
+		string newPlantName;
+
 		Scene scene;
 		EditorCtrl ctrl;
 
@@ -55,6 +58,7 @@ namespace Ecosim.SceneEditor
 				plants.Add(new PlantState (scene.plantTypes[i]));
 			}
 
+			newPlantName = "New plant";
 			extraPanel = null;
 		}
 		
@@ -98,30 +102,35 @@ namespace Ecosim.SceneEditor
 				{
 					GUILayout.BeginVertical (ctrl.skin.box);
 
+					// Parameter name
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label (string.Format(" Parameter name: '{0}'", ps.plant.dataName), GUILayout.Width (260));
+					GUILayout.EndHorizontal ();
+
 					// Spread attempts
 					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" # Spawn attempts", GUILayout.Width (100));
+					GUILayout.Label (" # Spawn seeds attempts", GUILayout.Width (140));
 					string spawnAttempts = GUILayout.TextField (ps.plant.spawnCount.ToString(), GUILayout.Width (40));
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
 
 					// Multiplier
 					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" Spawn multiplier", GUILayout.Width (100));
+					GUILayout.Label (" Spawn seeds multiplier", GUILayout.Width (140));
 					string spawnMultiplier = GUILayout.TextField (ps.plant.spawnMultiplier.ToString(), GUILayout.Width (40));
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
 
 					// Dispersion
 					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" Spawn dispersion", GUILayout.Width (100));
+					GUILayout.Label (" Spawn seeds dispersion", GUILayout.Width (140));
 					string spawnRadius = GUILayout.TextField (ps.plant.spawnRadius.ToString(), GUILayout.Width (40));
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
 
 					// Max per tile
 					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" Maximum per tile", GUILayout.Width (100));
+					GUILayout.Label (" Maximum per tile", GUILayout.Width (140));
 					ps.maxPerTileStr = GUILayout.TextField (ps.maxPerTileStr, GUILayout.Width (40));
 
 					// Format the string for only digits
@@ -149,7 +158,12 @@ namespace Ecosim.SceneEditor
 							}, null);
 						}
 						if (GUILayout.Button ("?", GUILayout.Width (20))) {
-							string message = "You need to explicitly say to update the 'Maximum per tile' value, because changing this value will affect the currently placed amounts of the plant on the terrain.\n\nThe current values will be converted by their percentage of the current maximum per tile value, like this:\n\n[new value] = ([current value]/[previous max]) * [new max].";
+							string message = 
+@"You need to explicitly say to update the 'Maximum per tile' value, because changing this value will affect the currently placed amounts of the plant on the terrain.
+
+The current values will be converted by their percentage of the current maximum per tile value, like this:
+
+[new value] = ([current value]/[previous max]) * [new max].";
 							ctrl.StartOkDialog (message, null, 300, 150);
 						}
 					}
@@ -166,26 +180,49 @@ namespace Ecosim.SceneEditor
 
 					// Rules
 					GUILayout.Space (2);
-					if (GUILayout.Button ("Rules"))
+					GUILayout.BeginHorizontal(); // Rules
 					{
-						extraPanel = new PlantRulesExtraPanel (ctrl, ps.plant);
+						if (GUILayout.Button ("Rules"))
+						{
+							extraPanel = new PlantRulesExtraPanel (ctrl, ps.plant);
+						}
 					}
+					GUILayout.EndHorizontal(); // ~Rules
 
 					GUILayout.EndVertical ();
 				}
 				GUILayout.EndVertical(); // ~Plant body
 				plantIndex++;
-			}
+			} // ~PlantState foreach
 
 			// Add button
 			GUILayout.BeginHorizontal ();
 			{
-				if (GUILayout.Button ("+")) {
-					// Add new plant
-					PlantType t = new PlantType (scene);
-					PlantState state = new PlantState (t);
-					plants.Add (state);
+				GUILayout.Label ("New plant:", GUILayout.Width (60));
+				newPlantName = GUILayout.TextField (newPlantName, GUILayout.Width (200));
+				if (GUILayout.Button ("Create")) {
+					// Check plant name
+					bool uniqueName = true;
+					foreach (PlantState ps in plants) {
+						if (ps.plant.name == newPlantName) {
+							uniqueName = false;
+							break;
+						}
+					}
+
+					if (uniqueName)
+					{
+						// Add new plant
+						PlantType t = new PlantType (scene, newPlantName);
+						PlantState state = new PlantState (t);
+						plants.Add (state);
+					}
+					else
+					{
+						ctrl.StartOkDialog ("Name is already taken, please choose another and try again.", null);
+					}
 				}
+
 				GUILayout.FlexibleSpace ();
 			}
 			GUILayout.EndHorizontal (); //~ Add button
@@ -215,6 +252,10 @@ namespace Ecosim.SceneEditor
 		
 		public bool NeedSidePanel ()
 		{
+			// TODO: Make this better when we also have animals
+			if (extraPanel != null) {
+				return true;
+			}
 			return false;
 		}
 		

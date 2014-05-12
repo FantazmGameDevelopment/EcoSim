@@ -15,6 +15,7 @@ namespace Ecosim.SceneData
 		public int index;
 
 		public PlantRule[] rules;
+		public PlantGerminationRule[] germinationRules;
 
 		public int maxPerTile;
 		public int spawnRadius;
@@ -28,12 +29,24 @@ namespace Ecosim.SceneData
 
 		}
 
-		public PlantType (Scene scene)
+		public PlantType (Scene scene, string name)
 		{
-			index = scene.plantTypes.Length;
-			name = "New plant " + index;
+			this.name = name;
+			this.dataName = StringUtil.MakeValidID (name);
 
-			rules = new PlantRule[0];
+			// Data name
+			string newDataName = this.dataName;
+			int tries = 1;
+			while (scene.progression.HasData (newDataName)) {
+				newDataName = this.dataName + tries;
+				tries++;
+			}
+			this.dataName = newDataName;
+			scene.progression.AddData (dataName, new BitMap8 (scene));
+
+			index = scene.plantTypes.Length;
+			rules = new PlantRule[1];
+			germinationRules = new PlantGerminationRule[0];
 
 			maxPerTile = 3;
 			spawnRadius = 5;
@@ -44,11 +57,6 @@ namespace Ecosim.SceneData
 			List<PlantType> tmpPlantList = new List<PlantType>(scene.plantTypes);
 			tmpPlantList.Add (this);
 			scene.plantTypes = tmpPlantList.ToArray();
-
-			// Data name
-			dataName = string.Format("_plant{0}", index);
-			if (!scene.progression.HasData (dataName))
-				scene.progression.AddData (dataName, new BitMap8 (scene));
 		}
 
 		public static PlantType Load (XmlTextReader reader, Scene scene)
@@ -67,6 +75,7 @@ namespace Ecosim.SceneData
 			// Check if the data exists
 
 			List<PlantRule> rules = new List<PlantRule>();
+			List<PlantGerminationRule> germinationRules = new List<PlantGerminationRule>();
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
 					XmlNodeType nType = reader.NodeType;
@@ -75,12 +84,18 @@ namespace Ecosim.SceneData
 						if (rule != null) {
 							rules.Add (rule);
 						}
+					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower() == PlantGerminationRule.XML_ELEMENT)) {
+						PlantGerminationRule germRule = PlantGerminationRule.Load (reader, scene);
+						if (germRule != null) {
+							germinationRules.Add (germRule);
+						}
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower() == XML_ELEMENT)) {
 						break;
 					}
 				}
 			}
 			plant.rules = rules.ToArray();
+			plant.germinationRules = germinationRules.ToArray();
 			return plant;
 		}
 
@@ -96,6 +111,9 @@ namespace Ecosim.SceneData
 			foreach (PlantRule r in rules) {
 				r.Save (writer, scene);
 			}
+			foreach (PlantGerminationRule gr in germinationRules) {
+				gr.Save (writer, scene);
+			}
 			writer.WriteEndElement ();
 		}
 
@@ -104,6 +122,26 @@ namespace Ecosim.SceneData
 			foreach (PlantRule r in rules) {
 				r.UpdateReferences (scene, this);
 			}
+
+			foreach (PlantGerminationRule r in germinationRules) {
+				r.UpdateReferences (scene, this);
+			}
+		}
+
+		public static PlantType Find (Scene scene, string name)
+		{
+			foreach (PlantType t in scene.plantTypes) {
+				if (t.name == name) return t;
+			}
+			return null;
+		}
+
+		public static PlantType FindByDataName (Scene scene, string dataName)
+		{
+			foreach (PlantType t in scene.plantTypes) {
+				if (t.dataName == dataName) return t;
+			}
+			return null;
 		}
 	}
 }

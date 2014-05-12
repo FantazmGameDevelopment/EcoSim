@@ -22,6 +22,8 @@ namespace Ecosim.SceneData
 		public const string VEGETATION_ID = "vegetation";
 		public const string CANAL_ID = "canals";
 		public const string ANIMAL_ID = "animals";
+		public const string SUCCESSION_ID = "succession";
+
 		public long budget = 0; // budget left
 		public int year = 0; // year of this progression
 		public int startYear = 2013; // not really progression, but for determining first progression data

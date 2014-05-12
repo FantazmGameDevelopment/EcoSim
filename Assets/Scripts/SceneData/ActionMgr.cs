@@ -20,6 +20,7 @@ namespace Ecosim.SceneData
 			typeof(WaterAction),
 			typeof(ConversionAction),
 			typeof(SuccessionAction),
+			typeof(PlantsAction)
 		};
 		
 		public ActionMgr (Scene scene)
@@ -214,6 +215,10 @@ namespace Ecosim.SceneData
 					actionsByID.Add (action.id, action);
 				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == SuccessionAction.XML_ELEMENT)) {
 					BasicAction action = SuccessionAction.Load (scene, reader);
+					actionQueue.Add (action);
+					actionsByID.Add (action.id, action);
+				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == PlantsAction.XML_ELEMENT)) {
+					BasicAction action = PlantsAction.Load (scene, reader);
 					actionQueue.Add (action);
 					actionsByID.Add (action.id, action);
 				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == UserInteractionGroup.XML_ELEMENT)) {

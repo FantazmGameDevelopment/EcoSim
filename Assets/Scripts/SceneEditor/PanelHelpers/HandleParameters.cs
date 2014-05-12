@@ -53,6 +53,12 @@ namespace Ecosim.SceneEditor.Helpers
 					if ((dataFindNames.GetMax() < 256) && (!p.StartsWith ("_")))
 						pList.Add (p);
 				}
+
+				// Exclude the plant data names
+				foreach (PlantType p in scene.plantTypes) {
+					pList.Remove (p.dataName);
+				}
+
 				parameters = pList.ToArray ();
 				activeParameter = 0;
 			}

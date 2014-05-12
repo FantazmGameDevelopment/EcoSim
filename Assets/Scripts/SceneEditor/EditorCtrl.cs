@@ -337,7 +337,7 @@ public class EditorCtrl : MonoBehaviour
 		CameraControl.SetupCamera (scene);
 		
 		winAreaR = new Rect (0f, 0f, 400f, Screen.height);
-		winAreaSideR = new Rect (400f, Screen.height - 400f, 400f, 400f);
+		winAreaSideR = new Rect (400f, (Screen.height * 0.5f) - 5f, 400f, (Screen.height * 0.5f) + 5f);
 		icon = skin.FindStyle ("Icon");
 		selectedIcon = skin.FindStyle ("IconSelected");
 		icon12x12 = skin.FindStyle ("Icon12x12");
@@ -414,7 +414,7 @@ public class EditorCtrl : MonoBehaviour
 				bool extra = tool.panel.Render ((int)mousePos.x, (int)mousePos.y);
 				GUILayout.EndVertical ();
 				if (extra) {
-					GUILayout.BeginVertical (skin.box, GUILayout.Height (400));
+					GUILayout.BeginVertical (skin.box, GUILayout.Height (Screen.height * 0.5f));
 					tool.panel.RenderExtra ((int)mousePos.x, (int)mousePos.y);
 					GUILayout.EndVertical ();
 				}
@@ -426,7 +426,9 @@ public class EditorCtrl : MonoBehaviour
 				if (winAreaSideR.Contains (screenMousePos))
 					CameraControl.MouseOverGUI = true;
 				GUILayout.BeginArea (winAreaSideR, skin.FindStyle ("BG"));
+				GUILayout.BeginVertical (skin.box, GUILayout.Height (Screen.height * 0.5f));
 				tool.panel.RenderSide ((int)mousePos.x, (int)mousePos.y);
+				GUILayout.EndVertical ();
 				GUILayout.EndArea ();
 			}
 #if !UNITY_EDITOR

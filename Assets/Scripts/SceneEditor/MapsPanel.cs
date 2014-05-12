@@ -18,6 +18,7 @@ namespace Ecosim.SceneEditor
 		
 		private enum ETabs
 		{
+			AREAS,
 			HEIGHTMAP,
 			PARAMETERS,
 			VEGETATION,
@@ -112,6 +113,12 @@ namespace Ecosim.SceneEditor
 			}
 		}
 
+		private void StartAreas ()
+		{
+			ResetEdit ();
+			helper = new HandleAreas (ctrl, this, scene);
+		}
+
 		private void StartHeightmap ()
 		{
 			ResetEdit ();
@@ -149,29 +156,37 @@ namespace Ecosim.SceneEditor
 		 */
 		public bool Render (int mx, int my)
 		{
+			float width = 60f;
 
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("Heightmap", (tab == ETabs.HEIGHTMAP) ? tabSelected : tabNormal, GUILayout.Width (60))) {
-				tab = ETabs.HEIGHTMAP;
-				StartHeightmap ();
+			{
+				if (GUILayout.Button ("Areas", (tab == ETabs.AREAS) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.AREAS;
+					StartAreas ();
+				}
+				if (GUILayout.Button ("Heightmap", (tab == ETabs.HEIGHTMAP) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.HEIGHTMAP;
+					StartHeightmap ();
+				}
+				if (GUILayout.Button ("Parameters", (tab == ETabs.PARAMETERS) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.PARAMETERS;
+					StartParameters ();
+				}
+				if (GUILayout.Button ("Vegetation", (tab == ETabs.VEGETATION) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.VEGETATION;
+					StartVegetation ();
+				}
+				if (GUILayout.Button("Plants", (tab == ETabs.PLANTS) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.PLANTS;
+					StartPlants();
+				}
+				if (GUILayout.Button ("Objects", (tab == ETabs.OBJECTS) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.OBJECTS;
+					StartObjects ();
+				}
+
+				GUILayout.FlexibleSpace ();
 			}
-			if (GUILayout.Button ("Parameters", (tab == ETabs.PARAMETERS) ? tabSelected : tabNormal, GUILayout.Width (60))) {
-				tab = ETabs.PARAMETERS;
-				StartParameters ();
-			}
-			if (GUILayout.Button ("Vegetation", (tab == ETabs.VEGETATION) ? tabSelected : tabNormal, GUILayout.Width (60))) {
-				tab = ETabs.VEGETATION;
-				StartVegetation ();
-			}
-			if (GUILayout.Button("Plants", (tab == ETabs.PLANTS) ? tabSelected : tabNormal, GUILayout.Width (60))) {
-				tab = ETabs.PLANTS;
-				StartPlants();
-			}
-			if (GUILayout.Button ("Objects", (tab == ETabs.OBJECTS) ? tabSelected : tabNormal, GUILayout.Width (60))) {
-				tab = ETabs.OBJECTS;
-				StartObjects ();
-			}
-			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
 			GUILayout.Space (4);
 			scrollPos = GUILayout.BeginScrollView (scrollPos, false, false);
@@ -208,6 +223,9 @@ namespace Ecosim.SceneEditor
 		public void Activate ()
 		{
 			switch (tab) {
+			case ETabs.AREAS :
+				StartAreas ();
+				break;
 			case ETabs.HEIGHTMAP :
 				StartHeightmap ();
 				break;

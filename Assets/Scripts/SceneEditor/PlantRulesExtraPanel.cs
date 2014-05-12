@@ -9,15 +9,20 @@ namespace Ecosim.SceneEditor
 	public class PlantRulesExtraPanel : ExtraPanel
 	{
 		Dictionary<PlantRule, bool> plantRuleFoldStates;
+		Dictionary<PlantGerminationRule, bool> germRuleFoldStates;
 		Dictionary<SuccessionType, string[]> vegetations;
 
 		EditorCtrl ctrl;
 		PlantType plant;
 		Vector2 scrollPos;
+		Vector2 germScrollPos;
 		string[] parameters;
 		string[] successions;
 
+		bool showGerminationRules;
+
 		private static PlantRule[] copyBuffer;
+		private static PlantGerminationRule[] germCopyBuffer;
 
 		public static void ClearCopyBuffer() 
 		{
@@ -31,7 +36,12 @@ namespace Ecosim.SceneEditor
 
 			plantRuleFoldStates = new Dictionary<PlantRule, bool>();
 			foreach (PlantRule r in this.plant.rules) {
-				plantRuleFoldStates.Add (r, false);
+				plantRuleFoldStates.Add (r, true);
+			}
+
+			germRuleFoldStates = new Dictionary<PlantGerminationRule, bool>();
+			foreach (PlantGerminationRule r in this.plant.germinationRules) {
+				germRuleFoldStates.Add (r, true);
 			}
 
 			vegetations = new Dictionary<SuccessionType, string[]>();
@@ -43,6 +53,8 @@ namespace Ecosim.SceneEditor
 					pList.Add (p);
 			}
 			parameters = pList.ToArray ();
+
+			showGerminationRules = true;
 
 			RetrieveSuccessions ();
 		}
@@ -100,22 +112,55 @@ namespace Ecosim.SceneEditor
 			rule = null;
 		}
 
+		public void DeleteGerminationRule (PlantGerminationRule rule)
+		{
+			List<PlantGerminationRule> rules = new List<PlantGerminationRule>(plant.germinationRules);
+			rules.Remove (rule);
+			plant.germinationRules = rules.ToArray();
+			germRuleFoldStates.Remove (rule);
+			rule = null;
+		}
+
 		public bool Render (int mx, int my)
 		{
 			bool keepOpen = true;
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button (ctrl.foldedOpen, ctrl.icon)) 
+			if (GUILayout.Button (ctrl.foldedOpenSmall)) 
 			{
 				keepOpen = false;
 			}
 
-			GUILayout.Label ("Rules", GUILayout.Width (100));
+			GUILayout.Label ("Succession Rules", GUILayout.Width (100));
 			GUILayout.Label (plant.name);
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
 
-			GUILayout.BeginHorizontal (); // Copy
+			GUILayout.BeginHorizontal (); // Buttons
 			{
+				if (GUILayout.Button ("Fold all"))
+				{
+					List<PlantRule> rules = new List<PlantRule>();
+					foreach (KeyValuePair<PlantRule, bool> pair in plantRuleFoldStates) {
+						rules.Add (pair.Key);
+					}
+					foreach (PlantRule r in rules) {
+						plantRuleFoldStates[r] = true;
+					}
+				}
+				
+				if (GUILayout.Button ("Unfold all"))
+				{
+					List<PlantRule> rules = new List<PlantRule>();
+					foreach (KeyValuePair<PlantRule, bool> pair in plantRuleFoldStates) {
+						rules.Add (pair.Key);
+					}
+					foreach (PlantRule r in rules) {
+						plantRuleFoldStates[r] = false;
+					}
+				}
+
+				GUILayout.Space (10f);
+
 				if (GUILayout.Button ("Copy")) 
 				{
 					copyBuffer = new PlantRule [plant.rules.Length];
@@ -144,7 +189,7 @@ namespace Ecosim.SceneEditor
 				}
 			}
 			GUILayout.FlexibleSpace ();
-			GUILayout.EndHorizontal (); // ~Copy
+			GUILayout.EndHorizontal (); // ~Buttons
 
 			// Check lists
 			RetrieveSuccessions ();
@@ -183,21 +228,9 @@ namespace Ecosim.SceneEditor
 
 							if (!plantRuleFoldStates[pr])
 							{
-								GUILayout.BeginHorizontal (); // Chance
-								{
-									GUILayout.Label ("Chance (0..1)", GUILayout.Width (70));
-									pr.chance = GUILayout.HorizontalSlider (pr.chance, 0.0f, 1.0f, GUILayout.Width (70));
-									string chanceStr = pr.chance.ToString ("0.00");
-									string newChanceStr = GUILayout.TextField (chanceStr, GUILayout.Width (40));
-									if (newChanceStr != chanceStr) {
-										float outVal;
-										if (float.TryParse (newChanceStr, out outVal)) {
-											pr.chance = outVal;
-										}
-									}
-								}
-								//GUILayout.EndHorizontal (); // ~Chance
-								//GUILayout.BeginHorizontal (); // Delta
+								RenderChance (ref pr.chance);
+
+								GUILayout.BeginHorizontal (); // Change
 								{
 									GUILayout.Label ("Change", GUILayout.Width (40));
 									pr.delta = (int)GUILayout.HorizontalSlider (pr.delta, -plant.maxPerTile, plant.maxPerTile, GUILayout.Width (70));
@@ -209,157 +242,13 @@ namespace Ecosim.SceneEditor
 											pr.delta = outVal;
 										}
 									}
+									
+									pr.canSpawn = GUILayout.Toggle (pr.canSpawn, "Can spawn seeds", GUILayout.Width (130));
 								}
-								GUILayout.EndHorizontal (); // ~Delta
-								
-								GUILayout.BeginHorizontal (); // Can spawn
-								{
-									pr.canSpawn = GUILayout.Toggle (pr.canSpawn, "Can spawn seedlings", GUILayout.Width (150));
-								}
-								GUILayout.EndHorizontal (); // ~Can spawn
+								GUILayout.EndHorizontal (); // ~Change
 
-								GUILayout.BeginVertical (ctrl.skin.box); // Vegetation conditions
-								{
-									GUILayout.BeginHorizontal (); // Header
-									{
-										GUILayout.Label ("Vegetation conditions");
-										GUILayout.FlexibleSpace();
-
-										if (GUILayout.Button ("+", GUILayout.Width (20)))
-										{
-											List<PlantRule.VegetationCondition> vcList = new List<PlantRule.VegetationCondition> (pr.vegetationConditions);
-											PlantRule.VegetationCondition newVC = new PlantRule.VegetationCondition (-1, -1);
-											vcList.Add (newVC);
-											pr.vegetationConditions = vcList.ToArray();
-										}
-									}
-									GUILayout.EndHorizontal (); //~Header
-
-									foreach (PlantRule.VegetationCondition vc in pr.vegetationConditions)
-									{
-										GUILayout.BeginVertical (ctrl.skin.box);
-										GUILayout.BeginHorizontal ();
-										{
-											// Succession, -1 means any succession so we show the index + 1
-											if (GUILayout.Button (successions[vc.successionIndex + 1], GUILayout.Width(150)))
-											{
-												PlantRule.VegetationCondition tmpVC = vc;
-												ctrl.StartSelection (successions, tmpVC.successionIndex + 1, 
-													newIndex => {
-														tmpVC.successionIndex = newIndex - 1;
-														tmpVC.vegetationIndex = -1;
-												});
-											}
-
-											// Vegetation
-											if (vc.successionIndex >= 0) 
-											{
-												string[] vegs = vegetations [FindSuccessionType(vc.successionIndex)];
-												if (GUILayout.Button (vegs[vc.vegetationIndex + 1], GUILayout.Width (150)))
-												{
-													PlantRule.VegetationCondition tmpVC = vc;
-													ctrl.StartSelection (vegs, tmpVC.vegetationIndex + 1, 
-													    newIndex => {
-															tmpVC.vegetationIndex = newIndex - 1;
-													});
-												}
-											}
-
-											GUILayout.FlexibleSpace();
-											if (GUILayout.Button ("-", GUILayout.Width (20))) 
-											{
-												List<PlantRule.VegetationCondition> vcList = new List<PlantRule.VegetationCondition>(pr.vegetationConditions);
-												vcList.Remove(vc);
-												pr.vegetationConditions = vcList.ToArray();
-												break;
-											}
-										}
-										GUILayout.EndHorizontal ();
-										GUILayout.EndVertical ();
-									}
-								}
-								GUILayout.EndVertical (); //~Vegetation conditions
-
-								GUILayout.BeginVertical (ctrl.skin.box); // Parameter conditions
-								{
-									GUILayout.BeginHorizontal (); // Header
-									{
-										GUILayout.Label ("Parameter conditions");
-										GUILayout.FlexibleSpace();
-
-										if (GUILayout.Button ("+", GUILayout.Width (20)))
-										{
-											List<ParameterRange> prList = new List<ParameterRange> (pr.parameterConditions);
-											ParameterRange newPR = new ParameterRange ();
-											newPR.paramName = parameters [0];
-											newPR.data = ctrl.scene.progression.GetData (newPR.paramName);
-											newPR.lowRange = 0;
-											newPR.highRange = newPR.data.GetMax();
-											prList.Add (newPR);
-											pr.parameterConditions = prList.ToArray();
-										}
-									}
-									GUILayout.EndHorizontal (); //~Header
-
-									foreach (ParameterRange pc in pr.parameterConditions)
-									{
-										GUILayout.BeginVertical (ctrl.skin.box);
-										GUILayout.BeginHorizontal ();
-										{
-											if (GUILayout.Button (pc.paramName, GUILayout.Width (120)))
-											{
-												ctrl.StartSelection (parameters, FindParamIndex (pc.paramName), 
-												                     newIndex => {
-													pc.paramName = parameters[newIndex];
-													pc.data = ctrl.scene.progression.GetData (pc.paramName);
-												});
-											}
-											
-											int min = pc.data.GetMin();
-											int max = pc.data.GetMax();
-
-											// Check for percentages
-											if (pc.lowRangePerc > -1f) {
-												pc.lowRange = (int)((float)max * pc.lowRangePerc);
-												pc.lowRangePerc = -1f;
-											}
-											if (pc.highRangePerc > -1f) {
-												pc.highRange = (int)((float)max * pc.highRangePerc);
-												pc.highRangePerc = -1f;
-											}
-
-											float minPerc = (float)pc.lowRange / (float)max;
-											float maxPerc = (float)pc.highRange / (float)max;
-											
-											//GUILayout.Label (string.Format("({0}-{1})", min, max), GUILayout.Width (40));
-											
-											// Min perc
-											GUILayout.Space(2);
-											GUILayout.Label (minPerc.ToString("0.00"), GUILayout.Width (25));
-											pc.lowRange = (int)GUILayout.HorizontalSlider (pc.lowRange, min, max, GUILayout.Width (62));
-											
-											// Max perc
-											pc.highRange = (int)GUILayout.HorizontalSlider (pc.highRange, min, max, GUILayout.Width (62));
-											GUILayout.Label (maxPerc.ToString("0.00"), GUILayout.Width (25));
-											
-											// Make the ranges correct
-											if (pc.lowRange > pc.highRange) pc.highRange = pc.lowRange;
-											if (pc.highRange > max) pc.highRange = max;
-
-											GUILayout.FlexibleSpace();
-											if (GUILayout.Button ("-", GUILayout.Width (20))) 
-											{
-												List<ParameterRange> prList = new List<ParameterRange> (pr.parameterConditions);
-												prList.Remove (pc);
-												pr.parameterConditions = prList.ToArray ();
-												break;
-											}
-										}
-										GUILayout.EndHorizontal ();
-										GUILayout.EndVertical ();
-									}
-								}
-								GUILayout.EndVertical (); //~Parameter conditions 
+								RenderVegetationConditions (ref pr.vegetationConditions);
+								RenderParameterConditions (ref pr.parameterConditions);
 							}
 						}
 						GUILayout.EndVertical (); //~Rule
@@ -386,7 +275,306 @@ namespace Ecosim.SceneEditor
 
 		public bool RenderSide (int mx, int my)
 		{
-			return false;
+			if (!showGerminationRules) return false;
+
+			bool keepOpen = true;
+			GUILayout.BeginHorizontal ();
+			/*if (GUILayout.Button (ctrl.foldedOpenSmall)) 
+			{
+				keepOpen = false;
+			}*/
+			
+			GUILayout.Label ("Germination Rules", GUILayout.Width (100));
+			GUILayout.Label (plant.name);
+			GUILayout.FlexibleSpace ();
+			GUILayout.EndHorizontal ();
+
+			GUILayout.BeginHorizontal (); // Buttons
+			{
+				if (GUILayout.Button ("Fold all"))
+				{
+					List<PlantGerminationRule> rules = new List<PlantGerminationRule>();
+					foreach (KeyValuePair<PlantGerminationRule, bool> pair in germRuleFoldStates) {
+						rules.Add (pair.Key);
+					}
+					foreach (PlantGerminationRule r in rules) {
+						germRuleFoldStates[r] = true;
+					}
+				}
+				
+				if (GUILayout.Button ("Unfold all"))
+				{
+					List<PlantGerminationRule> rules = new List<PlantGerminationRule>();
+					foreach (KeyValuePair<PlantGerminationRule, bool> pair in germRuleFoldStates) {
+						rules.Add (pair.Key);
+					}
+					foreach (PlantGerminationRule r in rules) {
+						germRuleFoldStates[r] = false;
+					}
+				}
+				
+				GUILayout.Space (10f);
+				
+				if (GUILayout.Button ("Copy")) 
+				{
+					germCopyBuffer = new PlantGerminationRule[plant.germinationRules.Length];
+					for (int i = 0; i < germCopyBuffer.Length; i++) {
+						germCopyBuffer[i] = (PlantGerminationRule) plant.germinationRules[i].Clone();
+					}
+				}
+				if ((germCopyBuffer != null) && GUILayout.Button ("Paste (add)")) 
+				{
+					List<PlantGerminationRule> rulesList = new List<PlantGerminationRule>(plant.germinationRules);
+					for (int i = 0; i < germCopyBuffer.Length; i++) {
+						rulesList.Add ((PlantGerminationRule)germCopyBuffer[i].Clone());
+					}
+					plant.germinationRules = rulesList.ToArray();
+				}
+				if ((germCopyBuffer != null) && GUILayout.Button ("Paste (replace)")) 
+				{
+					plant.germinationRules = new PlantGerminationRule[germCopyBuffer.Length];
+					for (int i = 0; i < plant.germinationRules.Length; i++) {
+						plant.germinationRules[i] = (PlantGerminationRule)germCopyBuffer[i].Clone();
+					}
+				}
+				if ((germCopyBuffer != null) && GUILayout.Button ("Clear"))
+				{
+					germCopyBuffer = null;
+				}
+			}
+			GUILayout.FlexibleSpace ();
+			GUILayout.EndHorizontal (); // ~Buttons
+
+			germScrollPos = GUILayout.BeginScrollView (germScrollPos, false, false);
+			{
+				foreach (PlantGerminationRule gr in plant.germinationRules)
+				{
+					GUILayout.BeginVertical (ctrl.skin.box); // PlantGerminationRule
+					{
+						GUILayout.BeginHorizontal ();
+						{
+							if (!germRuleFoldStates.ContainsKey (gr)) germRuleFoldStates.Add (gr, true);
+							if (GUILayout.Button (germRuleFoldStates[gr] ? (ctrl.foldedCloseSmall) : (ctrl.foldedOpenSmall), ctrl.icon12x12)) 
+							{
+								germRuleFoldStates[gr] = !germRuleFoldStates[gr];
+							}
+
+							GUILayout.Label ("Description", GUILayout.Width (80));
+							gr.description = GUILayout.TextField (gr.description);
+							
+							if (GUILayout.Button("-", GUILayout.Width(20)))
+							{
+								PlantGerminationRule tmpGR = gr;
+								ctrl.StartDialog (string.Format("Delete germination rule ({0})?", tmpGR.description), newVal => { 
+									DeleteGerminationRule (tmpGR);
+								}, null);
+							}
+						}
+						GUILayout.EndHorizontal ();
+
+						if (!germRuleFoldStates[gr])
+						{
+							RenderChance (ref gr.chance);
+							RenderVegetationConditions (ref gr.vegetationConditions);
+							RenderParameterConditions (ref gr.parameterConditions);
+						}
+					}
+					GUILayout.EndVertical (); // ~PlantGerminationRule
+				} // ~PlantGerminationRule foreach
+
+				GUILayout.BeginHorizontal ();
+				if (GUILayout.Button ("+", GUILayout.Width (20))) {
+					PlantGerminationRule newR = new PlantGerminationRule ();
+					List<PlantGerminationRule> list = new List<PlantGerminationRule> (plant.germinationRules);
+					list.Add (newR);
+					newR.description = "Germination Rule " + list.Count;
+					plant.germinationRules = list.ToArray ();
+					germRuleFoldStates.Add (newR, false);
+				}
+				GUILayout.FlexibleSpace ();
+				GUILayout.EndHorizontal ();
+			}
+			GUILayout.EndScrollView ();
+
+			return keepOpen;
+		}
+
+		private void RenderChance (ref float chance)
+		{
+			GUILayout.Space (1f);
+			GUILayout.BeginHorizontal (); // Chance
+			{
+				GUILayout.Label ("Chance (0..1)", GUILayout.Width (70));
+				chance = GUILayout.HorizontalSlider (chance, 0.0f, 1.0f, GUILayout.Width (120));
+				string chanceStr = chance.ToString ("0.00");
+				string newChanceStr = GUILayout.TextField (chanceStr, GUILayout.Width (40));
+				if (newChanceStr != chanceStr) {
+					float outVal;
+					if (float.TryParse (newChanceStr, out outVal)) {
+						chance = outVal;
+					}
+				}
+			}
+			GUILayout.EndHorizontal (); // ~Chance
+		}
+
+		private void RenderVegetationConditions(ref VegetationCondition[] vegetationConditions)
+		{
+			GUILayout.BeginVertical (ctrl.skin.box); // Vegetation conditions
+			{
+				GUILayout.BeginHorizontal (); // Header
+				{
+					GUILayout.Label ("Vegetation conditions");
+					GUILayout.FlexibleSpace();
+					
+					if (GUILayout.Button ("+", GUILayout.Width (20)))
+					{
+						List<VegetationCondition> vcList = new List<VegetationCondition> (vegetationConditions);
+						VegetationCondition newVC = new VegetationCondition (-1, -1);
+						vcList.Add (newVC);
+						vegetationConditions = vcList.ToArray();
+					}
+				}
+				GUILayout.EndHorizontal (); //~Header
+
+				int index = 0;
+				foreach (VegetationCondition vc in vegetationConditions)
+				{
+					GUILayout.BeginVertical (ctrl.skin.box);
+					GUILayout.BeginHorizontal ();
+					{
+						// Succession, -1 means any succession so we show the index + 1
+						if (GUILayout.Button (successions[vc.successionIndex + 1], GUILayout.Width(150)))
+						{
+							VegetationCondition tmpVC = vc;
+							ctrl.StartSelection (successions, tmpVC.successionIndex + 1, 
+							                     newIndex => {
+								tmpVC.successionIndex = newIndex - 1;
+								tmpVC.vegetationIndex = -1;
+							});
+						}
+						
+						// Vegetation
+						if (vc.successionIndex >= 0) 
+						{
+							string[] vegs = vegetations [FindSuccessionType(vc.successionIndex)];
+							if (GUILayout.Button (vegs[vc.vegetationIndex + 1], GUILayout.Width (150)))
+							{
+								VegetationCondition tmpVC = vc;
+								ctrl.StartSelection (vegs, tmpVC.vegetationIndex + 1, 
+								                     newIndex => {
+									tmpVC.vegetationIndex = newIndex - 1;
+								});
+							}
+						}
+						
+						GUILayout.FlexibleSpace();
+						if (index > 0) {
+							if (GUILayout.Button ("-", GUILayout.Width (20))) 
+							{
+								List<VegetationCondition> vcList = new List<VegetationCondition>(vegetationConditions);
+								vcList.Remove(vc);
+								vegetationConditions = vcList.ToArray();
+								break;
+							}
+						}
+					}
+					GUILayout.EndHorizontal ();
+					GUILayout.EndVertical ();
+
+					index++;
+				}
+			}
+			GUILayout.EndVertical (); //~Vegetation conditions
+		}
+
+		private void RenderParameterConditions(ref ParameterRange[] parameterConditions)
+		{
+			GUILayout.BeginVertical (ctrl.skin.box); // Parameter conditions
+			{
+				GUILayout.BeginHorizontal (); // Header
+				{
+					GUILayout.Label ("Parameter conditions");
+					GUILayout.FlexibleSpace();
+					
+					if (GUILayout.Button ("+", GUILayout.Width (20)))
+					{
+						List<ParameterRange> prList = new List<ParameterRange> (parameterConditions);
+						ParameterRange newPR = new ParameterRange ();
+						newPR.paramName = parameters [0];
+						newPR.data = ctrl.scene.progression.GetData (newPR.paramName);
+						newPR.lowRange = 0;
+						newPR.highRange = newPR.data.GetMax();
+						prList.Add (newPR);
+						parameterConditions = prList.ToArray();
+					}
+				}
+				GUILayout.EndHorizontal (); //~Header
+				
+				foreach (ParameterRange pc in parameterConditions)
+				{
+					GUILayout.BeginVertical (ctrl.skin.box);
+					GUILayout.BeginHorizontal ();
+					{
+						if (GUILayout.Button (pc.paramName, GUILayout.Width (120)))
+						{
+							ctrl.StartSelection (parameters, FindParamIndex (pc.paramName), 
+							                     newIndex => {
+								pc.paramName = parameters[newIndex];
+								pc.data = ctrl.scene.progression.GetData (pc.paramName);
+							});
+						}
+						
+						int min = pc.data.GetMin();
+						int max = pc.data.GetMax();
+						
+						// Check for percentages
+						if (pc.lowRangePerc > -1f) {
+							pc.lowRange = (int)((float)max * pc.lowRangePerc);
+							pc.lowRangePerc = -1f;
+						}
+						if (pc.highRangePerc > -1f) {
+							pc.highRange = (int)((float)max * pc.highRangePerc);
+							pc.highRangePerc = -1f;
+						}
+						
+						float minPerc = (float)pc.lowRange / (float)max;
+						float maxPerc = (float)pc.highRange / (float)max;
+						
+						//GUILayout.Label (string.Format("({0}-{1})", min, max), GUILayout.Width (40));
+						
+						// Min perc
+						GUILayout.Space(2);
+						GUILayout.Label (minPerc.ToString("0.00"), GUILayout.Width (25));
+						pc.lowRange = (int)GUILayout.HorizontalSlider (pc.lowRange, min, max, GUILayout.Width (62));
+						
+						// Max perc
+						pc.highRange = (int)GUILayout.HorizontalSlider (pc.highRange, min, max, GUILayout.Width (62));
+						GUILayout.Label (maxPerc.ToString("0.00"), GUILayout.Width (25));
+						
+						// Make the ranges correct
+						if (pc.lowRange > pc.highRange) pc.highRange = pc.lowRange;
+						if (pc.highRange > max) pc.highRange = max;
+						
+						GUILayout.FlexibleSpace();
+						if (GUILayout.Button ("-", GUILayout.Width (20))) 
+						{
+							List<ParameterRange> prList = new List<ParameterRange> (parameterConditions);
+							prList.Remove (pc);
+							parameterConditions = prList.ToArray ();
+							break;
+						}
+					}
+					GUILayout.EndHorizontal ();
+					GUILayout.EndVertical ();
+				}
+			}
+			GUILayout.EndVertical (); //~Parameter conditions 
+		}
+
+		public bool NeedSidePanel()
+		{
+			return (showGerminationRules);
 		}
 	}
 }

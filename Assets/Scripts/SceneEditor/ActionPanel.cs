@@ -149,6 +149,24 @@ namespace Ecosim.SceneEditor
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
 		}
+
+		void HandlePlansAction (PlantsAction action)
+		{
+			GUILayout.BeginHorizontal ();
+			{
+				action.skipNormalPlantsLogic = GUILayout.Toggle (action.skipNormalPlantsLogic, "Skip normal plants logic");
+			}
+			GUILayout.EndHorizontal ();
+			GUILayout.BeginHorizontal ();
+			{
+				GUI.enabled = !action.skipNormalPlantsLogic;
+				{
+					action.skipNormalSpawnLogic = GUILayout.Toggle (action.skipNormalSpawnLogic, "Skip normal spawn logic");
+				}
+				GUI.enabled = true;
+			}
+			GUILayout.EndHorizontal ();
+		}
 		
 		private string debugStr = "";
 		private CompilerErrorCollection errors = null;
@@ -282,6 +300,8 @@ namespace Ecosim.SceneEditor
 						HandleMarkerAction ((MarkerAction)action);
 					} else if (action is SuccessionAction) {
 						HandleSuccessionAction ((SuccessionAction)action);
+					} else if (action is PlantsAction) {
+						HandlePlansAction ((PlantsAction)action);
 					}
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Script", GUILayout.Width (80));

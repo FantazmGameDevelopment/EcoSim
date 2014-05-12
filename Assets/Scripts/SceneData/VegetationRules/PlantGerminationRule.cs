@@ -9,9 +9,9 @@ using Ecosim.SceneData.Action;
 
 namespace Ecosim.SceneData.PlantRules
 {
-	public class PlantRule : ICloneable
+	public class PlantGerminationRule : ICloneable
 	{
-		public const string XML_ELEMENT = "rule";
+		public const string XML_ELEMENT = "germinationrule";
 
 		public string description = "";
 
@@ -19,26 +19,22 @@ namespace Ecosim.SceneData.PlantRules
 		public VegetationCondition[] vegetationConditions;
 
 		public float chance = 1.0f;
-		public int delta = 1;
-		public bool canSpawn = true;
 
-		public PlantRule ()
+		public PlantGerminationRule()
 		{
 			parameterConditions = new ParameterRange[0];
 			vegetationConditions = new VegetationCondition[] { new VegetationCondition() };
 		}
 
-		public static PlantRule Load (XmlTextReader reader, Scene scene)
+		public static PlantGerminationRule Load (XmlTextReader reader, Scene scene)
 		{
-			PlantRule rule = new PlantRule ();
+			PlantGerminationRule rule = new PlantGerminationRule ();
 			rule.description = reader.GetAttribute ("description");
 			rule.chance = float.Parse(reader.GetAttribute ("chance"));
-			rule.delta = int.Parse(reader.GetAttribute ("delta"));
-			rule.canSpawn = bool.Parse(reader.GetAttribute ("canspawn"));
 
 			List<ParameterRange> paramConditions = new List<ParameterRange>();
 			List<VegetationCondition> vegConditions = new List<VegetationCondition>();
-
+			
 			if (!reader.IsEmptyElement) {
 				while (reader.Read ()) {
 					XmlNodeType nType = reader.NodeType;
@@ -63,7 +59,7 @@ namespace Ecosim.SceneData.PlantRules
 					}
 				}
 			}
-
+			
 			rule.parameterConditions = paramConditions.ToArray();
 			rule.vegetationConditions = vegConditions.ToArray();
 			return rule;
@@ -71,7 +67,7 @@ namespace Ecosim.SceneData.PlantRules
 
 		public object Clone () 
 		{
-			PlantRule clone = new PlantRule();
+			PlantGerminationRule clone = new PlantGerminationRule();
 			clone.description = description;
 			clone.parameterConditions = new ParameterRange[parameterConditions.Length];
 			for (int i = 0; i < clone.parameterConditions.Length; i++) {
@@ -82,8 +78,6 @@ namespace Ecosim.SceneData.PlantRules
 				clone.vegetationConditions[i] = (VegetationCondition)vegetationConditions[i].Clone();
 			}
 			clone.chance = chance;
-			clone.delta = delta;
-			clone.canSpawn = canSpawn;
 			return clone;
 		}
 
@@ -92,8 +86,6 @@ namespace Ecosim.SceneData.PlantRules
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("description", description);
 			writer.WriteAttributeString ("chance", chance.ToString());
-			writer.WriteAttributeString ("delta", delta.ToString());
-			writer.WriteAttributeString ("canspawn", canSpawn.ToString().ToLower());
 			foreach (ParameterRange pr in parameterConditions) {
 				pr.Save (writer, scene);
 			}

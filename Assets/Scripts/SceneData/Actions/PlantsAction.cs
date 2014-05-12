@@ -28,6 +28,9 @@ namespace Ecosim.SceneData.Action
 		private const int SLICE_SIZE = 128;
 		private volatile int activeThreads;
 
+		public bool skipNormalPlantsLogic = false;
+		public bool skipNormalSpawnLogic = false;
+
 		//public string successionAreaName = null; // if not null, progression data with this name is used to determine if tiles needs calculations
 		//private Data successionArea = null;
 
@@ -82,12 +85,10 @@ namespace Ecosim.SceneData.Action
 									if (plantRule.chance >= rnd.NextDouble ()) 
 									{
 										// Check if the rule contains the vegetation type of the current tile
-										foreach (PlantRule.VegetationCondition vegCondition in plantRule.vegetationConditions)
+										foreach (VegetationCondition vegCondition in plantRule.vegetationConditions)
 										{
 											// First check if the succession and vegetation indices match
-											bool correctVegetation = vegCondition.IsCompatible (vegType.successionType.index, vegType.index);
-
-											if (correctVegetation)
+											if (vegCondition.IsCompatible (vegType.successionType.index, vegType.index))
 											{
 												// Check if the parameter ranges match
 												bool paramsMatch = true;
@@ -125,6 +126,7 @@ namespace Ecosim.SceneData.Action
 										float range = RndUtil.RndRange (ref rnd, 1f, plantType.spawnRadius);
 										int targetX = Mathf.RoundToInt (Mathf.Sin (angle) * range) + x;
 										int targetY = Mathf.RoundToInt (Mathf.Cos (angle) * range) + y;
+
 										// Check if it's inside the terrain
 										if ((targetX >= 0) && (targetY >= 0) && 
 										    (targetX < this.scene.width) && (targetY < this.scene.height)) 
@@ -156,29 +158,32 @@ namespace Ecosim.SceneData.Action
 			}
 		}
 
-		void HandleSpawns()
+		void HandleSpawnedSeeds (object arguments)
 		{
 			System.Random rnd = new System.Random ();
 
 			foreach (Spawn spawn in spawnList)
 			{
+				// TODO: Limit to succession or "beheersgebied"?
 				int x = spawn.x;
 				int y = spawn.y;
+
 				PlantType plantType = spawn.plantType;
 				Data plantData = scene.progression.GetData (plantType.dataName);
+				int populationSize = plantData.Get (x, y);
 
-				// Check if the plant type already exists on the tile TODO: We should limit this to the "beheersgebied"?
-				if (plantData.Get (x, y) == 0)
+				if (populationSize < plantType.maxPerTile)
 				{
 					VegetationType vegType = scene.progression.vegetation.GetVegetationType (x, y);
-					bool doSpawn = false;
-					foreach (PlantRule r in plantType.rules)
+
+					foreach (PlantGerminationRule gr in plantType.germinationRules) 
 					{
-						// Check if we can spawn and if the chance is correct
-						if (r.canSpawn && r.chance >= rnd.NextDouble ())
+						// Check if we can germinate
+						bool doGerminate = false;
+						if (gr.chance >= rnd.NextDouble())
 						{
-							bool rightVeg = (r.vegetationConditions.Length == 0);
-							foreach (PlantRule.VegetationCondition vc in r.vegetationConditions)
+							bool rightVeg = false; // We need a veg type to germinate
+							foreach (VegetationCondition vc in gr.vegetationConditions)
 							{
 								if (vc.IsCompatible (vegType.successionType.index, vegType.index))
 								{
@@ -186,29 +191,38 @@ namespace Ecosim.SceneData.Action
 									break;
 								}
 							}
-								
+
 							if (rightVeg)
 							{
-								doSpawn = true;
-								foreach (ParameterRange pr in r.parameterConditions)
+								doGerminate = true;
+								foreach (ParameterRange pr in gr.parameterConditions)
 								{
 									int val = pr.data.Get (x, y);
 									if (val < pr.lowRange || val > pr.highRange) {
-										doSpawn = false;
+										doGerminate = false;
 										break;
 									}
 								}
 							}
-
-							if (!doSpawn) break;
 						}
-					}
-					if (doSpawn) {
-						plantData.Set (x, y, 1); // TODO: Which number must this become?
-					}
+
+						if (doGerminate)
+						{
+							// Up the population by one
+							plantData.Set (x, y, populationSize + 1);
+							break;
+						}
+					} // ~PlantGerminationRule foreach
 				}
+			} // ~Spawn foreach
+
+			spawnList.Clear();
+
+			// Deduct the amount of active threads
+			activeThreads--;
+			if (activeThreads == 0) {
+				finishedProcessing = true;
 			}
-			spawnList.Clear ();
 		}
 		
 		public override void DoSuccession ()
@@ -223,42 +237,47 @@ namespace Ecosim.SceneData.Action
 
 			spawnList = new List<Spawn>();
 
-			// Handle the plants logic
-			activeThreads = scene.height / SLICE_SIZE;
-			for (int y = 0; y < scene.height; y += SLICE_SIZE) 
+			// Just to be sure we up the active threads count
+			if (!skipNormalSpawnLogic)
 			{
-				// Temp disable unreachable code warning
-				#pragma warning disable 162
-				if (GameSettings.PLANTS_LOGIC_MULTITHREADED) {
-					ThreadPool.QueueUserWorkItem (ProcessSlice, y);
+				activeThreads++;
+			}
+
+			// Handle the plants logic
+			if (!skipNormalPlantsLogic)
+			{
+				activeThreads = scene.height / SLICE_SIZE;
+				for (int y = 0; y < scene.height; y += SLICE_SIZE) 
+				{
+					// Temp disable unreachable code warning
+					#pragma warning disable 162
+					if (GameSettings.PLANTS_LOGIC_MULTITHREADED) {
+						ThreadPool.QueueUserWorkItem (ProcessSlice, y);
+					}
+					else {
+						ProcessSlice (y);
+					}
+					#pragma warning restore 162
 				}
-				else {
-					ProcessSlice (y);
-				}
-				#pragma warning restore 162
 			}
 
 			// Handle spawns
-			HandleSpawns ();
+			if (!skipNormalSpawnLogic)
+			{
+				ThreadPool.QueueUserWorkItem (HandleSpawnedSeeds);
+			}
 		}
 		
 		public static PlantsAction Load (Scene scene, XmlTextReader reader)
 		{
 			int id = int.Parse (reader.GetAttribute ("id"));
 			PlantsAction action = new PlantsAction (scene, id);
+			action.skipNormalPlantsLogic = bool.Parse (reader.GetAttribute("skipnormalplantslogic"));
+			action.skipNormalPlantsLogic = bool.Parse (reader.GetAttribute("skipnormalspawnlogic"));
+			//action.successionAreaName = reader.GetAttribute ("successionarea");
 
 			if (!reader.IsEmptyElement) 
 			{
-			}
-
-			return action;
-			/*int id = int.Parse (reader.GetAttribute ("id"));
-			SuccessionAction action = new SuccessionAction (scene, id);
-			string sns = reader.GetAttribute ("skipnormalsuccession");
-			action.skipNormalSuccession = (sns != null) && (sns == "true");
-			action.successionAreaName = reader.GetAttribute ("successionarea");
-			
-			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
 					XmlNodeType nType = reader.NodeType;
 					if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == UserInteraction.XML_ELEMENT)) {
@@ -268,22 +287,26 @@ namespace Ecosim.SceneData.Action
 					}
 				}
 			}
-			return action;*/
+
+			return action;
 		}
 		
 		public override void Save (XmlTextWriter writer)
 		{
-			/*writer.WriteStartElement (XML_ELEMENT);
+			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("id", id.ToString ());
-			writer.WriteAttributeString ("skipnormalsuccession", skipNormalSuccession ? "true" : "false");
-			if (successionAreaName != null) {
+			writer.WriteAttributeString ("skipnormalplantslogic", skipNormalPlantsLogic.ToString().ToLower());
+			writer.WriteAttributeString ("skipnormalspawnlogic", skipNormalSpawnLogic.ToString().ToLower());
+
+			/*if (successionAreaName != null) {
 				writer.WriteAttributeString ("successionarea", successionAreaName);
-			}
-			
+			}*/
+
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
 			}
-			writer.WriteEndElement ();*/
+
+			writer.WriteEndElement ();
 		}		
 	}
 }
