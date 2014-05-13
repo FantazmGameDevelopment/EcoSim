@@ -69,7 +69,8 @@ namespace Ecosim.SceneEditor.Helpers
 			this.RenderBrushMode ();
 			GUILayout.Space (16);
 			this.RenderSaveRestoreApply ();
-			GUILayout.Space (16);
+			GUILayout.Space (5);
+			GUILayout.FlexibleSpace ();
 			this.RenderFromImage (currentArea.ToString() + " Area");
 
 			return false;
