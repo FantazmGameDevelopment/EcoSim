@@ -31,8 +31,7 @@ namespace Ecosim.SceneData.Action
 		public bool skipNormalPlantsLogic = false;
 		public bool skipNormalSpawnLogic = false;
 
-		//public string successionAreaName = null; // if not null, progression data with this name is used to determine if tiles needs calculations
-		//private Data successionArea = null;
+		private Data successionArea = null;
 
 		private List<Spawn> spawnList;
 		
@@ -46,7 +45,7 @@ namespace Ecosim.SceneData.Action
 		
 		public override string GetDescription ()
 		{
-			return "Handle Plants";
+			return "Handle Plants Logic";
 		}
 
 		/**
@@ -65,77 +64,80 @@ namespace Ecosim.SceneData.Action
 				foreach (PlantType plantType in scene.plantTypes)
 				{
 					Data plantData = progress.GetData (plantType.dataName);
-					if (plantData == null) continue; // TODO: Check if this is possible?
+					if (plantData == null) continue;
 
-					// Loop through the slice TODO: We should limit this to the "beheersgebied"!
+					// Loop through the slice
 					int p = scene.width * startY;
 					for (int y = startY; y < startY + SLICE_SIZE; y++) 
 					{
 						for (int x = 0; x < scene.width; x++) 
 						{
-							int populationValue = plantData.Get (x, y);
-							if (populationValue > 0) 
+							if ((successionArea == null) || (successionArea.Get (x, y) > 0))
 							{
-								VegetationType vegType = progress.vegetation.GetVegetationType (x, y);
-								int cummDelta = 0;
-
-								foreach (PlantRule plantRule in plantType.rules) // Rules
+								int populationValue = plantData.Get (x, y);
+								if (populationValue > 0) 
 								{
-									// Check if the rule applies
-									if (plantRule.chance >= rnd.NextDouble ()) 
+									VegetationType vegType = progress.vegetation.GetVegetationType (x, y);
+									int cummDelta = 0;
+
+									foreach (PlantRule plantRule in plantType.rules) // Rules
 									{
-										// Check if the rule contains the vegetation type of the current tile
-										foreach (VegetationCondition vegCondition in plantRule.vegetationConditions)
+										// Check if the rule applies
+										if (plantRule.chance >= rnd.NextDouble ()) 
 										{
-											// First check if the succession and vegetation indices match
-											if (vegCondition.IsCompatible (vegType.successionType.index, vegType.index))
+											// Check if the rule contains the vegetation type of the current tile
+											foreach (VegetationCondition vegCondition in plantRule.vegetationConditions)
 											{
-												// Check if the parameter ranges match
-												bool paramsMatch = true;
-												foreach (ParameterRange paramRange in plantRule.parameterConditions)
+												// First check if the succession and vegetation indices match
+												if (vegCondition.IsCompatible (vegType.successionType.index, vegType.index))
 												{
-													int val = paramRange.data.Get (x, y);
-													if (val < paramRange.lowRange || val > paramRange.highRange) {
-														paramsMatch = false;
-														break;
+													// Check if the parameter ranges match
+													bool paramsMatch = true;
+													foreach (ParameterRange paramRange in plantRule.parameterConditions)
+													{
+														int val = paramRange.data.Get (x, y);
+														if (val < paramRange.lowRange || val > paramRange.highRange) {
+															paramsMatch = false;
+															break;
+														}
+													}
+
+													if (paramsMatch) {
+														cummDelta += plantRule.delta;
 													}
 												}
-
-												if (paramsMatch) {
-													cummDelta += plantRule.delta;
-												}
-											}
-										} // ~VegetationCondition foreach
-									}
-								} // ~Rules foreach
-
-								// Update the plants population if it's changed
-								int newPopulationValue = UnityEngine.Mathf.Clamp (populationValue + cummDelta, 0, plantType.maxPerTile);
-								if (newPopulationValue != populationValue) {
-									plantData.Set (x, y, newPopulationValue);
-								}
-
-								// Check if we are going to spawn seedlings
-								if (newPopulationValue > 0)
-								{
-									int spawnCount = plantType.spawnCount + (newPopulationValue * plantType.spawnMultiplier);
-									for (int i = 0; i < spawnCount; i++)
-									{
-										// Spawn on a random tile
-										float angle = RndUtil.RndRange (ref rnd, 0f, 360f);
-										float range = RndUtil.RndRange (ref rnd, 1f, plantType.spawnRadius);
-										int targetX = Mathf.RoundToInt (Mathf.Sin (angle) * range) + x;
-										int targetY = Mathf.RoundToInt (Mathf.Cos (angle) * range) + y;
-
-										// Check if it's inside the terrain
-										if ((targetX >= 0) && (targetY >= 0) && 
-										    (targetX < this.scene.width) && (targetY < this.scene.height)) 
-										{
-											// New spawn
-											tmpSpawnList.Add (new Spawn (plantType, targetX, targetY));
+											} // ~VegetationCondition foreach
 										}
+									} // ~Rules foreach
+
+									// Update the plants population if it's changed
+									int newPopulationValue = UnityEngine.Mathf.Clamp (populationValue + cummDelta, 0, plantType.maxPerTile);
+									if (newPopulationValue != populationValue) {
+										plantData.Set (x, y, newPopulationValue);
 									}
-								} // ~Spawn seedlings check
+
+									// Check if we are going to spawn seedlings
+									if (newPopulationValue > 0)
+									{
+										int spawnCount = plantType.spawnCount + (newPopulationValue * plantType.spawnMultiplier);
+										for (int i = 0; i < spawnCount; i++)
+										{
+											// Spawn on a random tile
+											float angle = RndUtil.RndRange (ref rnd, 0f, 360f);
+											float range = RndUtil.RndRange (ref rnd, 1f, plantType.spawnRadius);
+											int targetX = Mathf.RoundToInt (Mathf.Sin (angle) * range) + x;
+											int targetY = Mathf.RoundToInt (Mathf.Cos (angle) * range) + y;
+
+											// Check if it's inside the terrain
+											if ((targetX >= 0) && (targetY >= 0) && 
+											    (targetX < this.scene.width) && (targetY < this.scene.height)) 
+											{
+												// New spawn
+												tmpSpawnList.Add (new Spawn (plantType, targetX, targetY));
+											}
+										}
+									} // ~Spawn seedlings check
+								}
 							}
 						}
 					}
@@ -164,55 +166,57 @@ namespace Ecosim.SceneData.Action
 
 			foreach (Spawn spawn in spawnList)
 			{
-				// TODO: Limit to succession or "beheersgebied"?
 				int x = spawn.x;
 				int y = spawn.y;
 
-				PlantType plantType = spawn.plantType;
-				Data plantData = scene.progression.GetData (plantType.dataName);
-				int populationSize = plantData.Get (x, y);
-
-				if (populationSize < plantType.maxPerTile)
+				if ((successionArea == null) || (successionArea.Get (x, y) > 0))
 				{
-					VegetationType vegType = scene.progression.vegetation.GetVegetationType (x, y);
+					PlantType plantType = spawn.plantType;
+					Data plantData = scene.progression.GetData (plantType.dataName);
+					int populationSize = plantData.Get (x, y);
 
-					foreach (PlantGerminationRule gr in plantType.germinationRules) 
+					if (populationSize < plantType.maxPerTile)
 					{
-						// Check if we can germinate
-						bool doGerminate = false;
-						if (gr.chance >= rnd.NextDouble())
-						{
-							bool rightVeg = false; // We need a veg type to germinate
-							foreach (VegetationCondition vc in gr.vegetationConditions)
-							{
-								if (vc.IsCompatible (vegType.successionType.index, vegType.index))
-								{
-									rightVeg = true;
-									break;
-								}
-							}
+						VegetationType vegType = scene.progression.vegetation.GetVegetationType (x, y);
 
-							if (rightVeg)
+						foreach (PlantGerminationRule gr in plantType.germinationRules) 
+						{
+							// Check if we can germinate
+							bool doGerminate = false;
+							if (gr.chance >= rnd.NextDouble())
 							{
-								doGerminate = true;
-								foreach (ParameterRange pr in gr.parameterConditions)
+								bool rightVeg = false; // We need a veg type to germinate
+								foreach (VegetationCondition vc in gr.vegetationConditions)
 								{
-									int val = pr.data.Get (x, y);
-									if (val < pr.lowRange || val > pr.highRange) {
-										doGerminate = false;
+									if (vc.IsCompatible (vegType.successionType.index, vegType.index))
+									{
+										rightVeg = true;
 										break;
 									}
 								}
-							}
-						}
 
-						if (doGerminate)
-						{
-							// Up the population by one
-							plantData.Set (x, y, populationSize + 1);
-							break;
-						}
-					} // ~PlantGerminationRule foreach
+								if (rightVeg)
+								{
+									doGerminate = true;
+									foreach (ParameterRange pr in gr.parameterConditions)
+									{
+										int val = pr.data.Get (x, y);
+										if (val < pr.lowRange || val > pr.highRange) {
+											doGerminate = false;
+											break;
+										}
+									}
+								}
+							}
+
+							if (doGerminate)
+							{
+								// Up the population by one
+								plantData.Set (x, y, populationSize + 1);
+								break;
+							}
+						} // ~PlantGerminationRule foreach
+					}
 				}
 			} // ~Spawn foreach
 
@@ -229,11 +233,9 @@ namespace Ecosim.SceneData.Action
 		{
 			base.DoSuccession ();
 
-			// Get the succession area
-			/*successionArea = null;
-			if (successionAreaName != null) {
-				successionArea = scene.progression.GetData (successionAreaName);
-			}*/
+			if (successionArea == null) {
+				successionArea = scene.progression.successionArea;
+			}
 
 			spawnList = new List<Spawn>();
 
@@ -274,7 +276,6 @@ namespace Ecosim.SceneData.Action
 			PlantsAction action = new PlantsAction (scene, id);
 			action.skipNormalPlantsLogic = bool.Parse (reader.GetAttribute("skipnormalplantslogic"));
 			action.skipNormalPlantsLogic = bool.Parse (reader.GetAttribute("skipnormalspawnlogic"));
-			//action.successionAreaName = reader.GetAttribute ("successionarea");
 
 			if (!reader.IsEmptyElement) 
 			{
@@ -297,10 +298,6 @@ namespace Ecosim.SceneData.Action
 			writer.WriteAttributeString ("id", id.ToString ());
 			writer.WriteAttributeString ("skipnormalplantslogic", skipNormalPlantsLogic.ToString().ToLower());
 			writer.WriteAttributeString ("skipnormalspawnlogic", skipNormalSpawnLogic.ToString().ToLower());
-
-			/*if (successionAreaName != null) {
-				writer.WriteAttributeString ("successionarea", successionAreaName);
-			}*/
 
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);

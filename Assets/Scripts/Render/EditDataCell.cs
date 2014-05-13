@@ -31,16 +31,18 @@ public class EditDataCell
 	private byte[] data; // data values for this cell (CELL_SIZE * CELL_SIZE values, index by x + CELL_SIZE * y)
 	private bool isEmpty = true; // data only contains 0 values
 	private bool isVisible = false; // the cell is visible (underlaying terrain cell is visible)
-	
+	private Data editableArea = null;
+
 	/**
 	 * Constructor, cx and cy are cell indexes, initialData is used to fill data can be
 	 * null (resulting in 0 values for data)
 	 */
-	public EditDataCell (int cx, int cy, EditData parent, Data initialData)
+	public EditDataCell (int cx, int cy, EditData parent, Data initialData, Data editableArea)
 	{
 		this.parent = parent;
 		this.cx = cx;
 		this.cy = cy;
+		this.editableArea = editableArea;
 		data = new byte[CELL_SIZE * CELL_SIZE];
 		
 		if (initialData != null) {
@@ -48,11 +50,19 @@ public class EditDataCell
 			int startX = cx * CELL_SIZE;
 			int startY = cy * CELL_SIZE;
 			int p = 0;
-			for (int y = 0; y < CELL_SIZE; y++) {
-				for (int x = 0; x < CELL_SIZE; x++) {
-					int val = initialData.Get (startX + x, startY + y);
-					if (val != 0) isEmpty = false;
-					data [p++] = (byte)val;
+			for (int y = 0; y < CELL_SIZE; y++) 
+			{
+				for (int x = 0; x < CELL_SIZE; x++) 
+				{
+					// Check if we can edit this tile
+					if (CanEditTile (startX + x, startY + y))
+					{
+						int val = initialData.Get (startX + x, startY + y);
+						if (val != 0) isEmpty = false;
+						data [p++] = (byte)val;
+					} else {
+						p++;
+					}
 				}
 			}
 			
@@ -91,6 +101,13 @@ public class EditDataCell
 	public int GetValueAt (int x, int y) {
 		return data[y * CELL_SIZE + x];
 	}
+
+	public bool CanEditTile (int x, int y)
+	{
+		if (editableArea != null) 
+			return editableArea.Get (x, y) > 0;
+		return true;
+	}
 	
 	/**
 	 * Deletes gameobject/mesh if they exist, makes that cell won't be rendered
@@ -126,11 +143,19 @@ public class EditDataCell
 		int min = toData.GetMin ();
 		int max = toData.GetMax ();
 		int p = 0;
-		for (int y = 0; y < CELL_SIZE; y++) {
-			for (int x = 0; x < CELL_SIZE; x++) {
-				int val = (int)(data [p++]);
-				val = (val < min) ? min : ((val > max) ? max : val);
-				toData.Set (x + startX, y + startY, val);
+		for (int y = 0; y < CELL_SIZE; y++) 
+		{
+			for (int x = 0; x < CELL_SIZE; x++) 
+			{
+				// Check if we can edit this tile
+				if (CanEditTile (startX + x, startY + y))
+				{
+					int val = (int)(data [p++]);
+					val = (val < min) ? min : ((val > max) ? max : val);
+					toData.Set (x + startX, y + startY, val);
+				} else {
+					p++;
+				}
 			}
 		}
 	}
@@ -146,9 +171,17 @@ public class EditDataCell
 		int startX = cx * CELL_SIZE;
 		int startY = cy * CELL_SIZE;
 		int p = 0;
-		for (int y = 0; y < CELL_SIZE; y++) {
-			for (int x = 0; x < CELL_SIZE; x++) {
-				setFn (x + startX, y + startY, (int)(data [p++]));
+		for (int y = 0; y < CELL_SIZE; y++) 
+		{
+			for (int x = 0; x < CELL_SIZE; x++) 
+			{
+				// Check if we can edit this tile
+				if (CanEditTile (startX + x, startY + y))
+				{
+					setFn (x + startX, y + startY, (int)(data [p++]));
+				} else {
+					p++;
+				}
 			}
 		}
 	}
@@ -162,12 +195,20 @@ public class EditDataCell
 		int startY = cy * CELL_SIZE;
 		int p = 0;
 		isEmpty = true;
-		for (int y = 0; y < CELL_SIZE; y++) {
-			for (int x = 0; x < CELL_SIZE; x++) {
-				int val = fromData.Get (x + startX, y + startY);				
-				val = (val < 0) ? 0 : ((val > 255) ? 255 : val);
-				if (val != 0) isEmpty = false;
-				data [p++] = (byte) val;
+		for (int y = 0; y < CELL_SIZE; y++) 
+		{
+			for (int x = 0; x < CELL_SIZE; x++) 
+			{
+				// Check if we can edit this tile
+				if (CanEditTile (startX + x, startY + y)) 
+				{
+					int val = fromData.Get (x + startX, y + startY);				
+					val = (val < 0) ? 0 : ((val > 255) ? 255 : val);
+					if (val != 0) isEmpty = false;
+					data [p++] = (byte) val;
+				} else {
+					p++;
+				}
 			}
 		}
 		if (isVisible) {
@@ -183,12 +224,20 @@ public class EditDataCell
 		int startY = cy * CELL_SIZE;
 		int p = 0;
 		isEmpty = true;
-		for (int y = 0; y < CELL_SIZE; y++) {
-			for (int x = 0; x < CELL_SIZE; x++) {
-				int val = getFn (x + startX, y + startY);				
-				val = (val < 0) ? 0 : ((val > 255) ? 255 : val);
-				if (val != 0) isEmpty = false;
-				data [p++] = (byte) val;
+		for (int y = 0; y < CELL_SIZE; y++) 
+		{
+			for (int x = 0; x < CELL_SIZE; x++) 
+			{
+				// Check if we can edit this tile
+				if (CanEditTile (startX + x, startY + y))
+				{
+					int val = getFn (x + startX, y + startY);				
+					val = (val < 0) ? 0 : ((val > 255) ? 255 : val);
+					if (val != 0) isEmpty = false;
+					data [p++] = (byte) val;
+				} else {
+					p++;
+				}
 			}
 		}
 		if (isVisible) {
@@ -235,6 +284,7 @@ public class EditDataCell
 	{
 		if (!isVisible)
 			return; // cell not visible
+
 		int startX = cx * CELL_SIZE;
 		int startY = cy * CELL_SIZE;
 		
@@ -261,31 +311,38 @@ public class EditDataCell
 		int heightsOffsetX = startX % TERRAIN_CELL_SIZE;
 		int heightsOffsetY = startY % TERRAIN_CELL_SIZE;
 		
-		for (int y = 0; y < CELL_SIZE; y++) {
+		for (int y = 0; y < CELL_SIZE; y++) 
+		{
 			int yy = (heightsOffsetY + y) << 2; // terrain coord
-			for (int x = 0; x < CELL_SIZE; x++) {
-				int xx = (heightsOffsetX + x) << 2; // terrain coord
-				int val = fn (startX + x, startY + y);
-				if ((showZero && (val >= 0)) || (val > 0)) {
-					val += offset;
-					int uvX = val % elementsPerRow;
-					int uvY = val / elementsPerRow;
-					uv.Add (new Vector2 (uvStep * uvX, uvStep * uvY));
-					uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * uvY));
-					uv.Add (new Vector2 (uvStep * uvX, uvStep * (uvY + 1)));
-					uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * (uvY + 1)));
-					vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
-					vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
-					vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
-					vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
-					indices.Add (count + 1);
-					indices.Add (count);
-					indices.Add (count + 2);
-					indices.Add (count + 1);
-					indices.Add (count + 2);
-					indices.Add (count + 3);
-					count += 4;
-				}	
+			for (int x = 0; x < CELL_SIZE; x++) 
+			{
+				// Check if we can edit this tile
+				if (CanEditTile (startX + x, startY + y))
+				{
+					int xx = (heightsOffsetX + x) << 2; // terrain coord
+					int val = fn (startX + x, startY + y);
+					if ((showZero && (val >= 0)) || (val > 0)) 
+					{
+						val += offset;
+						int uvX = val % elementsPerRow;
+						int uvY = val / elementsPerRow;
+						uv.Add (new Vector2 (uvStep * uvX, uvStep * uvY));
+						uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * uvY));
+						uv.Add (new Vector2 (uvStep * uvX, uvStep * (uvY + 1)));
+						uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * (uvY + 1)));
+						vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
+						vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
+						vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
+						vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
+						indices.Add (count + 1);
+						indices.Add (count);
+						indices.Add (count + 2);
+						indices.Add (count + 1);
+						indices.Add (count + 2);
+						indices.Add (count + 3);
+						count += 4;
+					}	
+				}
 			}
 		}
 		if (count > 0) {
@@ -323,17 +380,25 @@ public class EditDataCell
 		int y0 = Mathf.Max (minY - startY, 0);
 		int x1 = Mathf.Min (maxX - startX, CELL_SIZE - 1);
 		int y1 = Mathf.Min (maxY - startY, CELL_SIZE - 1);
+
 		if ((x0 > x1) || (y0 > y1))
 			return; // outside our cell
-		for (int y = y0; y <= y1; y++) {
+
+		for (int y = y0; y <= y1; y++) 
+		{
 			int p = (y * CELL_SIZE) + x0;
-			for (int x = x0; x <= x1; x++) {
-				int val = fn (x + startX, y + startY);
-				if (val >= 0) {
-					if (hasTileChangedEventHandler) {
-						parent.FireTileChangedEvent(x + startX, y + startY, (int) (data[p]), val);
+			for (int x = x0; x <= x1; x++) 
+			{
+				// Check if we can edit this tile
+				if (CanEditTile (startX + x, startY + y))
+				{
+					int val = fn (x + startX, y + startY);
+					if (val >= 0) {
+						if (hasTileChangedEventHandler) {
+							parent.FireTileChangedEvent(x + startX, y + startY, (int) (data[p]), val);
+						}
+						data [p] = (byte) val;
 					}
-					data [p] = (byte) val;
 				}
 				p++;
 			}
@@ -377,36 +442,45 @@ public class EditDataCell
 			indices = new List<int> ();
 			int startX = cx * CELL_SIZE;
 			int startY = cy * CELL_SIZE;
-		
+			
 			int heightsOffsetX = startX % TERRAIN_CELL_SIZE;
 			int heightsOffsetY = startY % TERRAIN_CELL_SIZE;
-		
+
 			int p = 0;
-			for (int y = 0; y < CELL_SIZE; y++) {
+			for (int y = 0; y < CELL_SIZE; y++) 
+			{
 				int yy = (heightsOffsetY + y) << 2; // terrain coord
-				for (int x = 0; x < CELL_SIZE; x++) {
-					int xx = (heightsOffsetX + x) << 2; // terrain coord
-					int val = data[p++];
-					if (showZero || (val > 0)) {
-						val += offset;
-						int uvX = val % elementsPerRow;
-						int uvY = val / elementsPerRow;
-						uv.Add (new Vector2 (uvStep * uvX, uvStep * uvY));
-						uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * uvY));
-						uv.Add (new Vector2 (uvStep * uvX, uvStep * (uvY + 1)));
-						uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * (uvY + 1)));
-						vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
-						vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
-						vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
-						vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
-						indices.Add (count + 1);
-						indices.Add (count);
-						indices.Add (count + 2);
-						indices.Add (count + 1);
-						indices.Add (count + 2);
-						indices.Add (count + 3);
-						count += 4;
-					}	
+				for (int x = 0; x < CELL_SIZE; x++) 
+				{
+					// Check if we can edit this tile
+					if (CanEditTile (startX + x, startY + y))
+					{
+						int xx = (heightsOffsetX + x) << 2; // terrain coord
+						int val = data[p++];
+
+						if (showZero || (val > 0)) {
+							val += offset;
+							int uvX = val % elementsPerRow;
+							int uvY = val / elementsPerRow;
+							uv.Add (new Vector2 (uvStep * uvX, uvStep * uvY));
+							uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * uvY));
+							uv.Add (new Vector2 (uvStep * uvX, uvStep * (uvY + 1)));
+							uv.Add (new Vector2 (uvStep * (uvX + 1), uvStep * (uvY + 1)));
+							vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
+							vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy) * VERTICAL_HEIGHT, TERRAIN_SCALE * y));
+							vertices.Add (new Vector3 (TERRAIN_SCALE * x, Height (xx, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
+							vertices.Add (new Vector3 (TERRAIN_SCALE * (x + 1), Height (xx + 4, yy + 4) * VERTICAL_HEIGHT, TERRAIN_SCALE * (y + 1)));
+							indices.Add (count + 1);
+							indices.Add (count);
+							indices.Add (count + 2);
+							indices.Add (count + 1);
+							indices.Add (count + 2);
+							indices.Add (count + 3);
+							count += 4;
+						}	
+					} else {
+						p++;
+					}
 				}
 			}
 		}

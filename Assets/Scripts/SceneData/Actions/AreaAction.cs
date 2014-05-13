@@ -163,7 +163,7 @@ namespace Ecosim.SceneData.Action
 				}
 				scene.progression.AddData (areaName, selectedArea);
 			}
-			edit = EditData.CreateEditData ("action", selectedArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
+			edit = EditData.CreateEditData ("action", selectedArea, scene.progression.managedArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
 				if (shift)
 					return 0;
 				return CanSelectTile (x, y, ui) ? (ui.index + 1) : invalidAreaIndex;

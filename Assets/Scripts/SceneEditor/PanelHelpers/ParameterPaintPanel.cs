@@ -24,13 +24,14 @@ namespace Ecosim.SceneEditor.Helpers
 		protected EditData edit;
 		protected Data data;
 		protected Data backupCopy;
+		protected Data clipboardCopy;
 		
 		protected GUIStyle tabNormal;
 		protected GUIStyle tabSelected;
 		
 		protected int maxParamValue = 255;
 		protected int paramStrength = 255;
-		private string paramStrengthStr = "";
+		protected string paramStrengthStr = "";
 		
 		public ParameterPaintPanel (EditorCtrl ctrl, MapsPanel parent, Scene scene)
 		{
@@ -73,7 +74,7 @@ namespace Ecosim.SceneEditor.Helpers
 			SetupBackupCopy ();
 		}
 		
-		public bool Render (int mx, int my)
+		public virtual bool Render (int mx, int my)
 		{
 			return false;
 		}
@@ -121,9 +122,10 @@ namespace Ecosim.SceneEditor.Helpers
 			
 			GUILayout.BeginHorizontal (); // Brush value
 			{
-				GUILayout.Label ("Brush value", GUILayout.Width (100));
 				if (maxParamValue > 1)
 				{
+					GUILayout.Label ("Brush value", GUILayout.Width (100));
+					
 					if (paramStrength > maxParamValue)
 						paramStrength = maxParamValue;
 					
@@ -142,9 +144,7 @@ namespace Ecosim.SceneEditor.Helpers
 						paramStrengthStr = newParamStrengthStr;
 					}
 					GUILayout.Label ("(0-" + maxParamValue + ")");
-				} else {
-					GUILayout.Label (paramStrengthStr);
-				} 
+				}
 			}
 			GUILayout.EndHorizontal (); //~Brush value
 			
@@ -192,14 +192,14 @@ namespace Ecosim.SceneEditor.Helpers
 			parent.RenderLoadTexture ();
 		}
 		
-		public void Disable ()
+		public virtual void Disable ()
 		{
 			if (edit != null)
 				edit.Delete ();
 			edit = null;
 		}
 		
-		public void Update ()
+		public virtual void Update ()
 		{
 			
 		}

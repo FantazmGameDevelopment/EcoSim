@@ -22,7 +22,9 @@ namespace Ecosim.SceneData
 		public const string VEGETATION_ID = "vegetation";
 		public const string CANAL_ID = "canals";
 		public const string ANIMAL_ID = "animals";
-		public const string SUCCESSION_ID = "succession";
+		public const string SUCCESSION_ID = "_succession";
+		public const string MANAGED_ID = "_managed";
+		public const string PURCHASABLE_ID = "_purchasable";
 
 		public long budget = 0; // budget left
 		public int year = 0; // year of this progression
@@ -32,7 +34,6 @@ namespace Ecosim.SceneData
 		public bool allowMeasures = true;
 		public readonly Scene scene;
 		
-		
 		// important much used data set are stored in variables
 		// for quick access (they can still be accessed through GetData of course)
 		public VegetationData vegetation;
@@ -40,8 +41,9 @@ namespace Ecosim.SceneData
 		public HeightMap waterHeightMap;
 		public HeightMap calculatedWaterHeightMap;
 		public BitMap2 canals;
-			
-		
+		public BitMap1 successionArea;
+		public BitMap1 managedArea;
+		public BitMap8 purchasableArea;
 		
 		/**
 		 * Stores 2-dimensional data, like pH, heightmap, ...
@@ -212,10 +214,17 @@ namespace Ecosim.SceneData
 			AddData (WATERHEIGHTMAP_ID, new HeightMap (scene));
 			AddData (CALCULATED_WATERHEIGHTMAP_ID, new HeightMap (scene));
 			AddData (CANAL_ID, new BitMap2 (scene));
+			AddData (SUCCESSION_ID, new BitMap1 (scene));
+			AddData (MANAGED_ID, new BitMap1 (scene));
+			AddData (PURCHASABLE_ID, new BitMap8 (scene));
+
 			vegetation = GetData <VegetationData> (VEGETATION_ID);
 			heightMap = GetData <HeightMap> (HEIGHTMAP_ID);
 			waterHeightMap = GetData <HeightMap> (WATERHEIGHTMAP_ID);
 			canals = GetData <BitMap2> (CANAL_ID);
+			successionArea = GetData <BitMap1> (SUCCESSION_ID);
+			managedArea = GetData <BitMap1> (MANAGED_ID);
+			purchasableArea = GetData <BitMap8> (PURCHASABLE_ID);
 		}
 		
 		/**
@@ -576,6 +585,9 @@ namespace Ecosim.SceneData
 			progression.waterHeightMap = progression.GetData <HeightMap> (WATERHEIGHTMAP_ID);
 			progression.calculatedWaterHeightMap = progression.GetData <HeightMap> (CALCULATED_WATERHEIGHTMAP_ID);
 			progression.canals = progression.GetData <BitMap2> (CANAL_ID);
+			progression.successionArea = progression.GetData <BitMap1> (SUCCESSION_ID);
+			progression.managedArea = progression.GetData <BitMap1> (MANAGED_ID);
+			progression.purchasableArea = progression.GetData <BitMap8> (PURCHASABLE_ID);
 			return progression;
 		}
 		

@@ -171,15 +171,15 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 			}
 		}		
 	}
-	
+
 	/**
-	 * Constructor, T determines which Data implementation is used (1 bit, 2 bit, ...)
 	 * name is just for easier debugging (used for naming game objects)
 	 * data is the current value set, if null, editData will be initialized with 0 values for data
+	 * area is used to determine which tiles are editable
 	 * fn is used to get initial values when adding areas to edit set
 	 * gridSettings is used to determine material and uv mapping
 	 */
-	public static EditData CreateEditData (string name, Data data, BrushValue fn, GridTextureSettings gridSettings)
+	public static EditData CreateEditData (string name, Data data, Data editableArea, BrushValue fn, GridTextureSettings gridSettings)
 	{
 		GameObject go = new GameObject ("EditData " + name);
 		go.transform.parent = TerrainMgr.self.transform;
@@ -193,10 +193,22 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 		ed.cells = new EditDataCell[h, w];
 		for (int y = 0; y < h; y++) {
 			for (int x = 0; x < w; x++) {
-				ed.cells [y, x] = new EditDataCell (x, y, ed, data);
+				ed.cells [y, x] = new EditDataCell (x, y, ed, data, editableArea);
 			}
 		}
 		return ed;
+	}
+
+	/**
+	 * Constructor, T determines which Data implementation is used (1 bit, 2 bit, ...)
+	 * name is just for easier debugging (used for naming game objects)
+	 * data is the current value set, if null, editData will be initialized with 0 values for data
+	 * fn is used to get initial values when adding areas to edit set
+	 * gridSettings is used to determine material and uv mapping
+	 */
+	public static EditData CreateEditData (string name, Data data, BrushValue fn, GridTextureSettings gridSettings)
+	{
+		return CreateEditData (name, data, null, fn, gridSettings);
 	}
 	
 	/**
@@ -387,7 +399,7 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 			}
 			
 			if (mouseClick) {
-				if (Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt))
+				if (Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt) || Input.GetMouseButton(1))
 					return; // moving/rotating camera, don't use brush
 				// place selection (update actual values)
 				foreach (EditDataCell cell in cells) {
@@ -419,6 +431,7 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 			if (mouseClickDown) {
 				if (Input.GetKey (KeyCode.LeftAlt) || Input.GetKey (KeyCode.RightAlt))
 					return; // rotating/moving camera
+
 				// start selecting area
 				startPoint = c;
 				lastMinX = c.x;

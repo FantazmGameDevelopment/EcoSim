@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Reflection;
 using System.Collections.Generic;
 using Ecosim.SceneEditor;
 using Ecosim.SceneData;
@@ -9,229 +10,121 @@ namespace Ecosim.SceneEditor.Helpers
 {
 	public class HandleAreas : ParameterPaintPanel
 	{
-		//private string[] plantNames;
-		//private PlantType activePlantType;
+		private enum Areas
+		{
+			Managed,
+			Succession,
+			Purchasable 
+		};
 		
-		//private int activeParameter = 0;
+		private Areas currentArea;
 		
 		public HandleAreas (EditorCtrl ctrl, MapsPanel parent, Scene scene) : base(ctrl, parent, scene)
 		{
-			this.maxParamValue = 10;
 		}
 
 		protected override void Setup (string editDataParamName)
 		{
 			base.Setup ("areas");
+
+			UpdateCurrentArea ();
 		}
 		
-		/*string[] GetPlantNames()
+		public override bool Render (int mx, int my)
 		{
-			List<string> pList = new List<string>();
-			if (scene != null) {
-				foreach (PlantType p in scene.plantTypes) {
-					pList.Add (p.name);
+			GUILayout.BeginHorizontal(); // Area
+			{
+				GUILayout.Label (" Area:", GUILayout.Width (30));
+
+				Areas[] areas = (Areas[])System.Enum.GetValues (typeof(Areas));
+				foreach (Areas a in areas) 
+				{
+					if (GUILayout.Button (a.ToString(), (currentArea == a) ? tabSelected : tabNormal, GUILayout.Width (100))) 
+					{
+						if (currentArea != a)
+						{
+							currentArea = a;
+							UpdateCurrentArea ();
+						}
+					}
 				}
 			}
-			return pList.ToArray();
+			GUILayout.EndHorizontal (); // ~Area
+			GUILayout.Space (5);
+
+			switch (currentArea)
+			{
+			case Areas.Succession : 
+				if (!HandleSuccession ()) return false;
+				else break;
+			case Areas.Managed : 
+				if (!HandleManaged ()) return false; 
+				else break;
+			case Areas.Purchasable : 
+				if (!HandlePurchasable ()) return false; 
+				else break;
+			}
+
+			GUILayout.Space (5);
+			this.RenderBrushMode ();
+			GUILayout.Space (16);
+			this.RenderSaveRestoreApply ();
+			GUILayout.Space (16);
+			this.RenderFromImage (currentArea.ToString() + " Area");
+
+			return false;
 		}
-		
-		PlantType GetPlantType (string name) 
+
+		void UpdateCurrentArea ()
 		{
-			if (scene != null) {
-				foreach (PlantType p in scene.plantTypes) {
-					if (p.name == name) return p;
-				}
+			data = GetAreaData (currentArea);
+
+			switch (currentArea)
+			{
+			case Areas.Succession :
+			case Areas.Managed :
+				maxParamValue = 1;
+				break;
+			case Areas.Purchasable :
+				// TODO:
+				maxParamValue = 10;
+				break;
 			}
-			return null;
-		}
-		
-		int GetPlantNameIndex (string[] names, string name)
-		{
-			for (int i = 0; i < names.Length; i++) {
-				if (names[i] == name) return i;
-			}
-			return 0;
-		}*/
-		
-		/*void SetupPlantEditData ()
-		{
-			if (activePlantType == null) {
-				backupCopy.Clear ();
-				return;
-			}
-			
-			if (scene.progression.GetData (activePlantType.dataName) == null)
-				scene.progression.AddData (activePlantType.dataName, new BitMap8 (scene));
-			data = scene.progression.GetData (activePlantType.dataName);
-			
-			maxParamValue = activePlantType.maxPerTile;
+
 			paramStrength = maxParamValue;
 			paramStrengthStr = paramStrength.ToString();
 			
 			if (edit != null) edit.SetData (data);
 			if (backupCopy != null) data.CopyTo (backupCopy);
-		}*/
-		
-		public bool Render (int mx, int my)
-		{
-			this.RenderBrushMode ();
-			GUILayout.Space (16);
-			this.RenderSaveRestoreApply ();
-			GUILayout.FlexibleSpace ();
-			GUILayout.Space (8);
-			this.RenderFromImage ("test");
+		}
 
-			/*if (scene.plantTypes.Length != plantNames.Length) {
-				plantNames = GetPlantNames();
-			}
-			
-			if (plantNames.Length == 0) {
-				GUILayout.Label ("No plants found.");
-				return false;
-			}
-			
-			GUILayout.BeginHorizontal(); // Plant type
-			{
-				if (GUILayout.Button (activePlantType.name, GUILayout.ExpandWidth (true)))// GUILayout.Width(240)))
-				{
-					ctrl.StartSelection (plantNames, GetPlantNameIndex(plantNames, activePlantType.name),
-					                     newIndex => {
-						bool newPlant = true;
-						if (activePlantType != null) {
-							newPlant = (plantNames[newIndex] != activePlantType.name);
-						}
-						if (newPlant) {
-							activePlantType = GetPlantType (plantNames[newIndex]);
-							SetupPlantEditData ();
-						}
-					});
-				}
-				
-				//GUILayout.Label ("Range: 0-" + maxParamValue, GUILayout.Width(100));
-				//GUILayout.FlexibleSpace ();
-			}
-			GUILayout.EndHorizontal(); //~Plant type
-			
-			GUILayout.BeginHorizontal(); // Brush mode
-			{
-				GUILayout.Label ("Brush mode", GUILayout.Width (100));
-				if (GUILayout.Button ("Area select", (brushMode == EBrushMode.Area) ? tabSelected : tabNormal, GUILayout.Width (100))) {
-					brushMode = EBrushMode.Area;
-					edit.SetModeAreaSelect ();
-				}
-				if (GUILayout.Button ("Circle brush", (brushMode == EBrushMode.Circle) ? tabSelected : tabNormal, GUILayout.Width (100))) {
-					brushMode = EBrushMode.Circle;
-					edit.SetModeBrush (brushWidth);
-				}
-				GUILayout.FlexibleSpace ();
-			}
-			GUILayout.EndHorizontal(); //~Brush mode
-			
-			GUILayout.BeginHorizontal (); // Brush value
-			{
-				GUILayout.Label ("Brush value", GUILayout.Width (100));
-				if (maxParamValue > 1)
-				{
-					if (paramStrength > activePlantType.maxPerTile)
-						paramStrength = activePlantType.maxPerTile;
-					
-					int newParamStrength = Mathf.RoundToInt (GUILayout.HorizontalSlider (paramStrength, 1, maxParamValue, GUILayout.Width (160)));
-					if (newParamStrength != paramStrength) {
-						newParamStrength = Mathf.Clamp (newParamStrength, 1, maxParamValue);
-						paramStrengthStr = newParamStrength.ToString ();
-						paramStrength = newParamStrength;
-					}
-					string newParamStrengthStr = GUILayout.TextField (paramStrengthStr, GUILayout.Width (30));
-					if (newParamStrengthStr != paramStrengthStr) {
-						int intVal;
-						if (int.TryParse (newParamStrengthStr, out intVal)) {
-							paramStrength = Mathf.Clamp (intVal, 1, maxParamValue);
-						}
-						paramStrengthStr = newParamStrengthStr;
-					}
-					GUILayout.Label ("(0-" + maxParamValue + ")");
-				} else {
-					GUILayout.Label (paramStrengthStr);
-				} 
-			}
-			GUILayout.EndHorizontal (); //~Brush value
-			
-			if (brushMode == EBrushMode.Circle) 
-			{
-				GUILayout.BeginHorizontal (); // Brush width
-				{
-					GUILayout.Label ("Brush width", GUILayout.Width (100));
-					int newBrushWidth = (int)GUILayout.HorizontalSlider (brushWidth, 0f, 10f, GUILayout.Width (160f));
-					GUILayout.Label (brushWidth.ToString ());
-					if (newBrushWidth != brushWidth) {
-						brushWidth = newBrushWidth;
-						edit.SetModeBrush (brushWidth);
-					}
-					GUILayout.FlexibleSpace ();
-				}
-				GUILayout.EndHorizontal (); //~Brush width
-			}
-			
-			GUILayout.Space (16);
-			
-			GUILayout.BeginHorizontal (); // Save, restore etc
-			{
-				if (GUILayout.Button ("Save to clipboard", GUILayout.Width (100))) {
-					edit.CopyData (backupCopy);
-				}
-				if (GUILayout.Button ("Restore from clipb.", GUILayout.Width (100))) {
-					backupCopy.CopyTo (data);
-					edit.SetData (data);
-				}
-				if (GUILayout.Button ("Apply", GUILayout.Width (60))) {
-					edit.CopyData (data);
-				}
-				if (GUILayout.Button ("Reset", GUILayout.Width (60))) {
-					edit.SetData (data);
-				}
-			}
-			GUILayout.EndHorizontal (); //~Save, restore etc
-			
-			GUILayout.FlexibleSpace ();
-			GUILayout.Space (8);
-			if (parent.texture != null) 
-			{
-				GUILayout.BeginHorizontal ();
-				{
-					GUILayout.Label ("Set from image", GUILayout.Width (100));
-					if (GUILayout.Button ("Set " + activePlantType.name)) 
-					{
-						int maxValue = activePlantType.maxPerTile;
-						for (int y = 0; y < scene.height; y++) 
-						{
-							for (int x = 0; x < scene.width; x++) 
-							{
-								int v = (int)(maxValue * parent.GetFromImage (x, y));
-								data.Set (x, y, v);
-							}
-						}
-						edit.SetData (data);
-					}
-					GUILayout.FlexibleSpace ();
-				}
-				GUILayout.EndHorizontal ();
-			}
-			parent.RenderLoadTexture ();
-			return false;*/
+		private bool HandleManaged ()
+		{
+			return true;
+		}
+
+		private bool HandleSuccession ()
+		{
+			return true;
+		}
+
+		private bool HandlePurchasable ()
+		{
+			// TODO: The user should be able to make price classes or use the value (0...255) * cost multiplier
+			GUILayout.Label ("Under construction...");
 
 			return false;
 		}
-		
-		public void Disable ()
+
+		private Data GetAreaData (Areas area)
 		{
-			if (edit != null)
-				edit.Delete ();
-			edit = null;
-		}
-		
-		public void Update ()
-		{
-			
+			switch (area)
+			{
+			case Areas.Succession : return scene.progression.successionArea;
+			case Areas.Managed : return scene.progression.managedArea;
+			case Areas.Purchasable : return scene.progression.purchasableArea;
+			}
+			return null;
 		}
 	}
 }

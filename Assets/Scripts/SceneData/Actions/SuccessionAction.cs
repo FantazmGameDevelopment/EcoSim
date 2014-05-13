@@ -15,7 +15,6 @@ namespace Ecosim.SceneData.Action
 		private const int SLICE_SIZE = 128;
 		private volatile int active_threads;
 		public bool skipNormalSuccession = false;
-		public string successionAreaName = null; // if not null, progression data with this name is used to determine if tiles needs calculations
 		private Data successionArea = null;
 		
 		public SuccessionAction (Scene scene, int id) : base(scene, id)
@@ -146,10 +145,11 @@ namespace Ecosim.SceneData.Action
 		public override void DoSuccession ()
 		{
 			base.DoSuccession ();
-			successionArea = null;
-			if (successionAreaName != null) {
-				successionArea = scene.progression.GetData (successionAreaName);
+
+			if (successionArea == null) {
+				successionArea = scene.progression.successionArea;
 			}
+
 			active_threads = scene.height / SLICE_SIZE;
 			for (int y = 0; y < scene.height; y += SLICE_SIZE) {
 // temp disable unreachable code warning
@@ -170,7 +170,6 @@ namespace Ecosim.SceneData.Action
 			SuccessionAction action = new SuccessionAction (scene, id);
 			string sns = reader.GetAttribute ("skipnormalsuccession");
 			action.skipNormalSuccession = (sns != null) && (sns == "true");
-			action.successionAreaName = reader.GetAttribute ("successionarea");
 			
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
@@ -190,9 +189,6 @@ namespace Ecosim.SceneData.Action
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("id", id.ToString ());
 			writer.WriteAttributeString ("skipnormalsuccession", skipNormalSuccession ? "true" : "false");
-			if (successionAreaName != null) {
-				writer.WriteAttributeString ("successionarea", successionAreaName);
-			}
 			
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);

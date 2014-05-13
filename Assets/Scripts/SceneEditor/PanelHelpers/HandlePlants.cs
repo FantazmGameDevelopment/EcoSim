@@ -89,7 +89,7 @@ namespace Ecosim.SceneEditor.Helpers
 
 			gridSettings255 = new GridTextureSettings (false, 0, 16, "MapGrid255", true, "ActiveMapGrid255");
 
-			edit = EditData.CreateEditData ("plantsparam", data, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
+			edit = EditData.CreateEditData ("plants", data, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
 				if ((!ctrl) || (maxParamValue == 1)) {
 					return shift ? 0 : paramStrength;
 				} else {
