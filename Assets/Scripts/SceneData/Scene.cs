@@ -16,6 +16,7 @@ namespace Ecosim.SceneData
 	
 		public SuccessionType[] successionTypes;
 		public PlantType[] plantTypes;
+		public AnimalType[] animalTypes; // TODO: AnimalTypes
 		public CalculatedData.Calculation[] calculations;
 
 		public ActionMgr actions;

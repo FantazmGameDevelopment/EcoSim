@@ -6,6 +6,8 @@ namespace Ecosim.SceneEditor
 {
 	public class SpeciesPanel : Panel
 	{
+		#region Plants
+
 		public class PlantState
 		{
 			public PlantState (PlantType plant)
@@ -35,16 +37,36 @@ namespace Ecosim.SceneEditor
 			plants.Remove (plantState);
 		}
 
+		#endregion Plants
+
+		#region Animals
+
+		public class AnimalState
+		{
+			public AnimalState (AnimalType animal)
+			{
+				this.animal = animal;
+				this.isFoldedOpen = false;
+			}
+
+			public bool isFoldedOpen;
+			public AnimalType animal;
+		}
+
+		#endregion Animals
+
 		ExtraPanel extraPanel;
 		Vector2 scrollPos;
 		Vector2 scrollPosExtra;
+
 		string newPlantName;
+		string newAnimalName;
 
 		Scene scene;
 		EditorCtrl ctrl;
 
 		List<PlantState> plants;
-
+		List<AnimalState> animals;
 
 		public void Setup (EditorCtrl ctrl, Scene scene)
 		{
@@ -58,7 +80,14 @@ namespace Ecosim.SceneEditor
 				plants.Add(new PlantState (scene.plantTypes[i]));
 			}
 
+			animals = new List<AnimalState>();
+			for (int i = 0; i < scene.animalTypes.Length; i++) {
+				animals.Add(new AnimalState (scene.animalTypes[i]));
+			}
+
 			newPlantName = "New plant";
+			newAnimalName = "New animal";
+
 			extraPanel = null;
 		}
 		
@@ -68,14 +97,33 @@ namespace Ecosim.SceneEditor
 				return false;
 
 			scrollPos = GUILayout.BeginScrollView (scrollPos, false, false);
-			GUILayout.BeginVertical ();
+			{
+				GUILayout.BeginVertical ();
+				{
+					// Plants
+					RenderPlants ();
+					RenderAnimals ();
 
-			// Plants
+					GUILayout.FlexibleSpace ();
+				}
+				GUILayout.EndVertical ();
+			}
+			GUILayout.EndScrollView ();
+			return (extraPanel != null);
+		}
+
+		private void RenderAnimals ()
+		{
+
+		}
+
+		private void RenderPlants ()
+		{
 			int plantIndex = 0;
 			foreach (PlantState ps in plants) 
 			{
 				GUILayout.BeginVertical (ctrl.skin.box);
-
+				
 				// Header
 				GUILayout.BeginHorizontal ();
 				{
@@ -83,10 +131,10 @@ namespace Ecosim.SceneEditor
 					{
 						ps.isFoldedOpen = !ps.isFoldedOpen;
 					}
-
+					
 					GUILayout.Label (plantIndex.ToString(), GUILayout.Width (40));
 					ps.plant.name = GUILayout.TextField (ps.plant.name);
-
+					
 					if (GUILayout.Button ("-", GUILayout.Width (20)))
 					{
 						PlantState tmpPS = ps;
@@ -96,50 +144,50 @@ namespace Ecosim.SceneEditor
 					}
 				}
 				GUILayout.EndHorizontal(); // ~Header
-
+				
 				// Plant body
 				if (ps.isFoldedOpen) 
 				{
 					GUILayout.BeginVertical (ctrl.skin.box);
-
+					
 					// Parameter name
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label (string.Format(" Parameter name: '{0}'", ps.plant.dataName), GUILayout.Width (260));
 					GUILayout.EndHorizontal ();
-
+					
 					// Spread attempts
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label (" # Spawn seeds attempts", GUILayout.Width (140));
 					string spawnAttempts = GUILayout.TextField (ps.plant.spawnCount.ToString(), GUILayout.Width (40));
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
-
+					
 					// Multiplier
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label (" Spawn seeds multiplier", GUILayout.Width (140));
 					string spawnMultiplier = GUILayout.TextField (ps.plant.spawnMultiplier.ToString(), GUILayout.Width (40));
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
-
+					
 					// Dispersion
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label (" Spawn seeds dispersion", GUILayout.Width (140));
 					string spawnRadius = GUILayout.TextField (ps.plant.spawnRadius.ToString(), GUILayout.Width (40));
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
-
+					
 					// Max per tile
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label (" Maximum per tile", GUILayout.Width (140));
 					ps.maxPerTileStr = GUILayout.TextField (ps.maxPerTileStr, GUILayout.Width (40));
-
+					
 					// Format the string for only digits
 					string str = "";
 					foreach (char c in ps.maxPerTileStr)
 						if (char.IsDigit (c)) str += c.ToString();
 					ps.maxPerTileStr = str;
 					if (ps.maxPerTileStr.Length == 0) ps.maxPerTileStr = "0";
-
+					
 					// Check for a different value
 					int maxPerTile = int.Parse (ps.maxPerTileStr);
 					if (maxPerTile != ps.plant.maxPerTile) 
@@ -159,7 +207,7 @@ namespace Ecosim.SceneEditor
 						}
 						if (GUILayout.Button ("?", GUILayout.Width (20))) {
 							string message = 
-@"You need to explicitly say to update the 'Maximum per tile' value, because changing this value will affect the currently placed amounts of the plant on the terrain.
+								@"You need to explicitly say to update the 'Maximum per tile' value, because changing this value will affect the currently placed amounts of the plant on the terrain.
 
 The current values will be converted by their percentage of the current maximum per tile value, like this:
 
@@ -169,7 +217,7 @@ The current values will be converted by their percentage of the current maximum 
 					}
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
-
+					
 					int outNr;
 					if (int.TryParse (spawnAttempts, out outNr))
 						ps.plant.spawnCount = outNr;
@@ -177,7 +225,7 @@ The current values will be converted by their percentage of the current maximum 
 						ps.plant.spawnMultiplier = outNr;
 					if (int.TryParse (spawnRadius, out outNr))
 						ps.plant.spawnRadius = outNr;
-
+					
 					// Rules
 					GUILayout.Space (2);
 					GUILayout.BeginHorizontal(); // Rules
@@ -188,13 +236,13 @@ The current values will be converted by their percentage of the current maximum 
 						}
 					}
 					GUILayout.EndHorizontal(); // ~Rules
-
+					
 					GUILayout.EndVertical ();
 				}
 				GUILayout.EndVertical(); // ~Plant body
 				plantIndex++;
 			} // ~PlantState foreach
-
+			
 			// Add button
 			GUILayout.BeginHorizontal ();
 			{
@@ -209,7 +257,7 @@ The current values will be converted by their percentage of the current maximum 
 							break;
 						}
 					}
-
+					
 					if (uniqueName)
 					{
 						// Add new plant
@@ -222,15 +270,10 @@ The current values will be converted by their percentage of the current maximum 
 						ctrl.StartOkDialog ("Name is already taken, please choose another and try again.", null);
 					}
 				}
-
+				
 				GUILayout.FlexibleSpace ();
 			}
 			GUILayout.EndHorizontal (); //~ Add button
-			GUILayout.FlexibleSpace ();
-
-			GUILayout.EndVertical ();
-			GUILayout.EndScrollView ();
-			return (extraPanel != null);
 		}
 
 		public void RenderExtra (int mx, int my)

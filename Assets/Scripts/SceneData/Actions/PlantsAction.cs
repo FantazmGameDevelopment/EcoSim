@@ -58,7 +58,7 @@ namespace Ecosim.SceneData.Action
 			int startY = (int)arguments;
 			try 
 			{
-				System.Random rnd = new System.Random (); // when multithreading, you need a random generator per thread
+				System.Random rnd = new System.Random (); // When multithreading, you need a random generator per thread
 				Progression progress = scene.progression;
 
 				foreach (PlantType plantType in scene.plantTypes)
@@ -67,7 +67,6 @@ namespace Ecosim.SceneData.Action
 					if (plantData == null) continue;
 
 					// Loop through the slice
-					int p = scene.width * startY;
 					for (int y = startY; y < startY + SLICE_SIZE; y++) 
 					{
 						for (int x = 0; x < scene.width; x++) 
