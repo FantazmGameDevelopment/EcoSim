@@ -15,17 +15,19 @@ namespace Ecosim.SceneEditor.Helpers
 			Managed,
 			Succession,
 			Purchasable 
+			// TODO: Target areas
 		};
 		
 		private Areas currentArea;
 		
 		public HandleAreas (EditorCtrl ctrl, MapsPanel parent, Scene scene) : base(ctrl, parent, scene)
 		{
+			Setup ("areas");
 		}
 
 		protected override void Setup (string editDataParamName)
 		{
-			base.Setup ("areas");
+			base.Setup (editDataParamName);
 
 			UpdateCurrentArea ();
 		}

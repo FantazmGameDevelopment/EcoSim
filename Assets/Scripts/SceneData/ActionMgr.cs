@@ -9,8 +9,7 @@ namespace Ecosim.SceneData
 	{
 		private readonly Scene scene;
 		public string assemblyId;
-		
-		
+
 		public static System.Type[] actionTypes = new System.Type[] {
 			typeof(AreaAction),
 			typeof(InventarisationAction),
@@ -30,6 +29,8 @@ namespace Ecosim.SceneData
 			actionsByID = new Dictionary<int, BasicAction> ();
 			uiButtons = new List<UserInteraction> ();
 			uiGroups = new Dictionary<string, UserInteractionGroup> ();
+
+			SetupDefaultActions ();
 		}
 		
 		List<BasicAction> actionQueue;
@@ -62,7 +63,12 @@ namespace Ecosim.SceneData
 			}
 		}
 
-		
+		public void SetupDefaultActions ()
+		{
+			AddAction (new SuccessionAction (scene, 0));
+			AddAction (new PlantsAction (scene, 1));
+		}
+
 		/**
 		 * Adds action to action queue
 		 */
@@ -183,6 +189,10 @@ namespace Ecosim.SceneData
 		
 		private void Load (XmlTextReader reader)
 		{
+			actionQueue = new List<BasicAction>();
+			actionsByID = new Dictionary<int, BasicAction>();
+			uiGroups = new Dictionary<string, UserInteractionGroup>();
+
 			while (reader.Read()) {
 				XmlNodeType nType = reader.NodeType;
 				if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == DialogAction.XML_ELEMENT)) {

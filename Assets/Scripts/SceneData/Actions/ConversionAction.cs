@@ -64,8 +64,7 @@ namespace Ecosim.SceneData.Action
 				MethodInfo mi = ecoBase.GetType ().GetMethod (name,
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] {typeof(int), typeof(int)}, null);
 				if (mi != null) {
-					Delegate d = 
-            			Delegate.CreateDelegate (typeof(GetFn), ecoBase, mi, false);
+					Delegate d = Delegate.CreateDelegate (typeof(GetFn), ecoBase, mi, false);
 					if (d != null) {
 						return (GetFn)d;
 					}

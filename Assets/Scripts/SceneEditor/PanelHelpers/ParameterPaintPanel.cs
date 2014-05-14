@@ -41,8 +41,6 @@ namespace Ecosim.SceneEditor.Helpers
 			this.scene = parent.scene;
 			tabNormal = ctrl.listItem;
 			tabSelected = ctrl.listItemSelected;
-			
-			Setup ("param");
 		}
 
 		protected virtual void SetupBackupCopy()
@@ -85,18 +83,18 @@ namespace Ecosim.SceneEditor.Helpers
 			{
 				if (backupCopy != null)
 				{
-					if (GUILayout.Button ("Save to clipboard", GUILayout.Width (100))) {
+					if (GUILayout.Button ("Save to clipboard")) { //, GUILayout.Width (100))) {
 						edit.CopyData (backupCopy);
 					}
-					if (GUILayout.Button ("Restore from clipb.", GUILayout.Width (100))) {
+					if (GUILayout.Button ("Restore from clipb.")) { //, GUILayout.Width (100))) {
 						backupCopy.CopyTo (data);
 						edit.SetData (data);
 					}
 				}
-				if (GUILayout.Button ("Apply", GUILayout.Width (60))) {
+				if (GUILayout.Button ("Apply")) { //, GUILayout.Width (60))) {
 					edit.CopyData (data);
 				}
-				if (GUILayout.Button ("Reset", GUILayout.Width (60))) {
+				if (GUILayout.Button ("Reset")) { //, GUILayout.Width (60))) {
 					edit.SetData (data);
 				}
 			}
@@ -105,64 +103,69 @@ namespace Ecosim.SceneEditor.Helpers
 
 		protected void RenderBrushMode ()
 		{
-			GUILayout.BeginHorizontal(); // Brush mode
+			GUILayout.BeginVertical (ctrl.skin.box);
 			{
-				GUILayout.Label ("Brush mode", GUILayout.Width (100));
-				if (GUILayout.Button ("Area select", (brushMode == EBrushMode.Area) ? tabSelected : tabNormal, GUILayout.Width (100))) {
-					brushMode = EBrushMode.Area;
-					edit.SetModeAreaSelect ();
-				}
-				if (GUILayout.Button ("Circle brush", (brushMode == EBrushMode.Circle) ? tabSelected : tabNormal, GUILayout.Width (100))) {
-					brushMode = EBrushMode.Circle;
-					edit.SetModeBrush (brushWidth);
-				}
-				GUILayout.FlexibleSpace ();
-			}
-			GUILayout.EndHorizontal(); //~Brush mode
-			
-			GUILayout.BeginHorizontal (); // Brush value
-			{
-				if (maxParamValue > 1)
+				GUILayout.Label ("Paint Brush");
+				GUILayout.BeginHorizontal(); // Brush mode
 				{
-					GUILayout.Label ("Brush value", GUILayout.Width (100));
-					
-					if (paramStrength > maxParamValue)
-						paramStrength = maxParamValue;
-					
-					int newParamStrength = Mathf.RoundToInt (GUILayout.HorizontalSlider (paramStrength, 1, maxParamValue, GUILayout.Width (160)));
-					if (newParamStrength != paramStrength) {
-						newParamStrength = Mathf.Clamp (newParamStrength, 1, maxParamValue);
-						paramStrengthStr = newParamStrength.ToString ();
-						paramStrength = newParamStrength;
+					GUILayout.Label ("Brush mode", GUILayout.Width (100));
+					if (GUILayout.Button ("Area select", (brushMode == EBrushMode.Area) ? tabSelected : tabNormal, GUILayout.Width (100))) {
+						brushMode = EBrushMode.Area;
+						edit.SetModeAreaSelect ();
 					}
-					string newParamStrengthStr = GUILayout.TextField (paramStrengthStr, GUILayout.Width (30));
-					if (newParamStrengthStr != paramStrengthStr) {
-						int intVal;
-						if (int.TryParse (newParamStrengthStr, out intVal)) {
-							paramStrength = Mathf.Clamp (intVal, 1, maxParamValue);
-						}
-						paramStrengthStr = newParamStrengthStr;
-					}
-					GUILayout.Label ("(0-" + maxParamValue + ")");
-				}
-			}
-			GUILayout.EndHorizontal (); //~Brush value
-			
-			if (brushMode == EBrushMode.Circle) 
-			{
-				GUILayout.BeginHorizontal (); // Brush width
-				{
-					GUILayout.Label ("Brush width", GUILayout.Width (100));
-					int newBrushWidth = (int)GUILayout.HorizontalSlider (brushWidth, 0f, 10f, GUILayout.Width (160f));
-					GUILayout.Label (brushWidth.ToString ());
-					if (newBrushWidth != brushWidth) {
-						brushWidth = newBrushWidth;
+					if (GUILayout.Button ("Circle brush", (brushMode == EBrushMode.Circle) ? tabSelected : tabNormal, GUILayout.Width (100))) {
+						brushMode = EBrushMode.Circle;
 						edit.SetModeBrush (brushWidth);
 					}
 					GUILayout.FlexibleSpace ();
 				}
-				GUILayout.EndHorizontal (); //~Brush width
+				GUILayout.EndHorizontal(); //~Brush mode
+				
+				GUILayout.BeginHorizontal (); // Brush value
+				{
+					if (maxParamValue > 1)
+					{
+						GUILayout.Label ("Brush value", GUILayout.Width (100));
+						
+						if (paramStrength > maxParamValue)
+							paramStrength = maxParamValue;
+						
+						int newParamStrength = Mathf.RoundToInt (GUILayout.HorizontalSlider (paramStrength, 1, maxParamValue, GUILayout.Width (160)));
+						if (newParamStrength != paramStrength) {
+							newParamStrength = Mathf.Clamp (newParamStrength, 1, maxParamValue);
+							paramStrengthStr = newParamStrength.ToString ();
+							paramStrength = newParamStrength;
+						}
+						string newParamStrengthStr = GUILayout.TextField (paramStrengthStr, GUILayout.Width (30));
+						if (newParamStrengthStr != paramStrengthStr) {
+							int intVal;
+							if (int.TryParse (newParamStrengthStr, out intVal)) {
+								paramStrength = Mathf.Clamp (intVal, 1, maxParamValue);
+							}
+							paramStrengthStr = newParamStrengthStr;
+						}
+						GUILayout.Label ("(0-" + maxParamValue + ")");
+					}
+				}
+				GUILayout.EndHorizontal (); //~Brush value
+				
+				if (brushMode == EBrushMode.Circle) 
+				{
+					GUILayout.BeginHorizontal (); // Brush width
+					{
+						GUILayout.Label ("Brush width", GUILayout.Width (100));
+						int newBrushWidth = (int)GUILayout.HorizontalSlider (brushWidth, 0f, 10f, GUILayout.Width (160f));
+						GUILayout.Label (brushWidth.ToString ());
+						if (newBrushWidth != brushWidth) {
+							brushWidth = newBrushWidth;
+							edit.SetModeBrush (brushWidth);
+						}
+						GUILayout.FlexibleSpace ();
+					}
+					GUILayout.EndHorizontal (); //~Brush width
+				}
 			}
+			GUILayout.EndVertical ();
 		}
 
 		protected void RenderFromImage (string paramName)
@@ -185,7 +188,7 @@ namespace Ecosim.SceneEditor.Helpers
 						}
 						edit.SetData (data);
 					}
-					GUILayout.FlexibleSpace ();
+					//.GUILayout.FlexibleSpace ();
 				}
 				GUILayout.EndHorizontal ();
 			}

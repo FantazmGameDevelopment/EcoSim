@@ -636,15 +636,17 @@ namespace Ecosim.SceneData
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement ("progress");
 			writer.WriteAttributeString ("budget", budget.ToString ());
-//			writer.WriteAttributeString ("year", year.ToString ());
 			writer.WriteAttributeString ("startyear", startYear.ToString ());
 			writer.WriteAttributeString ("allowresearch", allowResearch ? "true" : "false");
 			writer.WriteAttributeString ("allowmeasures", allowMeasures ? "true" : "false");
 			writer.WriteAttributeString ("gameended", gameEnded ? "true" : "false");
 			writer.WriteAttributeString ("messageindex", messageUnreadIndex.ToString ());
-			// we write out the data dictionary, the data itself is saved seperately
-			foreach (DataInfo info in dataDict.Values) {
-				if (!info.isInternal) {
+
+			// We write out the data dictionary, the data itself is saved seperately
+			foreach (DataInfo info in dataDict.Values) 
+			{
+				if (!info.isInternal)
+				{
 					writer.WriteStartElement ("data");
 					writer.WriteAttributeString ("name", info.name);
 					writer.WriteAttributeString ("year", info.year.ToString ());

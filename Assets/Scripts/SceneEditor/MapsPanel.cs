@@ -43,42 +43,52 @@ namespace Ecosim.SceneEditor
 		
 		public void RenderLoadTexture ()
 		{
-			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("Image path", GUILayout.Width (100));
-			imagePath = GUILayout.TextField (imagePath, GUILayout.Width (225));
-			if (GUILayout.Button ("Load", GUILayout.Width (45))) {
-				if (System.IO.File.Exists (imagePath)) {
-					try {
-						byte[] data = System.IO.File.ReadAllBytes (imagePath);
-						texture = new Texture2D (4, 4, TextureFormat.ARGB32, false);
-						texture.filterMode = FilterMode.Point;
-						if (!texture.LoadImage (data)) {
-							texture = null;
-							ctrl.StartOkDialog ("Invalid image. Please choose another image and try again.", null);
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.Label ("Get data from image");
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Label ("Image path", GUILayout.Width (60));
+					imagePath = GUILayout.TextField (imagePath, GUILayout.Width (225));
+					if (GUILayout.Button ("Load")) { //, GUILayout.Width (45))) {
+						if (System.IO.File.Exists (imagePath)) {
+							try {
+								byte[] data = System.IO.File.ReadAllBytes (imagePath);
+								texture = new Texture2D (4, 4, TextureFormat.ARGB32, false);
+								texture.filterMode = FilterMode.Point;
+								if (!texture.LoadImage (data)) {
+									texture = null;
+									ctrl.StartOkDialog ("Invalid image. Please choose another image and try again.", null);
+								}
+								
+							} catch (System.Exception e) {
+								Debug.LogException (e);
+							}
+						} else {
+							ctrl.StartOkDialog ("Image could not be found, please check the path and try again.", null);
 						}
-						
-					} catch (System.Exception e) {
-						Debug.LogException (e);
 					}
-				} else {
-					ctrl.StartOkDialog ("Image could not be found, please check the path and try again.", null);
+					//GUILayout.FlexibleSpace ();
+				}
+				GUILayout.EndHorizontal ();
+				if (texture != null) 
+				{
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Label ("Size " + texture.width + " x " + texture.height, GUILayout.Width (80));
+						GUILayout.Label ("Horizontal offset ");
+						offsetXStr = GUILayout.TextField (offsetXStr, GUILayout.Width (40));
+						GUILayout.Label (" Vertical offset ");
+						offsetYStr = GUILayout.TextField (offsetYStr, GUILayout.Width (40));
+						int.TryParse (offsetXStr, out offsetX);
+						int.TryParse (offsetYStr, out offsetY);
+						//GUILayout.FlexibleSpace ();
+					}
+					GUILayout.EndHorizontal ();
+					GUILayout.Label (texture, GUILayout.Width (380), GUILayout.Height (380));
 				}
 			}
-			GUILayout.FlexibleSpace ();
-			GUILayout.EndHorizontal ();
-			if (texture != null) {
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("size " + texture.width + " x " + texture.height, GUILayout.Width (80));
-				GUILayout.Label ("horizontal offset ");
-				offsetXStr = GUILayout.TextField (offsetXStr, GUILayout.Width (40));
-				GUILayout.Label (" vertical offset ");
-				offsetYStr = GUILayout.TextField (offsetYStr, GUILayout.Width (40));
-				int.TryParse (offsetXStr, out offsetX);
-				int.TryParse (offsetYStr, out offsetY);
-				GUILayout.FlexibleSpace ();
-				GUILayout.EndHorizontal ();
-			}
-			GUILayout.Label (texture, GUILayout.Width (380), GUILayout.Height (380));
+			GUILayout.EndVertical ();
 		}
 		
 		string offsetXStr = "0";

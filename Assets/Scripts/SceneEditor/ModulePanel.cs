@@ -263,14 +263,14 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndVertical ();
 		}
 
-		IEnumerable<bool> CONewScene (int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes)
+		IEnumerable<bool> CONewScene (int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, CalculatedData.Calculation[] calculations)
 		{
 			// we do two yield as we're lazy and ask for moveNext, thus already
 			// advancing on first iteration. The return value actually doesn't
 			// matter as we don't look at it.
 			yield return true;
 			yield return true;
-			scene = Scene.CreateNewScene (sceneName, width, height, successionTypes, plantTypes);
+			scene = Scene.CreateNewScene (sceneName, width, height, successionTypes, plantTypes, calculations);
 			yield return true;
 			TerrainMgr.self.SetupTerrain (scene);
 			CameraControl.SetupCamera (scene);
@@ -286,6 +286,7 @@ namespace Ecosim.SceneEditor
 		private string[] sizeStrings;
 		private bool reuseVegetation = true;
 		private bool reusePlants = true;
+		private bool reuseCalculations = true;
 		
 		bool RenderNew (int mx, int my)
 		{
@@ -327,7 +328,11 @@ namespace Ecosim.SceneEditor
 					if ((scene != null) && reusePlants) {
 						plantTypes = scene.plantTypes;
 					}
-					coRoutine = CONewScene (sizes [newWidthIndex], sizes [newHeightIndex], successionTypes, plantTypes).GetEnumerator ();
+					CalculatedData.Calculation[] calculations = null;
+					if ((scene != null) && reuseCalculations) {
+						calculations = scene.calculations;
+					}
+					coRoutine = CONewScene (sizes [newWidthIndex], sizes [newHeightIndex], successionTypes, plantTypes, calculations).GetEnumerator ();
 				}
 			}
 			GUILayout.FlexibleSpace ();
@@ -336,6 +341,7 @@ namespace Ecosim.SceneEditor
 			if (scene != null) {
 				reuseVegetation = GUILayout.Toggle (reuseVegetation, "Use current vegetation");
 				reusePlants = GUILayout.Toggle (reusePlants, "Use current plants");
+				reuseCalculations = GUILayout.Toggle (reuseCalculations, "Use current Calculated data calculations");
 			}
 
 			return false;

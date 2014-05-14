@@ -14,6 +14,7 @@ namespace Ecosim.SceneEditor.Helpers
 
 		public HandlePlants (EditorCtrl ctrl, MapsPanel parent, Scene scene)  : base(ctrl, parent, scene)
 		{
+			Setup ("plants");
 		}
 		
 		protected override void Setup (string editDataParamName)
@@ -24,7 +25,7 @@ namespace Ecosim.SceneEditor.Helpers
 				SetupPlantEditData ();
 			}
 
-			base.Setup ("plants");
+			base.Setup (editDataParamName);
 		}
 
 		public override bool Render (int mx, int my)
