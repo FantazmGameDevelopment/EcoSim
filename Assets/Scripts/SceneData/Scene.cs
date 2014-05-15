@@ -16,6 +16,7 @@ namespace Ecosim.SceneData
 	
 		public SuccessionType[] successionTypes;
 		public PlantType[] plantTypes;
+		public ActionObjectsGroup[] actionObjectGroups; // TODO: ActionObjectsGroup
 		public AnimalType[] animalTypes; // TODO: AnimalTypes
 		public CalculatedData.Calculation[] calculations;
 
@@ -146,9 +147,9 @@ namespace Ecosim.SceneData
 			return scene;
 		}
 		
-		public static Scene CreateNewScene (string name, int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, CalculatedData.Calculation[] calculations)
+		public static Scene CreateNewScene (string name, int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, AnimalType[] animalTypes, ActionObjectsGroup[] actionObjectGroups, CalculatedData.Calculation[] calculations)
 		{
-			Scene scene = new Scene (name, width, height, successionTypes, plantTypes, calculations);
+			Scene scene = new Scene (name, width, height, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
 			scene.assets = new ExtraAssets (scene);
 			scene.actions = new ActionMgr (scene);
 			scene.buildings = new Buildings (scene);
@@ -286,6 +287,8 @@ namespace Ecosim.SceneData
 			
 			LoadSaveVegetation.Save (path, successionTypes, this);
 			LoadSavePlants.Save (path, plantTypes, this);
+			LoadSaveAnimals.Save (path, animalTypes, this);
+			ActionObjectsGroup.Save (path, actionObjectGroups, this);
 			CalculatedData.Calculation.Save (path, calculations, this);
 
 			assets.Save (path);
@@ -301,7 +304,7 @@ namespace Ecosim.SceneData
 //			budget = long.Parse (reader.GetAttribute ("budget"));
 			int width = int.Parse (reader.GetAttribute ("width"));
 			int height = int.Parse (reader.GetAttribute ("height"));
-			Scene scene = new Scene (name, width, height, new SuccessionType[0], new PlantType[0], new CalculatedData.Calculation[0]);
+			Scene scene = new Scene (name, width, height, new SuccessionType[0], new PlantType[0], new AnimalType[0], new ActionObjectsGroup[0], new CalculatedData.Calculation[0]);
 			scene.description = reader.GetAttribute ("description");
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
@@ -358,9 +361,11 @@ namespace Ecosim.SceneData
 				scene.actions = ActionMgr.Load (path, scene);
 				scene.successionTypes = LoadSaveVegetation.Load (path, scene);
 				scene.plantTypes = LoadSavePlants.Load (path, scene);
+				scene.animalTypes = LoadSaveAnimals.Load (path, scene);
 				scene.calculations = CalculatedData.Calculation.LoadAll (path, scene);
 				EcoTerrainElements.self.AddExtraBuildings (scene.assets);
 				scene.buildings = Buildings.Load (path, scene);
+				scene.actionObjectGroups = ActionObjectsGroup.Load (path, scene);
 				scene.roads = Roads.Load (path, scene);
 				scene.articles = Articles.Load (path, scene);
 			}
@@ -371,7 +376,7 @@ namespace Ecosim.SceneData
 		 * Create a new scene with given name, size and optional vegetation (successionTypes)
 		 * if vegetation == null a default Succession with one vegetation will be created
 		 */
-		Scene (string name, int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, CalculatedData.Calculation[] calculations)
+		Scene (string name, int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, AnimalType[] animalTypes, ActionObjectsGroup[] actionObjectGroups, CalculatedData.Calculation[] calculations)
 		{
 			sceneName = name;
 			description = "";
@@ -386,17 +391,10 @@ namespace Ecosim.SceneData
 				new VegetationType (suc);
 			}
 
-			if (plantTypes != null) {
-				this.plantTypes = plantTypes;
-			} else {
-				this.plantTypes = new PlantType[] { };
-			}
-
-			if (calculations != null) {
-				this.calculations = calculations;
-			} else {
-				this.calculations = new CalculatedData.Calculation[] { };
-			}
+			this.plantTypes = (plantTypes != null) ? plantTypes : new PlantType[] { };
+			this.animalTypes = (animalTypes != null) ? animalTypes : new AnimalType[] { };
+			this.actionObjectGroups = (actionObjectGroups != null) ? actionObjectGroups : new ActionObjectsGroup[] { };
+			this.calculations = (calculations != null) ? calculations : new CalculatedData.Calculation[] { };
 
 			overview = new UnityEngine.Texture2D[height / TerrainMgr.CELL_SIZE, width / TerrainMgr.CELL_SIZE];
 			expression = new EcoExpression (this);
@@ -433,6 +431,22 @@ namespace Ecosim.SceneData
 				p.UpdateReferences (this);
 			}
 
+			i = 0;
+			foreach (AnimalType a in animalTypes) {
+				a.index = i++;
+			}
+			foreach (AnimalType a in animalTypes) {
+				a.UpdateReferences (this);
+			}
+
+			i = 0;
+			foreach (ActionObjectsGroup g in actionObjectGroups) {
+				g.index = i++;
+			}
+			foreach (ActionObjectsGroup g in actionObjectGroups) {
+				g.UpdateReferences (this);
+			}
+
 			foreach (CalculatedData.Calculation c in calculations) {
 				c.UpdateReferences (this);
 			}
@@ -459,7 +473,7 @@ namespace Ecosim.SceneData
 		
 		public Scene ResizeTo (string newSceneName, int offsetX, int offsetY, int newWidth, int newHeight)
 		{
-			Scene newScene = new Scene (newSceneName, newWidth, newHeight, successionTypes, plantTypes, calculations);
+			Scene newScene = new Scene (newSceneName, newWidth, newHeight, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
 			Progression newProgression = new Progression (newScene);
 			newScene.progression = newProgression;
 			foreach (string name in progression.GetAllDataNames()) {

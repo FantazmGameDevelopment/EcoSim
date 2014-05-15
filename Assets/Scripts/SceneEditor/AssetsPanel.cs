@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Ecosim.SceneData;
@@ -92,11 +93,17 @@ namespace Ecosim.SceneEditor
 			public int shaderIndex;
 		}
 
+		/*void RenderPreviewTexture (Mesh mesh, Material mat) {
+			(GameObject.FindObjectOfType <MonoBehaviour> () as MonoBehaviour).StartCoroutine (CORenderPreviewTexture(mesh, mat));
+		}*/
+
+		//IEnumerator CORenderPreviewTexture (Mesh mesh, Material mat) {
 		void RenderPreviewTexture (Mesh mesh, Material mat) {
 			if (renderTex == null) {
 				renderTex = new Texture2D (380, 300, TextureFormat.RGB24, false);
 			}
 			RenderTileIcons.RenderSettings rs = new RenderTileIcons.RenderSettings (60f, 30f, 120f, 24f);
+			//yield return new WaitForEndOfFrame ();
 			RenderTileIcons.self.Render (rs, ref renderTex, scene.successionTypes[0].vegetations[0].tiles[0], mesh, mat);
 		}
 		

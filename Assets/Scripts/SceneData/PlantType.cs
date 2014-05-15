@@ -45,7 +45,7 @@ namespace Ecosim.SceneData
 			scene.progression.AddData (dataName, new BitMap8 (scene));
 
 			index = scene.plantTypes.Length;
-			rules = new PlantRule[1];
+			rules = new PlantRule[] { new PlantRule () };
 			germinationRules = new PlantGerminationRule[0];
 
 			maxPerTile = 3;

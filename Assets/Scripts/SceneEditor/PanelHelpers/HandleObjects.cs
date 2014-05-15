@@ -14,14 +14,15 @@ namespace Ecosim.SceneEditor.Helpers
 		private GUIStyle tabSelected;
 		private PanelHelper helper;
 		
-		private enum ObectType
+		private enum ObjectType
 		{
 			Buildings,
 			Roads,
-			Animals
+			Animals,
+			ActionGroups,
 		}
 		
-		private ObectType objectMode = ObectType.Roads;
+		private ObjectType objectMode = ObjectType.Roads;
 
 		public HandleObjects (EditorCtrl ctrl, MapsPanel parent, Scene scene)
 		{
@@ -37,14 +38,18 @@ namespace Ecosim.SceneEditor.Helpers
 		
 		void Setup ()
 		{
-			switch (objectMode) {
-			case ObectType.Buildings :
+			switch (objectMode) 
+			{
+			case ObjectType.ActionGroups :
+				SetupActionGroups ();
+				break;
+			case ObjectType.Buildings :
 				SetupBuildings ();
 				break;
-			case ObectType.Roads :
+			case ObjectType.Roads :
 				SetupRoads ();
 				break;
-			case ObectType.Animals :
+			case ObjectType.Animals :
 				SetupAnimals ();
 				break;
 			}
@@ -57,7 +62,13 @@ namespace Ecosim.SceneEditor.Helpers
 				helper = null;
 			}
 		}
-		
+
+		void SetupActionGroups ()
+		{
+			ResetEdit ();
+			helper = new HandleActionObjectGroups (ctrl, parent, scene);
+		}
+
 		void SetupBuildings ()
 		{
 			ResetEdit ();
@@ -79,21 +90,27 @@ namespace Ecosim.SceneEditor.Helpers
 		public bool Render (int mx, int my)
 		{
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("object type", GUILayout.Width (100));
-			if (GUILayout.Button ("Buildings", (objectMode == ObectType.Buildings) ? tabSelected : tabNormal, GUILayout.Width (90))) {
-				objectMode = ObectType.Buildings;
-				SetupBuildings ();
+			{
+				GUILayout.Label ("Type:", GUILayout.Width (30));
+
+				if (GUILayout.Button ("Buildings", (objectMode == ObjectType.Buildings) ? tabSelected : tabNormal)) {//, GUILayout.Width (90))) {
+					objectMode = ObjectType.Buildings;
+					SetupBuildings ();
+				}
+				if (GUILayout.Button ("Roads", (objectMode == ObjectType.Roads) ? tabSelected : tabNormal)) {//, GUILayout.Width (90))) {
+					objectMode = ObjectType.Roads;
+					SetupRoads ();
+				}
+				if (GUILayout.Button ("Animals", (objectMode == ObjectType.Animals) ? tabSelected : tabNormal)) {//, GUILayout.Width (90))) {
+					objectMode = ObjectType.Animals;
+					SetupAnimals ();
+				}
+				if (GUILayout.Button ("Action Groups", (objectMode == ObjectType.ActionGroups) ? tabSelected : tabNormal)) {//, GUILayout.Width (90))) {
+					objectMode = ObjectType.ActionGroups;
+					SetupActionGroups ();
+				}
+				//GUILayout.FlexibleSpace ();
 			}
-			if (GUILayout.Button ("Roads", (objectMode == ObectType.Roads) ? tabSelected : tabNormal, GUILayout.Width (90))) {
-				objectMode = ObectType.Roads;
-				SetupRoads ();
-			}
-			if (GUILayout.Button ("Animals", (objectMode == ObectType.Animals) ? tabSelected : tabNormal, GUILayout.Width (90))) {
-				objectMode = ObectType.Animals;
-				SetupAnimals ();
-			}
-			
-			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
 			
 			bool result = false;

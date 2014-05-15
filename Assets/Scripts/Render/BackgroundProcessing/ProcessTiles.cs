@@ -33,7 +33,9 @@ namespace Ecosim.Render.BackgroundProcessing
 		private const float CANAL_DEPTH = -2f / TerrainMgr.VERTICAL_HEIGHT;
 		private const float MIN_CANAL_WATER = 0.25f / TerrainMgr.VERTICAL_HEIGHT;
 		private const float VERTICAL_NORMALIZE = 1f / 65535f;
+
 		private readonly Dictionary<int, List<CombinedMeshesData>> objectDict;
+		private int nonCombinableBuildinsCount = 0;
 		private readonly StencilMap[] stencilMaps;
 
 		
@@ -126,28 +128,45 @@ namespace Ecosim.Render.BackgroundProcessing
 			yield return false;
 			
 			List<Buildings.Building> buildings = scene.buildings.GetBuildingsForCell (cell.cellX, cell.cellY);
-			if (buildings != null) {
+			if (buildings != null) 
+			{
 				Vector3 localOffset = new Vector3 (offsetX * TerrainMgr.TERRAIN_SCALE, 0f, offsetY * TerrainMgr.TERRAIN_SCALE);
-				foreach (Buildings.Building building in buildings) {
-					if (building.isActive) {
+				foreach (Buildings.Building building in buildings) 
+				{
+					if (building.isActive)
+					{
 						EcoTerrainElements.PrefabContainer prefab = building.prefab;
 						CombinedMeshesData cmd = new CombinedMeshesData ();
 						cmd.prefab = prefab;
 						cmd.pos = building.position - localOffset;
-//				Debug.Log("pos = " + cmd.pos + " local offset = " + localOffset + " gridx = " + gridX + " gridy = " + gridY);
+						//Debug.Log("pos = " + cmd.pos + " local offset = " + localOffset + " gridx = " + gridX + " gridy = " + gridY);
 						cmd.rotation = building.rotation;
 						cmd.scale = building.scale;
-						List<CombinedMeshesData> list = null;
-						if (!objectDict.TryGetValue (prefab.materialId, out list)) {
-							list = new List<CombinedMeshesData> ();
-							objectDict.Add (prefab.materialId, list);
+
+						if (building.combinable)
+						{
+							List<CombinedMeshesData> list = null;
+							if (!objectDict.TryGetValue (prefab.materialId, out list)) 
+							{
+								list = new List<CombinedMeshesData> ();
+								objectDict.Add (prefab.materialId, list);
+							}
+							list.Add (cmd);
 						}
-						list.Add (cmd);
+						else 
+						{
+							// Make a new 'list' with only this entry and give it a (probably) unique id
+							List<CombinedMeshesData> list = new List<CombinedMeshesData>();
+							objectDict.Add (int.MaxValue - nonCombinableBuildinsCount, list);
+							list.Add (cmd);
+							nonCombinableBuildinsCount++;
+						}
 					}
 				}
 			}
 		
-			foreach (KeyValuePair<int, List<CombinedMeshesData>> keyval in objectDict) {
+			foreach (KeyValuePair<int, List<CombinedMeshesData>> keyval in objectDict) 
+			{
 				int count = keyval.Value.Count;
 				if (count == 0) {
 					Log.LogError ("Shouldn't happen!");
@@ -156,7 +175,8 @@ namespace Ecosim.Render.BackgroundProcessing
 				
 					List<CombineInstance> combineInstances = new List<CombineInstance> ();
 					int totalVertices = 0;
-					foreach (CombinedMeshesData cmd in keyval.Value) {
+					foreach (CombinedMeshesData cmd in keyval.Value) 
+					{
 						EcoTerrainElements.PrefabContainer prefab = cmd.prefab;
 						if (totalVertices + prefab.vertexCount >= 65000) {
 							cell.AddObject (MakeGOOfMeshInstances (cell.transform, "objects " + baseMaterial.name,
@@ -166,7 +186,7 @@ namespace Ecosim.Render.BackgroundProcessing
 						}
 						Matrix4x4 t = new Matrix4x4 ();
 						Vector3 pos = cmd.pos;
-//						pos.Scale(scaleVector);
+						//pos.Scale(scaleVector);
 						t.SetTRS (pos, cmd.rotation, cmd.scale);
 						CombineInstance i = new CombineInstance ();
 						i.mesh = prefab.mesh;

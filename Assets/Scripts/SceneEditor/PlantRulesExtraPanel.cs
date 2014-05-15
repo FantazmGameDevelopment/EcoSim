@@ -36,7 +36,7 @@ namespace Ecosim.SceneEditor
 
 			plantRuleFoldStates = new Dictionary<PlantRule, bool>();
 			foreach (PlantRule r in this.plant.rules) {
-				plantRuleFoldStates.Add (r, true);
+				if (r != null) plantRuleFoldStates.Add (r, true);
 			}
 
 			germRuleFoldStates = new Dictionary<PlantGerminationRule, bool>();

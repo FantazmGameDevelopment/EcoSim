@@ -88,6 +88,8 @@ public class CameraControl : MonoBehaviour
 	
 	public static void SwitchToNear ()
 	{
+		if (self.isNearActive) return;
+
 		self.farCamera.gameObject.SetActive (false);
 		self.nearCamera.gameObject.SetActive (true);
 		self.isNearActive = true;

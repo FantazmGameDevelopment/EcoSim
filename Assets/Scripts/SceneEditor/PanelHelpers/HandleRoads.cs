@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using Ecosim.SceneEditor;
 using Ecosim.SceneData;
@@ -7,7 +8,6 @@ namespace Ecosim.SceneEditor.Helpers
 {
 	public class HandleRoads : PanelHelper
 	{
-	
 //		readonly MapsPanel parent;
 		readonly EditorCtrl ctrl;
 		readonly Scene scene;
@@ -50,7 +50,7 @@ namespace Ecosim.SceneEditor.Helpers
 				roadNamesList.Add (go.name);
 			}
 			roadNames = roadNamesList.ToArray ();
-			renderTex = new Texture2D (380, 300, TextureFormat.RGB24, false);
+			renderTex = new Texture2D (360, 300, TextureFormat.RGB24, false);
 			Setup ();
 		}
 
@@ -63,8 +63,14 @@ namespace Ecosim.SceneEditor.Helpers
 			RenderPreviewTexture ();
 		}
 
+		/*void RenderPreviewTexture () {
+			(GameObject.FindObjectOfType <MonoBehaviour> () as MonoBehaviour).StartCoroutine (CORenderPreviewTexture());
+		}*/
+
 		void RenderPreviewTexture () {
+		//IEnumerator CORenderPreviewTexture () {
 			RenderTileIcons.RenderSettings rs = new RenderTileIcons.RenderSettings (60f, 30f, 30f, 5f);
+			//yield return new WaitForEndOfFrame ();
 			RenderTileIcons.self.Render (rs, ref renderTex, scene.successionTypes[0].vegetations[0].tiles[0], null, null,
 				EcoTerrainElements.GetRoadPrefab (roadNames [activeRoadIndex]));
 		}
@@ -100,8 +106,12 @@ namespace Ecosim.SceneEditor.Helpers
 			} else {
 				GUILayout.Label ("Click on a road to edit the road. Press 'N' to create new road of type '" + roadNames [activeRoadIndex] + "'");
 			}
-			
-			GUILayout.Label (renderTex, GUIStyle.none);
+
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.Label (renderTex, GUIStyle.none);
+			}
+			GUILayout.EndVertical ();
 			return false;
 		}
 		
@@ -267,7 +277,7 @@ namespace Ecosim.SceneEditor.Helpers
 					isDragging = false;
 				}
 			}
-			if ((Input.GetMouseButtonDown (1)) || (Input.GetMouseButton (0) && ctrlKey)) {
+			if (Input.GetMouseButton (0) && ctrlKey) {
 				if (activeHandle != null) {
 					Vector3 point;
 					if (TerrainMgr.TryScreenToTerrainCoord (mousePos, out point)) {

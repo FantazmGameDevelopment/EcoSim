@@ -24,6 +24,8 @@ namespace Ecosim.SceneData.PlantRules
 
 		public PlantRule ()
 		{
+			description = "New rule";
+
 			parameterConditions = new ParameterRange[0];
 			vegetationConditions = new VegetationCondition[] { new VegetationCondition() };
 		}

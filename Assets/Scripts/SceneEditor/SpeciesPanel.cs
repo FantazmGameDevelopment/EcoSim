@@ -123,121 +123,122 @@ namespace Ecosim.SceneEditor
 			foreach (PlantState ps in plants) 
 			{
 				GUILayout.BeginVertical (ctrl.skin.box);
-				
-				// Header
-				GUILayout.BeginHorizontal ();
 				{
-					if (GUILayout.Button (ps.isFoldedOpen ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
+					// Header
+					GUILayout.BeginHorizontal ();
 					{
-						ps.isFoldedOpen = !ps.isFoldedOpen;
-					}
-					
-					GUILayout.Label (plantIndex.ToString(), GUILayout.Width (40));
-					ps.plant.name = GUILayout.TextField (ps.plant.name);
-					
-					if (GUILayout.Button ("-", GUILayout.Width (20)))
-					{
-						PlantState tmpPS = ps;
-						ctrl.StartDialog (string.Format("Delete plant '{0}'?", tmpPS.plant.name), newVal => { 
-							DeletePlant (tmpPS);
-						}, null);
-					}
-				}
-				GUILayout.EndHorizontal(); // ~Header
-				
-				// Plant body
-				if (ps.isFoldedOpen) 
-				{
-					GUILayout.BeginVertical (ctrl.skin.box);
-					
-					// Parameter name
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label (string.Format(" Parameter name: '{0}'", ps.plant.dataName), GUILayout.Width (260));
-					GUILayout.EndHorizontal ();
-					
-					// Spread attempts
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" # Spawn seeds attempts", GUILayout.Width (140));
-					string spawnAttempts = GUILayout.TextField (ps.plant.spawnCount.ToString(), GUILayout.Width (40));
-					GUILayout.FlexibleSpace ();
-					GUILayout.EndHorizontal ();
-					
-					// Multiplier
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" Spawn seeds multiplier", GUILayout.Width (140));
-					string spawnMultiplier = GUILayout.TextField (ps.plant.spawnMultiplier.ToString(), GUILayout.Width (40));
-					GUILayout.FlexibleSpace ();
-					GUILayout.EndHorizontal ();
-					
-					// Dispersion
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" Spawn seeds dispersion", GUILayout.Width (140));
-					string spawnRadius = GUILayout.TextField (ps.plant.spawnRadius.ToString(), GUILayout.Width (40));
-					GUILayout.FlexibleSpace ();
-					GUILayout.EndHorizontal ();
-					
-					// Max per tile
-					GUILayout.BeginHorizontal ();
-					GUILayout.Label (" Maximum per tile", GUILayout.Width (140));
-					ps.maxPerTileStr = GUILayout.TextField (ps.maxPerTileStr, GUILayout.Width (40));
-					
-					// Format the string for only digits
-					string str = "";
-					foreach (char c in ps.maxPerTileStr)
-						if (char.IsDigit (c)) str += c.ToString();
-					ps.maxPerTileStr = str;
-					if (ps.maxPerTileStr.Length == 0) ps.maxPerTileStr = "0";
-					
-					// Check for a different value
-					int maxPerTile = int.Parse (ps.maxPerTileStr);
-					if (maxPerTile != ps.plant.maxPerTile) 
-					{
-						GUILayout.Label ("was " + ps.plant.maxPerTile.ToString(), GUILayout.Width (40));
-						if (GUILayout.Button ("Update", GUILayout.Width(60))) {
-							// Update the current plants data parameter map because we have changed the max per tile
-							Data plantData = scene.progression.GetData (ps.plant.dataName);
-							int prevMaxPerTile = ps.plant.maxPerTile;
-							ps.plant.maxPerTile = maxPerTile;
-							plantData.ProcessNotZero (delegate(int x, int y, int val, object data) {
-								// Get the current value's percentage to calculate the new value according the new max (per tile) value
-								float perc = (float)val / prevMaxPerTile;
-								int newVal = Mathf.RoundToInt(perc * (float)ps.plant.maxPerTile);
-								plantData.Set (x, y, newVal);
+						if (GUILayout.Button (ps.isFoldedOpen ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
+						{
+							ps.isFoldedOpen = !ps.isFoldedOpen;
+						}
+						
+						GUILayout.Label (plantIndex.ToString(), GUILayout.Width (40));
+						ps.plant.name = GUILayout.TextField (ps.plant.name);
+						
+						if (GUILayout.Button ("-", GUILayout.Width (20)))
+						{
+							PlantState tmpPS = ps;
+							ctrl.StartDialog (string.Format("Delete plant '{0}'?", tmpPS.plant.name), newVal => { 
+								DeletePlant (tmpPS);
 							}, null);
 						}
-						if (GUILayout.Button ("?", GUILayout.Width (20))) {
-							string message = 
-								@"You need to explicitly say to update the 'Maximum per tile' value, because changing this value will affect the currently placed amounts of the plant on the terrain.
-
-The current values will be converted by their percentage of the current maximum per tile value, like this:
-
-[new value] = ([current value]/[previous max]) * [new max].";
-							ctrl.StartOkDialog (message, null, 300, 150);
-						}
 					}
-					GUILayout.FlexibleSpace ();
-					GUILayout.EndHorizontal ();
+					GUILayout.EndHorizontal(); // ~Header
 					
-					int outNr;
-					if (int.TryParse (spawnAttempts, out outNr))
-						ps.plant.spawnCount = outNr;
-					if (int.TryParse (spawnMultiplier, out outNr))
-						ps.plant.spawnMultiplier = outNr;
-					if (int.TryParse (spawnRadius, out outNr))
-						ps.plant.spawnRadius = outNr;
-					
-					// Rules
-					GUILayout.Space (2);
-					GUILayout.BeginHorizontal(); // Rules
+					// Plant body
+					if (ps.isFoldedOpen) 
 					{
-						if (GUILayout.Button ("Rules"))
+						GUILayout.BeginVertical (ctrl.skin.box);
+						
+						// Parameter name
+						GUILayout.BeginHorizontal ();
+						GUILayout.Label (string.Format(" Parameter name: '{0}'", ps.plant.dataName), GUILayout.Width (260));
+						GUILayout.EndHorizontal ();
+						
+						// Spread attempts
+						GUILayout.BeginHorizontal ();
+						GUILayout.Label (" # Spawn seeds attempts", GUILayout.Width (140));
+						string spawnAttempts = GUILayout.TextField (ps.plant.spawnCount.ToString(), GUILayout.Width (40));
+						GUILayout.FlexibleSpace ();
+						GUILayout.EndHorizontal ();
+						
+						// Multiplier
+						GUILayout.BeginHorizontal ();
+						GUILayout.Label (" Spawn seeds multiplier", GUILayout.Width (140));
+						string spawnMultiplier = GUILayout.TextField (ps.plant.spawnMultiplier.ToString(), GUILayout.Width (40));
+						GUILayout.FlexibleSpace ();
+						GUILayout.EndHorizontal ();
+						
+						// Dispersion
+						GUILayout.BeginHorizontal ();
+						GUILayout.Label (" Spawn seeds dispersion", GUILayout.Width (140));
+						string spawnRadius = GUILayout.TextField (ps.plant.spawnRadius.ToString(), GUILayout.Width (40));
+						GUILayout.FlexibleSpace ();
+						GUILayout.EndHorizontal ();
+						
+						// Max per tile
+						GUILayout.BeginHorizontal ();
+						GUILayout.Label (" Maximum per tile", GUILayout.Width (140));
+						ps.maxPerTileStr = GUILayout.TextField (ps.maxPerTileStr, GUILayout.Width (40));
+						
+						// Format the string for only digits
+						string str = "";
+						foreach (char c in ps.maxPerTileStr)
+							if (char.IsDigit (c)) str += c.ToString();
+						ps.maxPerTileStr = str;
+						if (ps.maxPerTileStr.Length == 0) ps.maxPerTileStr = "0";
+						
+						// Check for a different value
+						int maxPerTile = int.Parse (ps.maxPerTileStr);
+						if (maxPerTile != ps.plant.maxPerTile) 
 						{
-							extraPanel = new PlantRulesExtraPanel (ctrl, ps.plant);
+							GUILayout.Label ("was " + ps.plant.maxPerTile.ToString(), GUILayout.Width (40));
+							if (GUILayout.Button ("Update", GUILayout.Width(60))) {
+								// Update the current plants data parameter map because we have changed the max per tile
+								Data plantData = scene.progression.GetData (ps.plant.dataName);
+								int prevMaxPerTile = ps.plant.maxPerTile;
+								ps.plant.maxPerTile = maxPerTile;
+								plantData.ProcessNotZero (delegate(int x, int y, int val, object data) {
+									// Get the current value's percentage to calculate the new value according the new max (per tile) value
+									float perc = (float)val / prevMaxPerTile;
+									int newVal = Mathf.RoundToInt(perc * (float)ps.plant.maxPerTile);
+									plantData.Set (x, y, newVal);
+								}, null);
+							}
+							if (GUILayout.Button ("?", GUILayout.Width (20))) {
+								string message = 
+									@"You need to explicitly say to update the 'Maximum per tile' value, because changing this value will affect the currently placed amounts of the plant on the terrain.
+
+	The current values will be converted by their percentage of the current maximum per tile value, like this:
+
+	[new value] = ([current value]/[previous max]) * [new max].";
+								ctrl.StartOkDialog (message, null, 300, 150);
+							}
 						}
+						GUILayout.FlexibleSpace ();
+						GUILayout.EndHorizontal ();
+						
+						int outNr;
+						if (int.TryParse (spawnAttempts, out outNr))
+							ps.plant.spawnCount = outNr;
+						if (int.TryParse (spawnMultiplier, out outNr))
+							ps.plant.spawnMultiplier = outNr;
+						if (int.TryParse (spawnRadius, out outNr))
+							ps.plant.spawnRadius = outNr;
+						
+						// Rules
+						GUILayout.Space (2);
+						GUILayout.BeginHorizontal(); // Rules
+						{
+							if (GUILayout.Button ("Rules"))
+							{
+								extraPanel = new PlantRulesExtraPanel (ctrl, ps.plant);
+							}
+						}
+						GUILayout.EndHorizontal(); // ~Rules
+						
+						GUILayout.EndVertical ();
 					}
-					GUILayout.EndHorizontal(); // ~Rules
-					
-					GUILayout.EndVertical ();
 				}
 				GUILayout.EndVertical(); // ~Plant body
 				plantIndex++;

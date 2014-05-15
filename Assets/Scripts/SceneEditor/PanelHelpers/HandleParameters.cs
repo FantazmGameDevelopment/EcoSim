@@ -192,136 +192,138 @@ namespace Ecosim.SceneEditor.Helpers
 				GUILayout.EndHorizontal ();
 			}
 
-			// Calculated (combined) parameters
-			GUILayout.Space (5);
-			GUILayout.BeginVertical (ctrl.skin.box);
+			if (onlyEditThisData == null) 
 			{
-				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (calcParamsOpen ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
+				// Calculated (combined) parameters
+				GUILayout.Space (5);
+				GUILayout.BeginVertical (ctrl.skin.box);
 				{
-					calcParamsOpen = !calcParamsOpen;
-				}
-				GUILayout.Label (" Calculated parameters");
-				GUILayout.EndHorizontal ();
-				GUILayout.Space (2);
-
-				if (calcParamsOpen)
-				{
-					if (scene.calculations.Length > 0)
+					GUILayout.BeginHorizontal ();
+					if (GUILayout.Button (calcParamsOpen ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
 					{
-						calcParamsScrollPos = GUILayout.BeginScrollView (calcParamsScrollPos);
-						{
-							foreach (CalculatedData.Calculation c in scene.calculations)
-							{
-								GUILayout.BeginVertical (ctrl.skin.box);
-								{
-									// Check if we have an entry
-									bool calcOpened = false;
-									if (!calculatedDataOpenStates.TryGetValue (c, out calcOpened)) {
-										calculatedDataOpenStates.Add (c, calcOpened);
-									}
-
-									GUILayout.BeginHorizontal ();
-									{
-										if (GUILayout.Button (calcOpened ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
-										{
-											calcOpened = !calcOpened;
-											calculatedDataOpenStates[c] = calcOpened;
-										}
-										GUILayout.Label (" " + c.paramName);
-									}
-									GUILayout.EndHorizontal ();
-									GUILayout.Space (2);
-
-									if (calcOpened)
-									{
-										GUILayout.Space (3);
-										EcoGUI.IntField (" Offset:", ref c.offset, GUILayout.Width (40), GUILayout.Width (50));
-
-										foreach (CalculatedData.Calculation.ParameterCalculation p in c.calculations)
-										{
-											GUILayout.BeginHorizontal ();
-											{
-												int paramIndex = 0;
-												if (!calculationActiveParameters.TryGetValue (p, out paramIndex)) {
-
-													foreach (string parameter in parameters) {
-														if (parameter == p.paramName) break;
-														paramIndex++;
-													}
-													calculationActiveParameters.Add (p, paramIndex);
-												}
-
-												GUILayout.Space (10);
-												GUILayout.Label ("+", GUILayout.Width (10));
-												EcoGUI.FloatField ("", ref p.multiplier, 2, null, GUILayout.Width (50));
-
-												if (GUILayout.Button (parameters[paramIndex], GUILayout.MaxWidth (550))) 
-												{
-													CalculatedData.Calculation tmpCC = c;
-													ctrl.StartSelection (parameters, paramIndex,
-													newIndex => {
-														if (newIndex != paramIndex) {
-															// Check if we didn't choose an calculated parameter
-															/*Data newData = scene.progression.GetData (parameters[newIndex]);
-															if (newData is CalculatedData) {
-																ctrl.StartOkDialog ("You're not allowed to refer to other Calculated Data parameters within a Calculated Data parameter.", null);
-															} else {
-																calculationActiveParameters[p] = newIndex;
-																p.paramName = parameters[newIndex];
-															}*/ 
-															if (parameters[newIndex] == tmpCC.paramName) {
-																ctrl.StartOkDialog ("You're not allowed to refer to the same Calculated Data parameter this calculation belongs to.", null);
-															} else {
-																calculationActiveParameters[p] = newIndex;
-																p.paramName = parameters[newIndex];
-															}
-														}
-													});
-													break;
-												}
-
-												if (GUILayout.Button ("-", GUILayout.Width (20)))
-												{
-													List<CalculatedData.Calculation.ParameterCalculation> list = new List<CalculatedData.Calculation.ParameterCalculation>(c.calculations);
-													list.Remove (p);
-													c.calculations = list.ToArray ();
-													break;
-												}
-											}
-											GUILayout.EndHorizontal ();
-										}
-
-										if (GUILayout.Button ("+", GUILayout.Width (20))) 
-										{
-											List<CalculatedData.Calculation.ParameterCalculation> list = new List<CalculatedData.Calculation.ParameterCalculation>(c.calculations);
-
-											// Get a random parameter
-											string parameterName = "";
-											foreach (string param in parameters) {
-												if (param != c.paramName) {
-													parameterName = param;
-													break;
-												}
-											}
-											list.Add (new CalculatedData.Calculation.ParameterCalculation( parameterName ));
-											list [list.Count - 1].data = scene.progression.GetData (parameterName);
-											c.calculations = list.ToArray ();
-										}
-									}
-								}	
-								GUILayout.EndVertical ();
-							}
-						}
-						GUILayout.EndScrollView ();
+						calcParamsOpen = !calcParamsOpen;
 					}
-					else {
-						GUILayout.Label (" No Calculated Data parameters found.");
+					GUILayout.Label (" Calculated parameters");
+					GUILayout.EndHorizontal ();
+					GUILayout.Space (2);
+
+					if (calcParamsOpen)
+					{
+						if (scene.calculations.Length > 0)
+						{
+							calcParamsScrollPos = GUILayout.BeginScrollView (calcParamsScrollPos);
+							{
+								foreach (CalculatedData.Calculation c in scene.calculations)
+								{
+									GUILayout.BeginVertical (ctrl.skin.box);
+									{
+										// Check if we have an entry
+										bool calcOpened = false;
+										if (!calculatedDataOpenStates.TryGetValue (c, out calcOpened)) {
+											calculatedDataOpenStates.Add (c, calcOpened);
+										}
+
+										GUILayout.BeginHorizontal ();
+										{
+											if (GUILayout.Button (calcOpened ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
+											{
+												calcOpened = !calcOpened;
+												calculatedDataOpenStates[c] = calcOpened;
+											}
+											GUILayout.Label (" " + c.paramName);
+										}
+										GUILayout.EndHorizontal ();
+										GUILayout.Space (2);
+
+										if (calcOpened)
+										{
+											GUILayout.Space (3);
+											EcoGUI.IntField (" Offset:", ref c.offset, GUILayout.Width (40), GUILayout.Width (50));
+
+											foreach (CalculatedData.Calculation.ParameterCalculation p in c.calculations)
+											{
+												GUILayout.BeginHorizontal ();
+												{
+													int paramIndex = 0;
+													if (!calculationActiveParameters.TryGetValue (p, out paramIndex)) {
+
+														foreach (string parameter in parameters) {
+															if (parameter == p.paramName) break;
+															paramIndex++;
+														}
+														calculationActiveParameters.Add (p, paramIndex);
+													}
+
+													GUILayout.Space (10);
+													GUILayout.Label ("+", GUILayout.Width (10));
+													EcoGUI.FloatField ("", ref p.multiplier, 2, null, GUILayout.Width (50));
+
+													if (GUILayout.Button (parameters[paramIndex], GUILayout.MaxWidth (550))) 
+													{
+														CalculatedData.Calculation tmpCC = c;
+														ctrl.StartSelection (parameters, paramIndex,
+														newIndex => {
+															if (newIndex != paramIndex) {
+																// Check if we didn't choose an calculated parameter
+																/*Data newData = scene.progression.GetData (parameters[newIndex]);
+																if (newData is CalculatedData) {
+																	ctrl.StartOkDialog ("You're not allowed to refer to other Calculated Data parameters within a Calculated Data parameter.", null);
+																} else {
+																	calculationActiveParameters[p] = newIndex;
+																	p.paramName = parameters[newIndex];
+																}*/ 
+																if (parameters[newIndex] == tmpCC.paramName) {
+																	ctrl.StartOkDialog ("You're not allowed to refer to the same Calculated Data parameter this calculation belongs to.", null);
+																} else {
+																	calculationActiveParameters[p] = newIndex;
+																	p.paramName = parameters[newIndex];
+																}
+															}
+														});
+														break;
+													}
+
+													if (GUILayout.Button ("-", GUILayout.Width (20)))
+													{
+														List<CalculatedData.Calculation.ParameterCalculation> list = new List<CalculatedData.Calculation.ParameterCalculation>(c.calculations);
+														list.Remove (p);
+														c.calculations = list.ToArray ();
+														break;
+													}
+												}
+												GUILayout.EndHorizontal ();
+											}
+
+											if (GUILayout.Button ("+", GUILayout.Width (20))) 
+											{
+												List<CalculatedData.Calculation.ParameterCalculation> list = new List<CalculatedData.Calculation.ParameterCalculation>(c.calculations);
+
+												// Get a random parameter
+												string parameterName = "";
+												foreach (string param in parameters) {
+													if (param != c.paramName) {
+														parameterName = param;
+														break;
+													}
+												}
+												list.Add (new CalculatedData.Calculation.ParameterCalculation( parameterName ));
+												list [list.Count - 1].data = scene.progression.GetData (parameterName);
+												c.calculations = list.ToArray ();
+											}
+										}
+									}	
+									GUILayout.EndVertical ();
+								}
+							}
+							GUILayout.EndScrollView ();
+						}
+						else {
+							GUILayout.Label (" No Calculated Data parameters found.");
+						}
 					}
 				}
+				GUILayout.EndVertical ();
 			}
-			GUILayout.EndVertical ();
-
 			return false;
 		}
 

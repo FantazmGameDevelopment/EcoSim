@@ -125,8 +125,8 @@ public class RenderTileIcons : MonoBehaviour {
 		while (true) {
 			if (head != null) {
 				TileType tt = head.tile;
-//				TileType surroundings = tt.vegetationType.tiles[0];
 				Texture2D icon = new Texture2D(64, 64, TextureFormat.RGB24, false, false);
+				yield return new WaitForEndOfFrame ();
 				Render(defaultSettings, ref icon, tt);
 				tt.SetIcon(icon);
 				head = head.next;

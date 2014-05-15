@@ -47,7 +47,7 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 			if (!instanceGO) {
 				// GameObject go = (GameObject)GameObject.Instantiate (building.prefab.prefab, building.position, building.rotation);
 				GameObject go = building.prefab.Instantiate (building.position, building.rotation, building.scale);
-				go.AddComponent<BoxCollider> ();
+				go.AddComponent<MeshCollider> ();
 				go.layer = Layers.L_EDIT1;
 				instanceGO = go;
 				EditBuildings.self.dict.Add (go, this);
@@ -137,6 +137,16 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 		BuildingInstance result;
 		if (dict.TryGetValue (go, out result)) {
 			return result.building;
+		}
+		return null;
+	}
+
+	public GameObject GetGameObjectForBuilding (Buildings.Building building)
+	{
+		foreach (KeyValuePair<GameObject, BuildingInstance> pair in dict) {
+			if (pair.Value.building == building) {
+				return pair.Key;
+			}
 		}
 		return null;
 	}
