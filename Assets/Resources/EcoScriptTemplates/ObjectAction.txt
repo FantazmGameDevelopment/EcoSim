@@ -1,0 +1,17 @@
+void HandleClick (Coordinate c) {
+	
+}
+
+void ActionSelected (UserInteraction ui) {
+	AddActionObjects ();
+}
+
+void ActionDeselected (UserInteraction ui) {
+	RemoveActionObjects ();
+}
+
+void PrepareSuccession() {
+}
+
+void FinalizeSuccession() {
+}

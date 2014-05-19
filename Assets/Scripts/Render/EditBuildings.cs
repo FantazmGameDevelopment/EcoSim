@@ -15,19 +15,19 @@ using Ecosim.Render;
 public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 {
 	public static EditBuildings self;
-	private BuildingInstance selected;
+	protected BuildingInstance selected;
 	
-	void Awake ()
+	protected virtual void Awake ()
 	{
 		self = this;
 	}
 	
-	void OnDestroy ()
+	protected virtual void OnDestroy ()
 	{
 		self = null;
 	}
 	
-	private class BuildingInstance
+	protected class BuildingInstance
 	{
 		public BuildingInstance (Buildings.Building building)
 		{
@@ -73,12 +73,12 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 	 * We're lazy and keep all instances for all 'cells' in one list
 	 * we use BuildingInstance.cellKey to determine in which cell the instance belongs
 	 */
-	private List<BuildingInstance> instances;
+	protected List<BuildingInstance> instances;
 	
 	/**
 	 * Building instances referred by Game Object
 	 */
-	private Dictionary<GameObject, BuildingInstance> dict;
+	protected Dictionary<GameObject, BuildingInstance> dict;
 
 	/**
 	 * Building has changed and needs to be redrawn (if visible)
@@ -180,7 +180,7 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 		}
 	}
 	
-	void ActivateDeactivateRendering (GameObject go, bool active)
+	protected virtual void ActivateDeactivateRendering (GameObject go, bool active)
 	{
 		foreach (Component c in go.GetComponentsInChildren<MeshRenderer>()) {
 			MeshRenderer mr = (MeshRenderer)c;
@@ -188,7 +188,7 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 		}
 	}
 	
-	public void StartEditBuildings (Scene scene)
+	public virtual void StartEditBuildings (Scene scene)
 	{
 		selected = null;
 		instances = new List<BuildingInstance> ();
@@ -196,15 +196,16 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 			instances.Add (new BuildingInstance (b));
 		}
 		dict = new Dictionary<GameObject, BuildingInstance> ();
+
 		// temporarely remove buildings from 'buildings' class
 		// as we are going to draw all buildings from within this
 		// class
 		scene.buildings.SetAllBuildings (null);
 		TerrainMgr.AddListener (this);
-		StartCoroutine(COBlinkSelection());
+		StartCoroutine (COBlinkSelection());
 	}
 	
-	public void StopEditBuildings (Scene scene)
+	public virtual void StopEditBuildings (Scene scene)
 	{
 		selected = null;
 		TerrainMgr.RemoveListener (this);
@@ -213,12 +214,14 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 			buildings.Add (bi.building);
 			bi.DestroyInstance ();
 		}
+		// Add all the other current buildings
+		buildings.AddRange (scene.buildings.GetAllBuildings ());
 		scene.buildings.SetAllBuildings (buildings);
 		instances = null;
 		StopAllCoroutines ();
 	}
 	
-	IEnumerator COBlinkSelection ()
+	protected virtual IEnumerator COBlinkSelection ()
 	{
 		while (true) {
 			if ((selected != null) && (selected.instanceGO)) {

@@ -17,7 +17,8 @@ namespace Ecosim.SceneEditor.Helpers
 
 		private enum EditMode
 		{
-			Influence,
+			InfluenceMap,
+			InfluenceRules,
 			Objects
 		}
 
@@ -64,7 +65,7 @@ namespace Ecosim.SceneEditor.Helpers
 
 		public override void Update ()
 		{
-			if (editMode == null || editMode == EditMode.Influence) return;
+			if (editMode == null || editMode == EditMode.InfluenceMap) return;
 
 			base.Update ();
 		}
@@ -88,7 +89,7 @@ namespace Ecosim.SceneEditor.Helpers
 		protected override void BuildingCreated (Buildings.Building newBuilding)
 		{
 			// Create Action object
-			ActionObject actionObject = new ActionObject (newBuilding);
+			ActionObject actionObject = new ActionObject (editGroup, newBuilding);
 			List<ActionObject> actionObjects = new List<ActionObject>(editGroup.actionObjects);
 			actionObjects.Add (actionObject);
 			editGroup.actionObjects = actionObjects.ToArray();
@@ -143,7 +144,7 @@ namespace Ecosim.SceneEditor.Helpers
 										if (GUILayout.Button ("Edit influence area")) 
 										{
 											editGroup = group;
-											editMode = EditMode.Influence;
+											editMode = EditMode.InfluenceMap;
 											selectedBuilding = null;
 
 											if (handleParams != null) {
@@ -152,6 +153,18 @@ namespace Ecosim.SceneEditor.Helpers
 											}
 											Data influenceMap = scene.progression.GetData (group.dataName);
 											handleParams = new HandleParameters (ctrl, parent, scene, influenceMap);
+										}
+
+										if  (GUILayout.Button ("Edit influence rules"))
+										{
+											editGroup = group;
+											editMode = EditMode.InfluenceRules;
+											selectedBuilding = null;
+
+											if (handleParams != null) {
+												handleParams.Disable ();
+												handleParams = null;
+											}
 										}
 
 										if (GUILayout.Button ("Edit action objects")) //, GUILayout.Width(120))) 
@@ -299,8 +312,12 @@ namespace Ecosim.SceneEditor.Helpers
 					RenderEditObjects ();
 					break;
 
-				case EditMode.Influence :
-					RenderEditInfluence (mx, my);
+				case EditMode.InfluenceMap :
+					RenderEditInfluenceMap (mx, my);
+					break;
+
+				case EditMode.InfluenceRules :
+					RenderEditInfluenceRules (mx, my);
 					break;
 				}
 			}
@@ -343,10 +360,8 @@ namespace Ecosim.SceneEditor.Helpers
 			GUILayout.EndVertical ();
 		}
 
-		private void RenderEditInfluence (int mx, int my)
+		private void RenderEditInfluenceMap (int mx, int my)
 		{
-
-
 			GUILayout.BeginVertical (ctrl.skin.box);
 			{
 				GUILayout.BeginHorizontal ();
@@ -365,6 +380,43 @@ namespace Ecosim.SceneEditor.Helpers
 				GUILayout.Space (5f);
 				
 				handleParams.Render (mx, my);
+			}
+			GUILayout.EndVertical ();
+		}
+
+		private void RenderEditInfluenceRules (int mx, int my)
+		{
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.BeginHorizontal ();
+				{
+					if (GUILayout.Button (ctrl.foldedOpenSmall, GUILayout.Width (20))) 
+					{
+						editGroup = null;
+						selectedBuilding = null;
+						EditBuildings.self.MarkBuildingSelected (selectedBuilding);
+					}
+					
+					if (editGroup != null) 
+						GUILayout.Label (string.Format("Edit influence rules of '{0}'", editGroup.name));
+				}
+				GUILayout.EndHorizontal ();
+				GUILayout.Space (5f);
+
+				// TODO: Render influence rules
+				foreach (ActionObjectInfluenceRule rule in editGroup.influenceRules) 
+				{
+					/*
+					 * // Min perc
+						GUILayout.Space(2);
+						GUILayout.Label (minPerc.ToString("0.00"), GUILayout.Width (25));
+						pc.lowRange = (int)GUILayout.HorizontalSlider (pc.lowRange, min, max, GUILayout.Width (62));
+						
+						// Max perc
+						pc.highRange = (int)GUILayout.HorizontalSlider (pc.highRange, min, max, GUILayout.Width (62));
+						GUILayout.Label (maxPerc.ToString("0.00"), GUILayout.Width (25));
+					 */ 
+				}
 			}
 			GUILayout.EndVertical ();
 		}

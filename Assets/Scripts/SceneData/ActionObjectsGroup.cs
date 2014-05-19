@@ -11,24 +11,29 @@ namespace Ecosim.SceneData
 	{
 		public const string XML_ELEMENT = "actionobject";
 
+		public ActionObjectsGroup group;
+
 		public int buildingId;
 		public Buildings.Building building;
 
-		public ActionObject ()
+		public ActionObject (ActionObjectsGroup group)
 		{
+			this.group = group;
 		}
 
-		public ActionObject (Buildings.Building building)
+		public ActionObject (ActionObjectsGroup group, Buildings.Building building)
 		{
+			this.group = group;
 			this.building = building;
+			this.building.startsActive = false;
 			this.building.isActive = false;
 			this.building.combinable = false;
 			this.buildingId = this.building.id;
 		}
 
-		public static ActionObject Load (XmlTextReader reader, Scene scene)
+		public static ActionObject Load (XmlTextReader reader, Scene scene, ActionObjectsGroup group)
 		{
-			ActionObject result = new ActionObject ();
+			ActionObject result = new ActionObject (group);
 			result.buildingId = int.Parse(reader.GetAttribute ("buildingid"));
 
 			// Get the building
@@ -52,6 +57,54 @@ namespace Ecosim.SceneData
 		}
 	}
 
+	public class ActionObjectInfluenceRule
+	{
+		public const string XML_ELEMENT = "influencerule";
+
+		public enum MathTypes
+		{
+			Equals,
+			Multiply,
+			Plus,
+			Minus
+		}
+
+		public string paramName;
+		public MathTypes mathType;
+
+		public float lowRange;
+		public float highRange;
+
+		public ActionObjectInfluenceRule ()
+		{
+		}
+
+		public static ActionObjectInfluenceRule Load (XmlTextReader reader, Scene scene)
+		{
+			ActionObjectInfluenceRule result = new ActionObjectInfluenceRule ();
+			/*result.buildingId = int.Parse(reader.GetAttribute ("buildingid"));
+			
+			// Get the building
+			List<Buildings.Building> buildings = scene.buildings.GetAllBuildings ();
+			foreach (Buildings.Building building in buildings) 
+			{
+				if (building.id == result.buildingId) {
+					result.building = building;
+					break;
+				}
+			}*/
+			IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
+			return result;
+		}
+		
+		public void Save (XmlTextWriter writer, Scene scene)
+		{
+			writer.WriteStartElement (XML_ELEMENT);
+			//writer.WriteAttributeString ("buildingid", buildingId.ToString());
+			writer.WriteEndElement ();
+		}
+	}
+
 	public class ActionObjectsGroup
 	{
 		public const string XML_ELEMENT = "actionobjectgroup";
@@ -64,6 +117,7 @@ namespace Ecosim.SceneData
 		public int index;
 
 		public ActionObject[] actionObjects;
+		public ActionObjectInfluenceRule[] influenceRules;
 		
 		public ActionObjectsGroup ()
 		{
@@ -89,6 +143,7 @@ namespace Ecosim.SceneData
 			index = scene.actionObjectGroups.Length;
 
 			actionObjects = new ActionObject[] { };
+			influenceRules = new ActionObjectInfluenceRule[] { };
 			
 			// Add to scene
 			List<ActionObjectsGroup> tmpList = new List<ActionObjectsGroup>(scene.actionObjectGroups);
@@ -112,7 +167,7 @@ namespace Ecosim.SceneData
 					XmlNodeType nType = reader.NodeType;
 					if ((nType == XmlNodeType.Element) && (reader.Name.ToLower() == ActionObject.XML_ELEMENT)) 
 					{
-						ActionObject ao = ActionObject.Load (reader, scene);
+						ActionObject ao = ActionObject.Load (reader, scene, result);
 						if (ao != null) {
 							actionObjs.Add (ao);
 						}

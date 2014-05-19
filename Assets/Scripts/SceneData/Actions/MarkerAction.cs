@@ -71,7 +71,7 @@ namespace Ecosim.SceneData.Action
 				actionDeselectedMI.Invoke (ecoBase, new object[] { ui, cancel });
 			}
 		}
-		
+
 		protected override void UnlinkEcoBase ()
 		{
 			base.UnlinkEcoBase ();
@@ -83,8 +83,8 @@ namespace Ecosim.SceneData.Action
 			base.LinkEcoBase ();
 			if (ecoBase != null) {
 				actionDeselectedMI = ecoBase.GetType ().GetMethod ("ActionDeselected",
-				BindingFlags.NonPublic | BindingFlags.Instance, null,
-				new Type[] { typeof(UserInteraction), typeof(bool) }, null);
+						BindingFlags.NonPublic | BindingFlags.Instance, null,
+						new Type[] { typeof(UserInteraction), typeof(bool) }, null);
 			}
 		}
 		

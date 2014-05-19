@@ -150,7 +150,7 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndHorizontal ();
 		}
 
-		void HandlePlansAction (PlantsAction action)
+		void HandlePlantsAction (PlantsAction action)
 		{
 			GUILayout.BeginHorizontal ();
 			{
@@ -166,6 +166,11 @@ namespace Ecosim.SceneEditor
 				GUI.enabled = true;
 			}
 			GUILayout.EndHorizontal ();
+		}
+
+		void HandleObjectAction (ActionObjectAction action)
+		{
+			GUILayout.Label ("WIP");
 		}
 		
 		private string debugStr = "";
@@ -301,7 +306,9 @@ namespace Ecosim.SceneEditor
 					} else if (action is SuccessionAction) {
 						HandleSuccessionAction ((SuccessionAction)action);
 					} else if (action is PlantsAction) {
-						HandlePlansAction ((PlantsAction)action);
+						HandlePlantsAction ((PlantsAction)action);
+					} else if (action is ActionObjectAction) {
+						HandleObjectAction ((ActionObjectAction)action);
 					}
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Script", GUILayout.Width (80));
