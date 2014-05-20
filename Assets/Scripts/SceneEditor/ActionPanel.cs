@@ -16,6 +16,7 @@ namespace Ecosim.SceneEditor
 		private GUIStyle tabNormal;
 //		private GUIStyle tabSelected;
 		private string[] actionTypeNames;
+		private string[] actionObjectGroups;
 		private BasicAction sidePanelAction = null;
 		private bool sidePanelShowErrors = false;
 		private string sidePanelScript = null;
@@ -37,10 +38,16 @@ namespace Ecosim.SceneEditor
 				string str = ActionMgr.actionTypes [i].ToString ();
 				actionTypeNames [i] = str.Substring (str.LastIndexOf ('.') + 1);
 			}
+
+			actionObjectGroups = new string[scene.actionObjectGroups.Length];
+			for (int i = 0; i < scene.actionObjectGroups.Length; i++) {
+				actionObjectGroups[i] = scene.actionObjectGroups[i].name;
+			}
 		}
 		
 		private HashSet<BasicAction> foldedOpen;
 		private int addActionTypeIndex = 0;
+		private int addActionObjectGroupIndex = 0;
 		
 		void HandleDialogAction (DialogAction action)
 		{
@@ -168,9 +175,67 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndHorizontal ();
 		}
 
-		void HandleObjectAction (ActionObjectAction action)
+		void HandleActionObjectAction (ActionObjectAction action)
 		{
-			GUILayout.Label ("WIP");
+			// Choose possible action groups
+			int index = 0;
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				foreach (ActionObjectsGroup group in action.objectsGroups)
+				{
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Label (index++.ToString(), GUILayout.Width (20));
+						GUILayout.Label (group.name);
+						if (GUILayout.Button ("-", GUILayout.Width (20)))
+						{
+							action.objectsGroups.Remove (group);
+							break;
+						}
+					}
+					GUILayout.EndHorizontal ();
+				}
+
+				GUILayout.BeginHorizontal ();
+				{
+					if (GUILayout.Button (actionObjectGroups[addActionObjectGroupIndex]))
+					{
+						ctrl.StartSelection (actionObjectGroups, addActionObjectGroupIndex, newIndex => {
+							addActionObjectGroupIndex = newIndex;
+						});
+					}
+
+					if (scene.actionObjectGroups.Length > 0)
+					{
+						if (GUILayout.Button ("+", GUILayout.Width (20))) 
+						{
+							if (scene.actionObjectGroups.Length != actionObjectGroups.Length)
+							{
+								actionObjectGroups = new string[scene.actionObjectGroups.Length];
+								for (int i = 0; i < scene.actionObjectGroups.Length; i++) {
+									actionObjectGroups[i] = scene.actionObjectGroups[i].name;
+								}
+								addActionObjectGroupIndex = 0;
+							}
+
+							foreach (ActionObjectsGroup group in scene.actionObjectGroups)
+							{
+								if (group.name == actionObjectGroups[addActionObjectGroupIndex])
+								{
+									if (action.objectsGroups.Contains (group)) {
+										ctrl.StartOkDialog (string.Format("Action object group '{0}' is already added.", group.name), null);
+									} else {
+										action.objectsGroups.Add (group);
+									}
+									break;
+								}
+							}
+						}
+					} else GUILayout.Label ("No Action Object groups found.");
+				}
+				GUILayout.EndHorizontal ();
+			}
+			GUILayout.EndVertical ();
 		}
 		
 		private string debugStr = "";
@@ -308,7 +373,7 @@ namespace Ecosim.SceneEditor
 					} else if (action is PlantsAction) {
 						HandlePlantsAction ((PlantsAction)action);
 					} else if (action is ActionObjectAction) {
-						HandleObjectAction ((ActionObjectAction)action);
+						HandleActionObjectAction ((ActionObjectAction)action);
 					}
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Script", GUILayout.Width (80));

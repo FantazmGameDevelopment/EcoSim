@@ -366,7 +366,6 @@ namespace Ecosim.SceneEditor.Helpers
 					newBuilding.position = hitPoint;
 					newBuilding.scale = Vector3.one;
 					newBuilding.rotation = Quaternion.identity;
-					newBuilding.combinable = false;
 
 					BuildingCreated (newBuilding);
 				}

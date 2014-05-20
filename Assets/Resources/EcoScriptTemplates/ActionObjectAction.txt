@@ -1,0 +1,14 @@
+void SaveProgress() {
+}
+
+void LoadProgress(bool initScene) {
+}
+
+void PrepareSuccession() {
+}
+
+void DoSuccession() {
+}
+
+void FinalizeSuccession() {
+}

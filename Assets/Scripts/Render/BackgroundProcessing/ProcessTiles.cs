@@ -35,7 +35,6 @@ namespace Ecosim.Render.BackgroundProcessing
 		private const float VERTICAL_NORMALIZE = 1f / 65535f;
 
 		private readonly Dictionary<int, List<CombinedMeshesData>> objectDict;
-		private int nonCombinableBuildinsCount = 0;
 		private readonly StencilMap[] stencilMaps;
 
 		
@@ -143,24 +142,13 @@ namespace Ecosim.Render.BackgroundProcessing
 						cmd.rotation = building.rotation;
 						cmd.scale = building.scale;
 
-						if (building.combinable)
+						List<CombinedMeshesData> list = null;
+						if (!objectDict.TryGetValue (prefab.materialId, out list)) 
 						{
-							List<CombinedMeshesData> list = null;
-							if (!objectDict.TryGetValue (prefab.materialId, out list)) 
-							{
-								list = new List<CombinedMeshesData> ();
-								objectDict.Add (prefab.materialId, list);
-							}
-							list.Add (cmd);
+							list = new List<CombinedMeshesData> ();
+							objectDict.Add (prefab.materialId, list);
 						}
-						else 
-						{
-							// Make a new 'list' with only this entry and give it a (probably) unique id
-							List<CombinedMeshesData> list = new List<CombinedMeshesData>();
-							objectDict.Add (int.MaxValue - nonCombinableBuildinsCount, list);
-							list.Add (cmd);
-							nonCombinableBuildinsCount++;
-						}
+						list.Add (cmd);
 					}
 				}
 			}

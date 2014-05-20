@@ -527,6 +527,15 @@ namespace Ecosim.SceneData
 						variables.Add (name, var);
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
+					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "actionobjectgroup")) {
+						string name = reader.GetAttribute ("name");
+						bool enabled = bool.Parse (reader.GetAttribute ("enabled"));
+						foreach (ActionObjectsGroup gr in scene.actionObjectGroups) {
+							if (gr.name == name) {
+								gr.enabled = enabled;
+								break;
+							}
+						} 
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "progress")) {
 						break;
 					}
@@ -757,6 +766,15 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("actionid", ir.actionId.ToString ());
 				writer.WriteEndElement ();
 			}
+
+			// Action object groups
+			foreach (ActionObjectsGroup gr in scene.actionObjectGroups) {
+				writer.WriteStartElement ("actionobjectgroup");
+				writer.WriteAttributeString ("name", gr.name);
+				writer.WriteAttributeString ("enabled", gr.enabled.ToString().ToLower());
+				writer.WriteEndElement ();
+			}
+
 			writer.WriteEndElement ();
 			writer.WriteEndDocument ();
 			writer.Close ();

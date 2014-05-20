@@ -23,7 +23,6 @@ namespace Ecosim.SceneData
 			public Vector3 scale;
 			public bool startsActive = true;
 			public bool isActive = true;
-			public bool combinable = true;
 		}
 		
 //		private readonly Scene scene;
@@ -125,9 +124,6 @@ namespace Ecosim.SceneData
 			b.startsActive = ((isActive == null) || (isActive == "true"));
 			b.isActive = b.startsActive;
 
-			bool combinable = true;
-			if (bool.TryParse (reader.GetAttribute ("combinable"), out combinable)) b.combinable = combinable;
-
 			if ((cellX < 0) || (cellY < 0) || (cellX >= grid.GetLength (1)) || (cellY >= grid.GetLength (0))) {
 				Debug.Log ("building out of bounds [" + cellX + ", " + cellY + "] (" + b.position.x + ", " + b.position.z + ")");
 			} else {
@@ -169,7 +165,6 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("position", StringUtil.Vector3ToString (b.position));
 				writer.WriteAttributeString ("rotation", StringUtil.Vector3ToString (b.rotation.eulerAngles));
 				writer.WriteAttributeString ("scale", StringUtil.Vector3ToString (b.scale));
-				writer.WriteAttributeString ("combinable", b.combinable.ToString().ToLower());
 				writer.WriteAttributeString ("active", b.startsActive ? "true" : "false");
 				writer.WriteEndElement ();
 			}

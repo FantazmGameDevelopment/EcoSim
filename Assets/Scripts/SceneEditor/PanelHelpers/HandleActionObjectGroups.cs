@@ -14,6 +14,7 @@ namespace Ecosim.SceneEditor.Helpers
 
 		private Vector2 groupsScrollPos;
 		private Vector2 editObjectsScrollPos;
+		private Vector2 influenceRulesScrollPos;
 
 		private enum EditMode
 		{
@@ -30,8 +31,10 @@ namespace Ecosim.SceneEditor.Helpers
 			groupsOpenState = new Dictionary<ActionObjectsGroup, bool>();
 			objectsOpenState = new Dictionary<ActionObjectsGroup, bool>();
 			newGroupName = "New Group";
+
 			groupsScrollPos = Vector2.zero;
 			editObjectsScrollPos = Vector2.zero;
+			influenceRulesScrollPos = Vector2.zero;
 		}
 		
 		protected override void Setup ()
@@ -46,7 +49,14 @@ namespace Ecosim.SceneEditor.Helpers
 			List<ActionObjectsGroup> list = new List<ActionObjectsGroup>(scene.actionObjectGroups);
 			list.Remove (group);
 			scene.progression.DeleteData (group.dataName);
-			
+
+			// Delete all buildings associated with the action objects
+			foreach (ActionObject ao in group.actionObjects)
+			{
+				if (ao.building != null)
+					EditBuildings.self.DestroyBuilding (ao.building);
+			}
+
 			scene.actionObjectGroups = list.ToArray();
 			scene.UpdateReferences();
 			
@@ -73,15 +83,12 @@ namespace Ecosim.SceneEditor.Helpers
 		protected override void BuildingClicked (Buildings.Building building)
 		{
 			// Check if it's a action object
-			if (!building.combinable) 
+			foreach (ActionObject actionObject in editGroup.actionObjects) 
 			{
-				foreach (ActionObject actionObject in editGroup.actionObjects) 
+				// It's a building of an action object
+				if (actionObject.building == building) 
 				{
-					// It's a building of an action object
-					if (actionObject.building == building) 
-					{
-						base.BuildingClicked (building);
-					}
+					base.BuildingClicked (building);
 				}
 			}
 		}
@@ -122,13 +129,15 @@ namespace Ecosim.SceneEditor.Helpers
 								}
 								
 								GUILayout.Label (group.index.ToString(), GUILayout.Width (40));
-								group.name = GUILayout.TextField (group.name);
+								//group.name = GUILayout.TextField (group.name);
+								GUILayout.Label (group.name);
 								
 								if (GUILayout.Button ("-", GUILayout.Width (20)))
 								{
 									ActionObjectsGroup tmp = group;
-									ctrl.StartDialog (string.Format("Delete group '{0}'?", tmp.name), newVal => { 
-										//DeletePlant (tmp); TODO: Delete action group
+									ctrl.StartDialog (string.Format("Delete group '{0}'?", tmp.name), 
+									    newVal => { 
+										DeleteGroup (tmp);
 									}, null);
 								}
 							}
@@ -217,6 +226,16 @@ namespace Ecosim.SceneEditor.Helpers
 													{
 														if (GUILayout.Button ("Edit", GUILayout.Width (50))) 
 														{
+															// Same code as "Edit action objects"
+															editGroup = group;
+															editMode = EditMode.Objects;
+															selectedBuilding = null;
+															
+															if (handleParams != null) {
+																handleParams.Disable ();
+																handleParams = null;
+															}
+
 															BuildingClicked (aObj.building);
 														}
 													}
@@ -403,20 +422,144 @@ namespace Ecosim.SceneEditor.Helpers
 				GUILayout.EndHorizontal ();
 				GUILayout.Space (5f);
 
-				// TODO: Render influence rules
-				foreach (ActionObjectInfluenceRule rule in editGroup.influenceRules) 
+				influenceRulesScrollPos = GUILayout.BeginScrollView (influenceRulesScrollPos);
 				{
-					/*
-					 * // Min perc
-						GUILayout.Space(2);
-						GUILayout.Label (minPerc.ToString("0.00"), GUILayout.Width (25));
-						pc.lowRange = (int)GUILayout.HorizontalSlider (pc.lowRange, min, max, GUILayout.Width (62));
-						
-						// Max perc
-						pc.highRange = (int)GUILayout.HorizontalSlider (pc.highRange, min, max, GUILayout.Width (62));
-						GUILayout.Label (maxPerc.ToString("0.00"), GUILayout.Width (25));
-					 */ 
+					if (editGroup != null)
+					{
+						// TODO: Render influence rules
+						foreach (ActionObjectInfluenceRule rule in editGroup.influenceRules) 
+						{
+							GUILayout.BeginVertical (ctrl.skin.box);
+							{
+								bool removeRule = false;
+								GUILayout.BeginHorizontal ();
+								{
+									switch (rule.valueType)
+									{
+									case ActionObjectInfluenceRule.ValueType.Range :
+										GUILayout.Label ("If value is between ( ");
+										EcoGUI.RangeSliders ("", ref rule.lowRange, ref rule.highRange, 0f, 1f, null, GUILayout.Width (70));
+										GUILayout.Label (" )", GUILayout.Width (20));
+										break;
+										
+									case ActionObjectInfluenceRule.ValueType.Value :
+										GUILayout.Label ("If value is ");
+
+										rule.lowRange = GUILayout.HorizontalSlider (rule.lowRange, 0f, 1f, GUILayout.Width (160));
+										int value = (int)(rule.lowRange * 255f);
+										EcoGUI.IntField ("", ref value, null, GUILayout.Width (50));
+										rule.lowRange = Mathf.Clamp ((float)value / 255f, 0f, 1f);
+										rule.highRange = rule.lowRange;
+										break;
+									}
+
+									GUILayout.FlexibleSpace ();
+									if (GUILayout.Button ("-", GUILayout.Width (20))) {
+										removeRule = true;
+									}
+								}
+								GUILayout.EndHorizontal ();
+
+								// Should we remove the rule?
+								if (removeRule)
+								{
+									List<ActionObjectInfluenceRule> list = new List<ActionObjectInfluenceRule>(editGroup.influenceRules);
+									list.Remove (rule);
+									editGroup.influenceRules = list.ToArray();
+									break;
+								}
+
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Label ("then set ", GUILayout.Width (40));
+									if (GUILayout.Button (rule.paramName, GUILayout.Width (120)))
+									{
+										List<string> dataNames = scene.progression.GetAllDataNames();
+										for (int i = dataNames.Count - 1; i >= 0; i--) {
+											if (dataNames[i].StartsWith("_"))
+												dataNames.RemoveAt (i);
+										}
+										
+										ctrl.StartSelection (dataNames.ToArray(), Mathf.Max(dataNames.IndexOf (rule.paramName), 0), 
+										                     newIndex => { rule.paramName = dataNames[newIndex]; });
+									}
+
+									// Math type
+									string mathType = "";
+									int decimals = 0;
+									switch (rule.mathType)
+									{
+									case ActionObjectInfluenceRule.MathTypes.Equals : 
+										mathType = "="; 
+										break;
+
+									case ActionObjectInfluenceRule.MathTypes.Minus : 
+										mathType = "-"; 
+										break;
+
+									case ActionObjectInfluenceRule.MathTypes.Plus : 
+										mathType = "+";
+										break;
+
+									case ActionObjectInfluenceRule.MathTypes.Multiply : 
+										mathType = "*"; 
+										decimals = 2;
+										break;
+									}
+
+									if (GUILayout.Button (mathType, GUILayout.Width (30)))
+									{
+										List<string> mathTypesAbbr = new List<string>() { "=","+","-","*" };
+										ctrl.StartSelection (mathTypesAbbr.ToArray(), mathTypesAbbr.IndexOf (mathType), newIndex => 
+										{ 
+											string[] mathTypes = new string[] { "Equals","Plus","Minus","Multiply" };
+											rule.mathType = (ActionObjectInfluenceRule.MathTypes)
+												System.Enum.Parse (typeof(ActionObjectInfluenceRule.MathTypes), mathTypes[newIndex]); 
+										});
+									}
+
+									EcoGUI.FloatField ("", ref rule.mathValue, decimals);//, null, GUILayout.Width (40)); 
+								}
+								GUILayout.EndHorizontal ();
+							}
+							GUILayout.EndVertical ();
+						}
+
+						// Add new rule
+						bool addRule = false;
+						ActionObjectInfluenceRule.ValueType valueType = ActionObjectInfluenceRule.ValueType.Range;
+
+						GUILayout.BeginHorizontal ();
+						{
+							if (GUILayout.Button ("Add value rule")) {
+								valueType = ActionObjectInfluenceRule.ValueType.Value;
+								addRule = true;
+							}
+
+							if (GUILayout.Button ("Add range rule")) {
+								valueType = ActionObjectInfluenceRule.ValueType.Range;
+								addRule = true;
+							}
+						}
+						GUILayout.EndHorizontal ();
+
+						if (addRule)
+						{
+							List<ActionObjectInfluenceRule> list = new List<ActionObjectInfluenceRule>(editGroup.influenceRules);
+							ActionObjectInfluenceRule newRule = new ActionObjectInfluenceRule ();
+
+							list.Add (newRule);
+							newRule.valueType = valueType;
+							try {
+								newRule.paramName = scene.progression.GetAllDataNames ()[0];
+								newRule.UpdateReferences (scene);
+							} catch { }
+
+							editGroup.influenceRules = list.ToArray ();
+						}
+					}
 				}
+				GUILayout.EndScrollView ();
 			}
 			GUILayout.EndVertical ();
 		}

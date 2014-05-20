@@ -11,14 +11,14 @@ namespace Ecosim.SceneData.Action
 {
 	public class ActionObjectAction : BasicAction
 	{
+		// TODO: EcoBase Linkage
+
 		public const string XML_ELEMENT = "object";
 
-		public ActionObjectsGroup objectsGroup;
+		public List<ActionObjectsGroup> objectsGroups = new List<ActionObjectsGroup>();
+		public List<ActionObjectsGroup> enabledGroups = new List<ActionObjectsGroup>();
 
-		private MethodInfo actionDeselectedMI;
-		private MethodInfo handleActionObjectMI; // TODO: handleActionObjectMI
 		private string description;
-
 		private long backupEstimate;
 		
 		public ActionObjectAction (Scene scene, int id) : base (scene, id)
@@ -72,32 +72,95 @@ namespace Ecosim.SceneData.Action
 
 		public void ActionDeselected (UserInteraction ui, bool cancel)
 		{
-			if (actionDeselectedMI != null) 
-			{
-				actionDeselectedMI.Invoke (ecoBase, new object[] { ui, cancel });
-			} 
-			else 
-			{
-				uiList[0].estimatedTotalCostForYear = backupEstimate;
-			}
+			uiList[0].estimatedTotalCostForYear = backupEstimate;
 		}
 
-		public void HandleActionGroup (ActionObjectsGroup group, bool state)
+		public void HandleActionGroup (ActionObjectsGroup group, bool currentState)
 		{
-			if (handleActionObjectMI != null) 
+			if (currentState) 
 			{
-				//return (bool)handleActionObjectMI.Invoke (ecoBase, new object[] { x, y, ui });
-			} 
+				enabledGroups.Add (group);
+				uiList[0].estimatedTotalCostForYear += uiList[0].cost;
+			}
 			else 
 			{
-				if (state) uiList[0].estimatedTotalCostForYear += uiList[0].cost;
-				else uiList[0].estimatedTotalCostForYear -= uiList[0].cost;
+				enabledGroups.Remove (group);
+				uiList[0].estimatedTotalCostForYear -= uiList[0].cost;
 			}
 		}
 
 		public override void DoSuccession ()
 		{
-			// TODO: Handle all the influences of the action groups
+			// Loop through all enabled groups
+			foreach (ActionObjectsGroup group in enabledGroups)
+			{
+				if (group.enabled)
+				{
+					// Loop through all tiles who have the groups data on them
+					foreach (ValueCoordinate vc in group.data.EnumerateNotZero())
+					{
+						// Handle the influence rules
+						foreach (ActionObjectInfluenceRule ir in group.influenceRules)
+						{
+							// 1. Check if rule applies
+							bool ruleApplies = false;
+							switch (ir.valueType)
+							{
+							// Check if the groups data is a certain value
+							case ActionObjectInfluenceRule.ValueType.Value :
+
+								int ruleVal = Mathf.RoundToInt ( ir.lowRange * (float)group.data.GetMax () );
+								ruleApplies = (ruleVal == vc.v);
+								Debug.Log ("" + ruleVal + " :: " + vc.v);
+								break;
+
+							case ActionObjectInfluenceRule.ValueType.Range :
+
+								float max = (float)group.data.GetMax ();
+								int minVal = (int)(ir.lowRange * max);
+								int maxVal = (int)(ir.highRange * max);
+								ruleApplies = ((vc.v >= minVal) && (vc.v <= maxVal));
+
+								break;
+							}
+
+							// Apply influences
+							if (ruleApplies)
+							{
+								// Check math type
+								int currVal = ir.data.Get (vc);
+								int newVal = 0;
+
+								switch (ir.mathType)
+								{
+
+								case ActionObjectInfluenceRule.MathTypes.Equals :
+									newVal = (int)ir.mathValue;
+									break;
+
+								case ActionObjectInfluenceRule.MathTypes.Plus :
+									newVal = currVal + (int)ir.mathValue;
+									break;
+
+								case ActionObjectInfluenceRule.MathTypes.Minus :
+									newVal = currVal - (int)ir.mathValue;
+									break;
+
+								case ActionObjectInfluenceRule.MathTypes.Multiply :
+									newVal = Mathf.RoundToInt((float)currVal * ir.mathValue);
+									break;
+								
+								}
+								
+								ir.data.Set (vc, Mathf.Clamp (newVal, 0, ir.data.GetMax()));
+							}
+						}
+					}
+				}
+			}
+
+			// Clear the groups
+			enabledGroups.Clear ();
 
 			// Deduct budget
 			scene.progression.budget -= uiList[0].estimatedTotalCostForYear;
@@ -109,9 +172,6 @@ namespace Ecosim.SceneData.Action
 		protected override void UnlinkEcoBase ()
 		{
 			base.UnlinkEcoBase ();
-
-			actionDeselectedMI = null;
-			handleActionObjectMI = null;
 		}
 		
 		protected override void LinkEcoBase ()
@@ -119,11 +179,11 @@ namespace Ecosim.SceneData.Action
 			base.LinkEcoBase ();
 			if (ecoBase != null) 
 			{
-				actionDeselectedMI = ecoBase.GetType ().GetMethod ("ActionDeselected",
+				/*actionDeselectedMI = ecoBase.GetType ().GetMethod ("ActionDeselected",
 				                                                   BindingFlags.NonPublic | BindingFlags.Instance, null,
 				                                                   new Type[] { typeof(UserInteraction), typeof(bool) }, null);
 
-				/*handleActionObjectMI = ecoBase.GetType ().GetMethod ("HandleActionObject",
+				handleActionObjectMI = ecoBase.GetType ().GetMethod ("HandleActionObject",
 				                                                     BindingFlags.NonPublic | BindingFlags.Instance, null,
 				                                                     new Type[] { typeof(ActionObject), typeof(bool) }, null);*/
 			}
@@ -140,51 +200,14 @@ namespace Ecosim.SceneData.Action
 		
 		public override int GetMaxUICount ()
 		{
-			return 10;
+			return 1;
 		}				
 
 		public void StartSelecting (UserInteraction ui)
 		{
-			EditActionObjects.instance.StartEditActionObjects (scene, new string[]{}, HandleActionGroup);
+			EditActionObjects.instance.StartEditActionObjects (scene, objectsGroups.ToArray(), HandleActionGroup);
 			//TerrainMgr.self.ForceRedraw ();
 		}
-
-		/*/**
-		 * Called when player starts selecting tile
-		 * method will create EditData instance
-		 * ui is the user button pressed for doing this action
-		 *
-		public void StartSelecting (UserInteraction ui)
-		{
-			if (selectedArea == null) {
-				if (uiList.Count > 1) {
-					selectedArea = new SparseBitMap8 (scene);
-				} else {
-					selectedArea = new SparseBitMap1 (scene);
-				}
-				scene.progression.AddData (areaName, selectedArea);
-			}
-			edit = EditData.CreateEditData ("action", selectedArea, scene.progression.managedArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				if (shift)
-					return 0;
-				return CanSelectTile (x, y, ui) ? (ui.index + 1) : invalidAreaIndex;
-			}, areaGrid);
-			edit.SetFinalBrushFunction (delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				if (shift)
-					return 0;
-				return CanSelectTile (x, y, ui) ? (ui.index + 1) : -1;
-			});
-			edit.SetModeAreaSelect ();
-			edit.AddTileChangedHandler (delegate (int x, int y, int oldV, int newV) {
-				if ((oldV > 0) && (oldV <= uiList.Count)) {
-					uiList [oldV - 1].estimatedTotalCostForYear -= uiList [oldV - 1].cost;
-				}
-				if ((newV > 0) && (newV <= uiList.Count)) {
-					uiList [newV - 1].estimatedTotalCostForYear += uiList [newV - 1].cost;
-				}
-			});
-		}
-		 */ 
 
 		public void FinishSelecting (UserInteraction ui, bool isCanceled)
 		{
@@ -216,6 +239,13 @@ namespace Ecosim.SceneData.Action
 					XmlNodeType nType = reader.NodeType;
 					if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == UserInteraction.XML_ELEMENT)) {
 						action.uiList.Add (UserInteraction.Load (action, reader));
+					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ActionObjectsGroup.XML_ELEMENT)) {
+						string groupName = reader.GetAttribute ("name");
+						foreach (ActionObjectsGroup group in scene.actionObjectGroups) {
+							if (group.name == groupName) {
+								action.objectsGroups.Add (group);
+							}
+						}
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
 						break;
 					}
@@ -229,9 +259,13 @@ namespace Ecosim.SceneData.Action
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("id", id.ToString ());
 			writer.WriteAttributeString ("description", description);
-			//writer.WriteAttributeString ("areaname", areaName);
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
+			}
+			foreach (ActionObjectsGroup group in objectsGroups) {
+				writer.WriteStartElement (ActionObjectsGroup.XML_ELEMENT);
+				writer.WriteAttributeString ("name", group.name);
+				writer.WriteEndElement ();
 			}
 			writer.WriteEndElement ();
 		}	

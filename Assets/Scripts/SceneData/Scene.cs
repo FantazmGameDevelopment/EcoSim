@@ -358,7 +358,6 @@ namespace Ecosim.SceneData
 			if (scene != null) {
 				scene.LoadTiles (path);
 				scene.assets = ExtraAssets.Load (path, scene);
-				scene.actions = ActionMgr.Load (path, scene);
 				scene.successionTypes = LoadSaveVegetation.Load (path, scene);
 				scene.plantTypes = LoadSavePlants.Load (path, scene);
 				scene.animalTypes = LoadSaveAnimals.Load (path, scene);
@@ -368,6 +367,7 @@ namespace Ecosim.SceneData
 				scene.actionObjectGroups = ActionObjectsGroup.Load (path, scene);
 				scene.roads = Roads.Load (path, scene);
 				scene.articles = Articles.Load (path, scene);
+				scene.actions = ActionMgr.Load (path, scene);
 			}
 			return scene;
 		}

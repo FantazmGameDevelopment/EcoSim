@@ -12,7 +12,8 @@ public class EditActionObjects : EditBuildings
 	public static EditActionObjects instance;
 
 	private List<ActionObjectsGroup> objectGroups;
-	private Dictionary<BuildingInstance, bool> selectionStates;
+	private Dictionary<ActionObjectsGroup, List<BuildingInstance>> objectGroupBuildingInstances;
+	private Dictionary<ActionObjectsGroup, bool> selectionStates;
 	private List<BuildingInstance> purchasableObjects;
 
 	public delegate void ClickHandler (ActionObjectsGroup group, bool state);
@@ -30,49 +31,52 @@ public class EditActionObjects : EditBuildings
 		instance = null;
 	}
 
-	public void StartEditActionObjects (Scene scene, string[] groups, ClickHandler handler)
+	public void StartEditActionObjects (Scene scene, ActionObjectsGroup[] groups, ClickHandler handler)
 	{
+		// Necessary for base class
+		instances = new List<BuildingInstance>();
+		dict = new Dictionary<GameObject, BuildingInstance> ();
+
 		this.clickHandler = handler;
+		
+		objectGroups = new List<ActionObjectsGroup>(groups);
+		objectGroupBuildingInstances = new Dictionary<ActionObjectsGroup, List<BuildingInstance>>();
+		selectionStates = new Dictionary<ActionObjectsGroup, bool>();
 
-		// TODO: Use the string[] array to filter the groups
-		objectGroups = new List<ActionObjectsGroup>();
-		foreach (ActionObjectsGroup group in scene.actionObjectGroups) {
-			objectGroups.Add (group);
-		}
-
-		// TODO: Check for the correct action object groups
-		selectionStates = new Dictionary<BuildingInstance, bool>();
-		instances = new List<BuildingInstance> ();
-
-		List<Buildings.Building> currentBuildings = new List<Buildings.Building>();
+		// We must loop through all buildings and check whether it's a building associated with an action object
+		// if so, we must then check if it's a building that belong to one of our groups
+		List<Buildings.Building> staticBuildings = new List<Buildings.Building>();
 		foreach (Buildings.Building b in scene.buildings.GetAllBuildings ()) 
 		{
-			// Check if the building is part of the groups
-			bool correctGroup = false;
+			// Check if it's one of our groups
+			ActionObjectsGroup matchingGroup = null;
 			foreach (ActionObjectsGroup g in objectGroups) {
 				foreach (ActionObject obj in g.actionObjects) {
 					if (obj.building == b) {
-						correctGroup = true;
+						matchingGroup = g;
 						break;
 					}
 				}
-				if (correctGroup) break;
 			}
 
-			if (correctGroup && !b.isActive) 
+			if (matchingGroup != null && !b.isActive)
 			{
-				instances.Add (new BuildingInstance (b));
-				selectionStates.Add (instances[instances.Count - 1], false);
+				if (!objectGroupBuildingInstances.ContainsKey (matchingGroup)) 
+				{
+					objectGroupBuildingInstances.Add (matchingGroup, new List<BuildingInstance>());
+					selectionStates.Add (matchingGroup, false);
+				}
+
+				BuildingInstance newInst = new BuildingInstance(b);
+				objectGroupBuildingInstances[matchingGroup].Add (newInst);
+				instances.Add (newInst);
 			}
 			else 
-				currentBuildings.Add (b);
+				staticBuildings.Add (b);
 		}
 
-		dict = new Dictionary<GameObject, BuildingInstance> ();
-
-		scene.buildings.SetAllBuildings (currentBuildings);
+		scene.buildings.SetAllBuildings (staticBuildings);
 		TerrainMgr.AddListener (this);
-
 		StartCoroutine (COBlinkSelection());
 	}
 
@@ -81,16 +85,20 @@ public class EditActionObjects : EditBuildings
 		while (true) 
 		{
 			// Make the others blink
-			foreach (KeyValuePair<BuildingInstance, bool> pair in selectionStates) {
-				if (pair.Key.instanceGO && !pair.Value) 
-					ActivateDeactivateRendering (pair.Key.instanceGO, false);
+			foreach (KeyValuePair<ActionObjectsGroup, bool> pair in selectionStates) {
+				foreach (BuildingInstance bInst in objectGroupBuildingInstances[pair.Key]) {
+					if (bInst.instanceGO && !pair.Value) 
+						ActivateDeactivateRendering (bInst.instanceGO, false);
+				}
 			}
 
 			yield return new WaitForSeconds(0.125f);
 
-			foreach (KeyValuePair<BuildingInstance, bool> pair in selectionStates) {
-				if (pair.Key.instanceGO && !pair.Value) 
-					ActivateDeactivateRendering (pair.Key.instanceGO, true);
+			foreach (KeyValuePair<ActionObjectsGroup, bool> pair in selectionStates) {
+				foreach (BuildingInstance bInst in objectGroupBuildingInstances[pair.Key]) {
+					if (bInst.instanceGO && !pair.Value) 
+						ActivateDeactivateRendering (bInst.instanceGO, true);
+				}
 			}
 
 			yield return new WaitForSeconds(0.125f);
@@ -125,13 +133,47 @@ public class EditActionObjects : EditBuildings
 
 	protected void BuildingClicked (Buildings.Building building)
 	{
+		// Get the matching building instance
 		foreach (BuildingInstance instance in instances) 
+		{
+			// Find the list linked to the action object group where this instance belongs to
+			if (instance.building == building) 
+			{
+				foreach (KeyValuePair<ActionObjectsGroup, List<BuildingInstance>> pair in objectGroupBuildingInstances)
+				{
+					if (pair.Value.Contains (instance))
+					{
+						// Toggle the action object group state
+						bool newState = !selectionStates[pair.Key];
+						selectionStates [pair.Key] = newState;
+
+						if (clickHandler != null)
+							clickHandler (pair.Key, newState);
+
+						// Enable all instances if we're enabled
+						if (newState)
+						{
+							foreach (BuildingInstance bInst in pair.Value) {
+								if (bInst.instanceGO)
+									ActivateDeactivateRendering (bInst.instanceGO, true);
+							}
+						}
+						return;
+					}
+				}
+			}
+		}
+
+		/*foreach (BuildingInstance instance in instances) 
 		{
 			if (instance.building == building) 
 			{
 				ActionObjectsGroup group = GetActionObjectGroup (building);
 				if (group != null)
 				{
+					// Get all instances belonging to the group
+
+
 					// Toggle the state of the building
 					bool currState = selectionStates [instance];
 					currState = !currState;
@@ -143,11 +185,12 @@ public class EditActionObjects : EditBuildings
 						clickHandler (group, currState);
 
 					// TODO: Save the building state in xml
+
 					if (currState && instance.instanceGO)
 						ActivateDeactivateRendering (instance.instanceGO, true);
 				}
 			}
-		}
+		}*/
 	}
 
 	private ActionObjectsGroup GetActionObjectGroup (Buildings.Building building)
@@ -164,9 +207,17 @@ public class EditActionObjects : EditBuildings
 
 	public void ProcessSelectedObjects ()
 	{
-		foreach (KeyValuePair<BuildingInstance, bool> pair in selectionStates) {
+		foreach (KeyValuePair<ActionObjectsGroup, bool> pair in selectionStates) 
+		{
 			if (pair.Value == true)
-				pair.Key.building.isActive = true;
+			{
+				pair.Key.enabled = true;
+
+				foreach (BuildingInstance bInst in objectGroupBuildingInstances[pair.Key])
+				{
+					bInst.building.isActive = true;
+				}
+			}
 		}
 	}
 }
