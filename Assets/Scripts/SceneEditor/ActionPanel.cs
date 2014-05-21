@@ -147,6 +147,11 @@ namespace Ecosim.SceneEditor
 				GUILayout.EndHorizontal ();
 			}
 		}
+
+		void HandleResearchPointAction (ResearchPointAction action)
+		{
+			GUILayout.Label ("WIP");
+		}
 		
 		void HandleSuccessionAction (SuccessionAction action)
 		{
@@ -366,6 +371,8 @@ namespace Ecosim.SceneEditor
 						HandleAreaAction ((AreaAction)action);
 					} else if (action is InventarisationAction) {
 						HandleInventarisationAction ((InventarisationAction)action);
+					} else if (action is ResearchPointAction) {
+						HandleResearchPointAction ((ResearchPointAction)action);
 					} else if (action is MarkerAction) {
 						HandleMarkerAction ((MarkerAction)action);
 					} else if (action is SuccessionAction) {

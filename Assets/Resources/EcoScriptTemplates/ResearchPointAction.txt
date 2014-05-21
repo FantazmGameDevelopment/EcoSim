@@ -1,0 +1,31 @@
+void SaveProgress() {
+   LogDebug ("Bye, mom! class " + this.GetType ().ToString ());
+}
+
+void LoadProgress(bool initScene) {
+   LogDebug ("Hi, mom!" + initScene + " class " + this.GetType ().ToString ());
+}
+
+void PrepareSuccession() {
+}
+
+void DoSuccession() {
+}
+
+void FinalizeSuccession() {
+	foreach (UserInteraction ui in action.uiList) {
+		// substract the cost for this item for this year...
+		budget -= ui.estimatedTotalCostForYear;
+		// set cost to 0 (don't do it for ongoing measures)
+		ui.estimatedTotalCostForYear = 0;
+	}
+	
+	if (progression.HasData (AREA)) {
+		// as we don't do ongoing measures here, just delete it
+		progression.DeleteData (AREA);
+	}
+}
+
+bool CanSelectTile (int x, int y, UserInteraction ui) {
+	return ((x + y) % 2) == 1;
+}

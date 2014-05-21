@@ -102,7 +102,7 @@ namespace Ecosim.SceneData.Action
 						// Handle the influence rules
 						foreach (ActionObjectInfluenceRule ir in group.influenceRules)
 						{
-							// 1. Check if rule applies
+							// Check if rule applies
 							bool ruleApplies = false;
 							switch (ir.valueType)
 							{
@@ -111,7 +111,6 @@ namespace Ecosim.SceneData.Action
 
 								int ruleVal = Mathf.RoundToInt ( ir.lowRange * (float)group.data.GetMax () );
 								ruleApplies = (ruleVal == vc.v);
-								Debug.Log ("" + ruleVal + " :: " + vc.v);
 								break;
 
 							case ActionObjectInfluenceRule.ValueType.Range :

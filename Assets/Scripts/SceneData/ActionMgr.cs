@@ -10,17 +10,19 @@ namespace Ecosim.SceneData
 		private readonly Scene scene;
 		public string assemblyId;
 
-		public static System.Type[] actionTypes = new System.Type[] {
+		public static System.Type[] actionTypes = new System.Type[] 
+		{
+			typeof(SuccessionAction),
+			typeof(PlantsAction),
 			typeof(AreaAction),
 			typeof(InventarisationAction),
+			typeof(ResearchPointAction),
 			typeof(MarkerAction),
 			typeof(DialogAction),
 			typeof(ScriptAction),
 			typeof(WaterAction),
 			typeof(ConversionAction),
-			typeof(SuccessionAction),
-			typeof(PlantsAction),
-			typeof(ActionObjectAction),
+			typeof(ActionObjectAction)
 		};
 		
 		public ActionMgr (Scene scene)
@@ -218,6 +220,10 @@ namespace Ecosim.SceneData
 					actionsByID.Add (action.id, action);
 				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == InventarisationAction.XML_ELEMENT)) {
 					BasicAction action = InventarisationAction.Load (scene, reader);
+					actionQueue.Add (action);
+					actionsByID.Add (action.id, action);
+				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ResearchPointAction.XML_ELEMENT)) {
+					BasicAction action = ResearchPointAction.Load (scene, reader);
 					actionQueue.Add (action);
 					actionsByID.Add (action.id, action);
 				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == MarkerAction.XML_ELEMENT)) {
