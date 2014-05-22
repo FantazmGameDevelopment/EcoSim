@@ -63,6 +63,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		private Vector2 mouseDrag;
 		public int depth;
 		private GameWindowInstance instance;
+		protected bool canCloseManually = true;
 		
 		public GameWindow (int x, int y, int width, Texture2D icon) {
 			this.icon = icon;
@@ -98,10 +99,11 @@ namespace Ecosim.GameCtrl.GameButtons
 		{
 			Vector3 mousePos = Input.mousePosition;
 			Vector2 guiMousePos = new Vector2 (mousePos.x, Screen.height - mousePos.y);
-			if (SimpleGUI.Button (new Rect (xOffset, yOffset, 32, 32), closeIcon, closeIconH, black, white)) {
+			if (canCloseManually && SimpleGUI.Button (new Rect (xOffset, yOffset, 32, 32), closeIcon, closeIconH, black, white)) {
 				Close ();
 			}
-			SimpleGUI.Label (new Rect (xOffset + 33, yOffset, 32, 32), icon, titleNoText);
+			if (icon != null)
+				SimpleGUI.Label (new Rect (xOffset + 33, yOffset, 32, 32), icon, titleNoText);
 			// handle window dragging...
 			if (Event.current.type == EventType.MouseUp) {
 				isDragging = false;

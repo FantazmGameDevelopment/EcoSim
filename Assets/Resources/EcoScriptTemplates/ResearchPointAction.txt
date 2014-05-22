@@ -1,31 +1,18 @@
-void SaveProgress() {
-   LogDebug ("Bye, mom! class " + this.GetType ().ToString ());
-}
+string CreateResearchPointString (Coordinate c)
+{
+	// We first want to retrieve all Data objects that we need.
+	Data firstData = progression.GetData ("myFirstParameterName");
+	Data secondData = progression.GetData ("mySecondParameterName");
 
-void LoadProgress(bool initScene) {
-   LogDebug ("Hi, mom!" + initScene + " class " + this.GetType ().ToString ());
-}
-
-void PrepareSuccession() {
-}
-
-void DoSuccession() {
-}
-
-void FinalizeSuccession() {
-	foreach (UserInteraction ui in action.uiList) {
-		// substract the cost for this item for this year...
-		budget -= ui.estimatedTotalCostForYear;
-		// set cost to 0 (don't do it for ongoing measures)
-		ui.estimatedTotalCostForYear = 0;
-	}
+	// We then retrieve the value of the Data objects using the Coordinate 'c'.
+	// If we want the % of a value for example, we could divide the value by 
+	// the maximum of the Data like in the third line.
+	float firstValue = (float)firstData.Get (c);
+	float secondValue = (float)secondData.Get (c);
+	secondValue = secondValue / (float)secondData.GetMax ();
 	
-	if (progression.HasData (AREA)) {
-		// as we don't do ongoing measures here, just delete it
-		progression.DeleteData (AREA);
-	}
-}
-
-bool CanSelectTile (int x, int y, UserInteraction ui) {
-	return ((x + y) % 2) == 1;
+	// Finally we use these retrieved values to make a nice formatted string 
+	// and return it. Don't forget the '\n', these will make a new line in the string.
+	return "First name " + firstValue.ToString ("0.0") + "\n"
+			+"Second name " + secondValue.ToString ("0.00") + "%\n";
 }

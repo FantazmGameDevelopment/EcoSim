@@ -143,6 +143,7 @@ namespace Ecosim.SceneData
 		public List<Message> messages;
 		public List<Message> reports;
 		public List<InventarisationResult> inventarisations;
+		public List<ResearchPoint> researchPoints;
 		public Dictionary<string, object> variables;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
@@ -205,6 +206,7 @@ namespace Ecosim.SceneData
 			messages = new List<Message> ();
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
+			researchPoints = new List<ResearchPoint>();
 		}
 		
 		public void CreateBasicData ()
@@ -478,8 +480,7 @@ namespace Ecosim.SceneData
 			if (msgindexstr != null) {
 				messageUnreadIndex = int.Parse (msgindexstr);
 			}
-			
-			
+
 			/**
 			 * After ReadElementContentAsString the reader has already read in next
 			 * element, so we must not do reader.Read here then. We set
@@ -536,6 +537,9 @@ namespace Ecosim.SceneData
 								break;
 							}
 						} 
+					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ResearchPoint.XML_ELEMENT)) {
+						ResearchPoint rp = ResearchPoint.Load (reader, scene);
+						researchPoints.Add (rp);
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "progress")) {
 						break;
 					}
@@ -773,6 +777,11 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("name", gr.name);
 				writer.WriteAttributeString ("enabled", gr.enabled.ToString().ToLower());
 				writer.WriteEndElement ();
+			}
+
+			// Research points
+			foreach (ResearchPoint rp in researchPoints) {
+				rp.Save (writer, scene);
 			}
 
 			writer.WriteEndElement ();

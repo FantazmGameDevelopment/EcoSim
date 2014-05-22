@@ -289,6 +289,7 @@ namespace Ecosim.SceneEditor
 		private bool reusePlants = true;
 		private bool reuseAnimals = true;
 		private bool reuseActionObjectGroups = true;
+		private bool reuseResearchPoints = true;
 		private bool reuseCalculations = true;
 		
 		bool RenderNew (int mx, int my)
