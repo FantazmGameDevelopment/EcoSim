@@ -67,16 +67,6 @@ public class RenderResearchPointsMgr : MonoBehaviour, NotifyTerrainChange
 		return self.markers [rp];
 	}
 
-	public static void AddResearchPoints ()
-	{
-
-	}
-	
-	public static void RemoveResearchPoints ()
-	{
-
-	}
-	
 	#region NotifyTerrainChange implementation
 	void NotifyTerrainChange.SceneChanged (Scene scene)
 	{
@@ -97,25 +87,6 @@ public class RenderResearchPointsMgr : MonoBehaviour, NotifyTerrainChange
 
 			ShowMarkers ();
 		}
-
-		/*StopAllCoroutines ();
-		if (roads != null) {
-			// remove old roads...
-			foreach (Roads.Road data in roads.roads) {
-				RoadInstance instance = data.instance;
-				if (instance != null) {
-					Destroy (instance.gameObject);
-				}
-			}
-			roads = null;
-		}
-		if (scene != null) {
-			this.roads = scene.roads;
-			// For now, we just render all the roads at once...
-			RenderAllRoads ();
-		}
-		 */ 
-
 	}
 	
 	void NotifyTerrainChange.SuccessionCompleted ()
