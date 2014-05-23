@@ -234,7 +234,21 @@ namespace Ecosim.SceneData
 		 */
 		public List<string> GetAllDataNames ()
 		{
+			return GetAllDataNames (true);
+		}
+
+		/**
+		 * Returns a list of all data keys
+		 */
+		public List<string> GetAllDataNames (bool includeExternal)
+		{
 			List<string> keys = new List<string> (dataDict.Keys);
+			if (!includeExternal) {
+				for (int i = keys.Count - 1; i >= 0; i--) {
+					if (keys[i].StartsWith ("_"))
+						keys.RemoveAt (i);
+				}
+			}
 			return keys;
 		}
 		

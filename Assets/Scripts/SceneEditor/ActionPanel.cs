@@ -212,7 +212,7 @@ namespace Ecosim.SceneEditor
 
 					if (scene.actionObjectGroups.Length > 0)
 					{
-						if (GUILayout.Button ("+", GUILayout.Width (20))) 
+						if (GUILayout.Button ("Add", GUILayout.Width (35))) 
 						{
 							if (scene.actionObjectGroups.Length != actionObjectGroups.Length)
 							{

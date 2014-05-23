@@ -244,24 +244,14 @@ namespace Ecosim.SceneEditor.Helpers
 														if (GUILayout.Button ("Focus", GUILayout.Width (50))) 
 														{
 															GameObject go = EditBuildings.self.GetGameObjectForBuilding (aObj.building);
-															if (go != null)
-															{
-																CameraControl.SwitchToNear ();
-																Vector3 pos = CameraControl.self.nearCamera.transform.position;
-																Vector3 goPos = go.transform.position;
-																pos.x = goPos.x;
-																pos.z = goPos.z - 450f;
-																pos.y = goPos.y + 500f;
-																CameraControl.self.nearCamera.transform.position = pos;
-																CameraControl.self.nearCamera.transform.LookAt (goPos);
-															}
-															else
-															{
+															if (go != null) {
+																CameraControl.FocusOnPosition (go.transform.position);
+															} else {
 																ctrl.StartOkDialog (string.Format("Could not find the instance of '{0} ({1})'. It might be that the part of the terrain it's located is not rendered or visible.", aObj.building.name, aObj.buildingId), null);
 															}
 														}
 													}
-													// TODO: Delete
+
 													if (GUILayout.Button ("-", GUILayout.Width (20)))
 													{
 														if (aObj.building == selectedBuilding)
@@ -471,7 +461,7 @@ namespace Ecosim.SceneEditor.Helpers
 
 								GUILayout.BeginHorizontal ();
 								{
-									GUILayout.Label ("then set ", GUILayout.Width (40));
+									GUILayout.Label ("then", GUILayout.Width (25));
 									if (GUILayout.Button (rule.paramName, GUILayout.Width (120)))
 									{
 										List<string> dataNames = scene.progression.GetAllDataNames();
@@ -479,9 +469,10 @@ namespace Ecosim.SceneEditor.Helpers
 											if (dataNames[i].StartsWith("_"))
 												dataNames.RemoveAt (i);
 										}
-										
-										ctrl.StartSelection (dataNames.ToArray(), Mathf.Max(dataNames.IndexOf (rule.paramName), 0), 
-										                     newIndex => { rule.paramName = dataNames[newIndex]; });
+
+										ActionObjectInfluenceRule tmpRule = rule;
+										ctrl.StartSelection (dataNames.ToArray(), Mathf.Max(dataNames.IndexOf (tmpRule.paramName), 0), 
+										                     newIndex => { tmpRule.paramName = dataNames[newIndex]; });
 									}
 
 									// Math type

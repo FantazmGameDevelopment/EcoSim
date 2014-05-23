@@ -157,7 +157,7 @@ namespace Ecosim.SceneData
 		{
 			this.name = name;
 			this.description = "";
-			this.dataName = "_" + StringUtil.MakeValidID (name);
+			this.dataName = StringUtil.MakeValidID (name, true);
 			
 			// Data name
 			string newDataName = this.dataName;

@@ -26,13 +26,12 @@ namespace Ecosim.SceneData
 
 		public PlantType ()
 		{
-
 		}
 
 		public PlantType (Scene scene, string name)
 		{
 			this.name = name;
-			this.dataName = StringUtil.MakeValidID (name);
+			this.dataName = StringUtil.MakeValidID (name, true);
 
 			// Data name
 			string newDataName = this.dataName;

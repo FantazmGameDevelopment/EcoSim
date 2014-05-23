@@ -16,7 +16,7 @@ namespace Ecosim.SceneData
 	
 		public SuccessionType[] successionTypes;
 		public PlantType[] plantTypes;
-		public ActionObjectsGroup[] actionObjectGroups; // TODO: ActionObjectsGroup
+		public ActionObjectsGroup[] actionObjectGroups;
 		public AnimalType[] animalTypes; // TODO: AnimalTypes
 		public CalculatedData.Calculation[] calculations;
 
@@ -43,7 +43,7 @@ namespace Ecosim.SceneData
 			}
 			return Progression.Load (this, year);
 		}
-					
+
 		/**
 		 * Deletes savegame with given slotnr
 		 */
@@ -128,6 +128,7 @@ namespace Ecosim.SceneData
 				Log.LogError ("Failed to load EcoScript assembly");
 			}
 //			scene.progression.InitActions (false);
+
 			return scene;
 		}
 		

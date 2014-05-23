@@ -8,18 +8,18 @@ namespace Ecosim.SceneEditor
 {
 	public class PlantRulesExtraPanel : ExtraPanel
 	{
-		Dictionary<PlantRule, bool> plantRuleFoldStates;
-		Dictionary<PlantGerminationRule, bool> germRuleFoldStates;
-		Dictionary<SuccessionType, string[]> vegetations;
+		private Dictionary<PlantRule, bool> plantRuleFoldStates;
+		private Dictionary<PlantGerminationRule, bool> germRuleFoldStates;
+		private Dictionary<SuccessionType, string[]> vegetations;
 
-		EditorCtrl ctrl;
-		PlantType plant;
-		Vector2 scrollPos;
-		Vector2 germScrollPos;
-		string[] parameters;
-		string[] successions;
+		private EditorCtrl ctrl;
+		private PlantType plant;
+		private Vector2 scrollPos;
+		private Vector2 germScrollPos;
+		private string[] parameters;
+		private string[] successions;
 
-		bool showGerminationRules;
+		private bool showGerminationRules;
 
 		private static PlantRule[] copyBuffer;
 		private static PlantGerminationRule[] germCopyBuffer;
@@ -47,9 +47,9 @@ namespace Ecosim.SceneEditor
 			vegetations = new Dictionary<SuccessionType, string[]>();
 
 			List<string> pList = new List<string> ();
-			foreach (string p in ctrl.scene.progression.GetAllDataNames()) {
+			foreach (string p in ctrl.scene.progression.GetAllDataNames(false)) {
 				Data dataFindNames = ctrl.scene.progression.GetData (p);
-				if ((dataFindNames.GetMax () < 256) && (!p.StartsWith ("_")))
+				if ((dataFindNames.GetMax () < 256))
 					pList.Add (p);
 			}
 			parameters = pList.ToArray ();

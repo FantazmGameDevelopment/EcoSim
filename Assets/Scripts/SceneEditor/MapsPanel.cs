@@ -22,7 +22,7 @@ namespace Ecosim.SceneEditor
 			HEIGHTMAP,
 			PARAMETERS,
 			VEGETATION,
-			PLANTS,
+			SPECIES,
 			OBJECTS,
 		};
 		
@@ -147,8 +147,10 @@ namespace Ecosim.SceneEditor
 			helper = new HandleVegetation (ctrl, this, scene);
 		}
 
-		private void StartPlants ()
+		private void StartSpecies ()
 		{
+			// TODO: Add Animals
+
 			ResetEdit ();
 			helper = new HandlePlants (ctrl, this, scene);
 		}
@@ -186,9 +188,9 @@ namespace Ecosim.SceneEditor
 					tab = ETabs.VEGETATION;
 					StartVegetation ();
 				}
-				if (GUILayout.Button("Plants", (tab == ETabs.PLANTS) ? tabSelected : tabNormal, GUILayout.Width (width))) {
-					tab = ETabs.PLANTS;
-					StartPlants();
+				if (GUILayout.Button("Species", (tab == ETabs.SPECIES) ? tabSelected : tabNormal, GUILayout.Width (width))) {
+					tab = ETabs.SPECIES;
+					StartSpecies();
 				}
 				if (GUILayout.Button ("Objects", (tab == ETabs.OBJECTS) ? tabSelected : tabNormal, GUILayout.Width (width))) {
 					tab = ETabs.OBJECTS;
@@ -245,8 +247,8 @@ namespace Ecosim.SceneEditor
 			case ETabs.VEGETATION :
 				StartVegetation ();
 				break;
-			case ETabs.PLANTS : 
-				StartPlants ();
+			case ETabs.SPECIES : 
+				StartSpecies ();
 				break;
 			case ETabs.OBJECTS :
 				StartObjects ();

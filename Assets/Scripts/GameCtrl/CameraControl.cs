@@ -152,6 +152,17 @@ public class CameraControl : MonoBehaviour
 		self.farCamera.enabled = true;
 		self.enabled = true;
 	}
+
+	public static void FocusOnPosition (Vector3 targetPos)
+	{
+		SwitchToNear ();
+		Vector3 pos = self.nearTransform.position;
+		pos.x = targetPos.x;
+		pos.z = targetPos.z - 250f;
+		pos.y = targetPos.y + 200f;
+		self.nearTransform.position = pos;
+		self.nearTransform.LookAt (targetPos);
+	}
 	
 	void Update ()
 	{

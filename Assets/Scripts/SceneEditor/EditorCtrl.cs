@@ -29,6 +29,8 @@ public class EditorCtrl : MonoBehaviour
 	public Texture2D script;
 	public Texture2D placeholder;
 	public Texture2D questionMark;
+	public Texture2D editSmall;
+	public Texture2D viewSmall;
 	public Scene scene;
 	public GUISkin skin;
 	public static EditorCtrl self;
@@ -48,6 +50,7 @@ public class EditorCtrl : MonoBehaviour
 	private TerrainInfoPanel infoWin;
 	
 	public delegate void itemSelected (int index);
+	public delegate void itemSelectedResult (int index, string result);
 
 	public delegate void action (bool result);
 	
@@ -145,6 +148,23 @@ public class EditorCtrl : MonoBehaviour
 	 */
 	public void StartSelection (object[] items, int selected, itemSelected result)
 	{
+		listBoxResultFunc = result;
+		DoStartSelection (items, selected);
+	}
+
+	/**
+	 * Shows a selection list, using mx, my to determine screen position
+	 * list exists of items, selected is initially selected item
+	 * on selecting an item fn result is called with index of newly selected item.
+	 */
+	public void StartSelection (object[] items, int selected, itemSelectedResult result)
+	{
+		listBoxStringResultFunc = result;
+		DoStartSelection (items, selected);
+	}
+
+	private void DoStartSelection (object[] items, int selected)
+	{
 		Vector3 mousePos = Input.mousePosition;
 		int mx = (int)(mousePos.x);
 		int my = (int)(Screen.height - mousePos.y);
@@ -166,7 +186,6 @@ public class EditorCtrl : MonoBehaviour
 			listBoxItems [i] = (items [i]).ToString ();
 		}
 		iconBoxCurrentSelected = -1;
-		listBoxResultFunc = result;
 		listBoxScroll = Vector2.zero;
 		listBoxCurrentSelected = selected;
 		if (19 * selected > (height - 20)) {
@@ -186,6 +205,7 @@ public class EditorCtrl : MonoBehaviour
 	
 	// drop down list stuff:
 	itemSelected listBoxResultFunc;
+	itemSelectedResult listBoxStringResultFunc;
 	string[] listBoxItems;
 	Rect listBoxRect;
 	Vector2 listBoxScroll;
@@ -232,9 +252,11 @@ public class EditorCtrl : MonoBehaviour
 		for (int i = 0; i < listBoxItems.Length; i++) {
 			GUILayout.BeginHorizontal ();
 			if (GUILayout.Button (listBoxItems [i], (i == listBoxCurrentSelected) ? listItemSelected : listItem)) {
-				listBoxResultFunc (i);
+				if (listBoxResultFunc != null) listBoxResultFunc (i);
+				if (listBoxStringResultFunc != null) listBoxStringResultFunc(i, listBoxItems[i]);
 				listBoxItems = null;
 				listBoxResultFunc = null;
+				listBoxStringResultFunc = null;
 				return;
 			}
 			GUILayout.EndHorizontal ();
@@ -360,6 +382,7 @@ public class EditorCtrl : MonoBehaviour
 			isOpen = true;
 			listBoxItems = null;
 			listBoxResultFunc = null;
+			listBoxStringResultFunc = null;
 		}
 	}
 	

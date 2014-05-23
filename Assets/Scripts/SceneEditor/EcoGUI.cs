@@ -10,14 +10,31 @@ namespace Ecosim.SceneEditor
 {
 	public static class EcoGUI
 	{
+		public static bool skipHorizontal = false;
+
+		public static void IntField (string name, ref int val)
+		{
+			IntField (name, ref val, null, null);
+		}
+
+		public static void IntField (string name, ref int val, float nameWidth = 0f, float valWidth = 0f)
+		{
+			IntField (name, ref val, nameWidth > 0 ? GUILayout.Width (nameWidth) : null, valWidth > 0 ? GUILayout.Width (valWidth) : null);
+		}
+
 		public static void IntField (string name, ref int val, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null)
 		{
-			GUILayout.BeginHorizontal ();
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
-				if (!string.IsNullOrEmpty (name))
-					GUILayout.Label (name, nameLayout);
+				if (!string.IsNullOrEmpty (name)) {
+					if (nameLayout != null) 	GUILayout.Label (name, nameLayout);
+					else 						GUILayout.Label (name);
+				}
 
-				string str = GUILayout.TextField (val.ToString(), valLayout);
+				string str = val.ToString();
+				if (valLayout != null) 	str = GUILayout.TextField (str, valLayout);
+				else 					str = GUILayout.TextField (str);
+
 				if (str != val.ToString())
 				{
 					int newVal;
@@ -26,12 +43,22 @@ namespace Ecosim.SceneEditor
 					}
 				}
 			}
-			GUILayout.EndHorizontal ();
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
 		}
 
-		public static void FloatField (string name, ref float val, int decimals = 2, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null)
+		public static void FloatField (string name, ref float val, int decimals = 2)
 		{
-			GUILayout.BeginHorizontal ();
+			FloatField (name, ref val, decimals, null, null);
+		}
+
+		public static void FloatField (string name, ref float val, int decimals, float nameWidth, float valWidth)
+		{
+			FloatField (name, ref val, decimals, nameWidth > 0 ? GUILayout.Width (nameWidth) : null, valWidth > 0 ? GUILayout.Width (valWidth) : null);
+		}
+
+		public static void FloatField (string name, ref float val, int decimals, GUILayoutOption nameLayout, GUILayoutOption valLayout)
+		{
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				if (!string.IsNullOrEmpty (name)) {
 					if (nameLayout != null) 	GUILayout.Label (name, nameLayout);
@@ -56,12 +83,12 @@ namespace Ecosim.SceneEditor
 					}
 				}
 			}
-			GUILayout.EndHorizontal ();
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
 		}
 
 		public static void RangeSliders (string name, ref int minRange, ref int maxRange, int min, int max, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null)
 		{
-			GUILayout.BeginHorizontal ();
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				if (!string.IsNullOrEmpty (name)) {
 					if (nameLayout != null)
@@ -79,12 +106,12 @@ namespace Ecosim.SceneEditor
 				
 				if (maxRange < minRange) maxRange = minRange;
 			}
-			GUILayout.EndHorizontal ();
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
 		}
 
 		public static void RangeSliders (string name, ref float minRange, ref float maxRange, float min, float max, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null)
 		{
-			GUILayout.BeginHorizontal ();
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				if (!string.IsNullOrEmpty (name)) {
 					if (nameLayout != null)
@@ -102,7 +129,7 @@ namespace Ecosim.SceneEditor
 
 				if (maxRange < minRange) maxRange = minRange;
 			}
-			GUILayout.EndHorizontal ();
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
 		}
 	}
 }

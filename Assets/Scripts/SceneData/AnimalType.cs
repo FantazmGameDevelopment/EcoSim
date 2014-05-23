@@ -37,7 +37,7 @@ namespace Ecosim.SceneData
 				nest.totalCapacity = int.Parse (reader.GetAttribute ("cap"));
 				nest.malesCapacity = int.Parse (reader.GetAttribute ("malescap"));
 				nest.females = int.Parse (reader.GetAttribute ("femalescap"));
-				IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
+				//IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
 				return null;
 			}
 
@@ -80,6 +80,8 @@ namespace Ecosim.SceneData
 		//public float naturalDeath;
 
 		public Nest[] nests;
+
+		public string dataName;
 		
 		public AnimalType ()
 		{
@@ -88,9 +90,22 @@ namespace Ecosim.SceneData
 		public AnimalType (Scene scene, string name)
 		{
 			this.name = name;
-			index = scene.animalTypes.Length;
+			this.index = scene.animalTypes.Length;
 
-			foodParamName = scene.progression.GetAllDataNames ()[0];
+			this.dataName = StringUtil.MakeValidID (name, true);
+			
+			// Data name
+			string newDataName = this.dataName;
+			int tries = 1;
+			while (scene.progression.HasData (newDataName)) {
+				newDataName = this.dataName + tries;
+				tries++;
+			}
+			this.dataName = newDataName;
+
+			scene.progression.AddData (this.dataName, new BitMap8 (scene));
+
+			foodParamName = scene.progression.GetAllDataNames (false)[0];
 			foodOverruleParamName = foodParamName;
 			dangerParamName = foodParamName;
 
@@ -119,7 +134,12 @@ namespace Ecosim.SceneData
 			animal.moveDistanceFemale = int.Parse(reader.GetAttribute ("movedistf"));
 			animal.wanderMale = float.Parse(reader.GetAttribute ("wanderm"));
 			animal.wanderFemale = float.Parse(reader.GetAttribute ("wanderf"));
+			animal.dataName = reader.GetAttribute ("dataname");
 
+			if (string.IsNullOrEmpty(animal.dataName)) 
+				animal.dataName = string.Format("_animal{0}", StringUtil.MakeValidID(animal.name));
+
+			// TODO: Check if nests are saved/loaded properly
 			List<Nest> nests = new List<Nest>();
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
@@ -149,6 +169,7 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("movedistf", moveDistanceFemale.ToString());
 			writer.WriteAttributeString ("wanderm", wanderMale.ToString());
 			writer.WriteAttributeString ("wanderf", wanderFemale.ToString());
+			writer.WriteAttributeString ("dataname", dataName);
 			foreach (Nest n in nests) {
 				n.Save (writer, scene);
 			}

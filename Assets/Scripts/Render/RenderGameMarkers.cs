@@ -8,7 +8,6 @@ using Ecosim.SceneData.Action;
 
 public class RenderGameMarkers : MonoBehaviour, NotifyTerrainChange
 {
-
 	public RenderGameMarkersMgr parent;
 	public Data map;
 	public ExtraAssets.AssetObjDef[] objects = null;

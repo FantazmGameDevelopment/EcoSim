@@ -40,6 +40,11 @@ namespace Ecosim.SceneEditor.Helpers
 					pList.Remove (p.dataName);
 				}
 
+				// Exclude the animals data names
+				foreach (AnimalType a in scene.animalTypes) {
+					pList.Remove (a.dataName);
+				}
+
 				parameters = pList.ToArray ();
 				activeParameter = 0;
 			}
@@ -255,8 +260,9 @@ namespace Ecosim.SceneEditor.Helpers
 													}
 
 													GUILayout.Space (10);
-													GUILayout.Label ("+", GUILayout.Width (10));
+													GUILayout.Label ("+ (", GUILayout.Width (12));
 													EcoGUI.FloatField ("", ref p.multiplier, 2, null, GUILayout.Width (50));
+													GUILayout.Label ("*", GUILayout.Width (5));
 
 													if (GUILayout.Button (parameters[paramIndex], GUILayout.MaxWidth (550))) 
 													{
@@ -282,6 +288,8 @@ namespace Ecosim.SceneEditor.Helpers
 														});
 														break;
 													}
+
+													GUILayout.Label (")", GUILayout.Width (5));
 
 													if (GUILayout.Button ("-", GUILayout.Width (20)))
 													{

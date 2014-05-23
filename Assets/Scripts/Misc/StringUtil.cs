@@ -167,7 +167,11 @@ namespace Ecosim
 		}
 
 		public static string MakeValidID (string id) {
-			string newId = "";
+			return MakeValidID (id, false);
+		}
+
+		public static string MakeValidID (string id, bool isInternal) {
+			string newId = (isInternal) ? "_" : "";
 			foreach (char c in id) {
 				if (char.IsLetterOrDigit(c)) 
 					newId += c.ToString();
