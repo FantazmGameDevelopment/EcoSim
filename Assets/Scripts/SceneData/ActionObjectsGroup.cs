@@ -12,9 +12,21 @@ namespace Ecosim.SceneData
 		public const string XML_ELEMENT = "actionobject";
 
 		public ActionObjectsGroup group;
+		public int index = 0;
 
 		public int buildingId;
 		public Buildings.Building building;
+
+		private bool _enabled = false;
+		public bool enabled {
+			get { return _enabled; }
+			set {
+				if (_enabled != value) {
+					_enabled = value;
+					building.isActive = true;
+				}
+			}
+		}
 
 		public ActionObject (ActionObjectsGroup group)
 		{
@@ -44,6 +56,8 @@ namespace Ecosim.SceneData
 					break;
 				}
 			}
+
+			result.enabled = (reader.GetAttribute ("enabled") == "true") ? true : false;
 			IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
 			return result;
 		}
@@ -52,6 +66,7 @@ namespace Ecosim.SceneData
 		{
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("buildingid", buildingId.ToString());
+			writer.WriteAttributeString ("enabled", enabled.ToString().ToLower());
 			writer.WriteEndElement ();
 		}
 	}
@@ -123,6 +138,16 @@ namespace Ecosim.SceneData
 	{
 		public const string XML_ELEMENT = "actionobjectgroup";
 
+		/* Combined: This group is treated as a whole and acts as 'one' combined object.
+		 * Collection: Every object in this collection is treated seperately.
+		 */ 
+		public enum GroupType
+		{
+			Combined,
+			Collection
+		}
+		public GroupType groupType;
+
 		public string name;
 		public string description;
 		public string dataName;
@@ -138,16 +163,29 @@ namespace Ecosim.SceneData
 			get { return _enabled; }
 			set {
 				_enabled = value;
-				if (_enabled) {
-					// Set all buildings active
-					foreach (ActionObject obj in actionObjects) {
-						obj.building.isActive = true;
+
+				switch (groupType)
+				{
+				case GroupType.Combined :
+					// We enabled all action objects
+					if (_enabled) {
+						foreach (ActionObject obj in actionObjects) {
+							obj.enabled = true;
+						}
 					}
+					break;
+
+				case GroupType.Collection :
+					// We let the action objects themselves see whether they're enabled yes or no
+					break;
 				}
 			}
 		}
 
-		public Data data;
+		/// <summary>
+		/// The combined data data reference. Only used when groupType equals Combined.
+		/// </summary>
+		public Data combinedData;
 		
 		public ActionObjectsGroup ()
 		{
@@ -187,8 +225,12 @@ namespace Ecosim.SceneData
 			result.dataName = reader.GetAttribute ("dataname");
 			result.description = reader.GetAttribute ("description");
 
-			if (string.IsNullOrEmpty(result.dataName)) 
+			if (!string.IsNullOrEmpty(reader.GetAttribute ("grouptype")))
+				result.groupType = (GroupType)System.Enum.Parse(typeof(GroupType), reader.GetAttribute ("grouptype"));
+
+			if (string.IsNullOrEmpty(result.dataName)) {
 				result.dataName = string.Format("_actiongroup{0}", StringUtil.MakeValidID(result.name));
+			}
 
 			List<ActionObject> actionObjs = new List<ActionObject>();
 			List<ActionObjectInfluenceRule> influenceRules = new List<ActionObjectInfluenceRule>();
@@ -228,6 +270,8 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("name", name);
 			writer.WriteAttributeString ("dataname", dataName);
 			writer.WriteAttributeString ("description", description);
+			writer.WriteAttributeString ("grouptype", groupType.ToString());
+
 			foreach (ActionObject aObj in actionObjects) {
 				aObj.Save (writer, scene);
 			}
@@ -239,7 +283,7 @@ namespace Ecosim.SceneData
 		
 		public void UpdateReferences (Scene scene)
 		{
-			data = scene.progression.GetData (dataName);
+			combinedData = scene.progression.GetData (dataName);
 
 			foreach (ActionObjectInfluenceRule rule in influenceRules)
 			{

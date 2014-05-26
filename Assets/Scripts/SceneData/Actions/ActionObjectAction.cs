@@ -13,6 +13,8 @@ namespace Ecosim.SceneData.Action
 	{
 		// TODO: EcoBase Linkage
 
+		// TODO: Make a difference between Combined and Collection groups
+
 		public const string XML_ELEMENT = "object";
 
 		public List<ActionObjectsGroup> objectsGroups = new List<ActionObjectsGroup>();
@@ -94,67 +96,15 @@ namespace Ecosim.SceneData.Action
 			// Loop through all enabled groups
 			foreach (ActionObjectsGroup group in enabledGroups)
 			{
-				if (group.enabled)
+				switch (group.groupType)
 				{
-					// Loop through all tiles who have the groups data on them
-					foreach (ValueCoordinate vc in group.data.EnumerateNotZero())
-					{
-						// Handle the influence rules
-						foreach (ActionObjectInfluenceRule ir in group.influenceRules)
-						{
-							// Check if rule applies
-							bool ruleApplies = false;
-							switch (ir.valueType)
-							{
-							// Check if the groups data is a certain value
-							case ActionObjectInfluenceRule.ValueType.Value :
+				case ActionObjectsGroup.GroupType.Combined :
+					ProcessCombinedGroup (group);
+					break;
 
-								int ruleVal = Mathf.RoundToInt ( ir.lowRange * (float)group.data.GetMax () );
-								ruleApplies = (ruleVal == vc.v);
-								break;
-
-							case ActionObjectInfluenceRule.ValueType.Range :
-
-								float max = (float)group.data.GetMax ();
-								int minVal = (int)(ir.lowRange * max);
-								int maxVal = (int)(ir.highRange * max);
-								ruleApplies = ((vc.v >= minVal) && (vc.v <= maxVal));
-
-								break;
-							}
-
-							// Apply influences
-							if (ruleApplies)
-							{
-								// Check math type
-								int currVal = ir.data.Get (vc);
-								int newVal = 0;
-
-								switch (ir.mathType)
-								{
-
-								case ActionObjectInfluenceRule.MathTypes.Equals :
-									newVal = (int)ir.mathValue;
-									break;
-
-								case ActionObjectInfluenceRule.MathTypes.Plus :
-									newVal = currVal + (int)ir.mathValue;
-									break;
-
-								case ActionObjectInfluenceRule.MathTypes.Minus :
-									newVal = currVal - (int)ir.mathValue;
-									break;
-
-								case ActionObjectInfluenceRule.MathTypes.Multiply :
-									newVal = Mathf.RoundToInt((float)currVal * ir.mathValue);
-									break;
-								
-								}
-								
-								ir.data.Set (vc, Mathf.Clamp (newVal, 0, ir.data.GetMax()));
-							}
-						}
-					}
+				case ActionObjectsGroup.GroupType.Collection :
+					ProcessCollectionGroup (group);
+					break;
 				}
 			}
 
@@ -166,6 +116,98 @@ namespace Ecosim.SceneData.Action
 			uiList[0].estimatedTotalCostForYear = 0;
 
 			base.DoSuccession ();
+		}
+
+		private void ProcessCombinedGroup (ActionObjectsGroup group)
+		{
+			if (group.enabled) 
+			{
+				// Loop through all tiles who have the groups data on them
+				foreach (ValueCoordinate vc in group.combinedData.EnumerateNotZero())
+				{
+					// Handle the influence rules
+					foreach (ActionObjectInfluenceRule ir in group.influenceRules)
+					{
+						ProcessInfluenceRules (ir, vc, group.combinedData);
+					}
+				}
+			}
+		}
+
+		private void ProcessCollectionGroup (ActionObjectsGroup group)
+		{
+			// TODO: Debug and test ProcessCollectionGroup
+
+			// Process collection group
+			foreach (ActionObject obj in group.actionObjects)
+			{
+				if (obj.enabled)
+				{
+					// Get the data from the object and apply all the rules on the coordinate
+					Data objData = scene.progression.GetData (group.dataName.ToLower() + "_obj" + obj.index);
+					foreach (ValueCoordinate vc in group.combinedData.EnumerateNotZero())
+					{
+						foreach (ActionObjectInfluenceRule ir in group.influenceRules)
+						{
+							ProcessInfluenceRules (ir, vc, objData);
+						}
+					}
+				}
+			}
+		}
+
+		private void ProcessInfluenceRules (ActionObjectInfluenceRule ir, ValueCoordinate vc, Data data)
+		{
+			// Check if rule applies
+			bool ruleApplies = false;
+			switch (ir.valueType)
+			{
+				// Check if the groups data is a certain value
+			case ActionObjectInfluenceRule.ValueType.Value :
+				
+				int ruleVal = Mathf.RoundToInt ( ir.lowRange * (float)data.GetMax () );
+				ruleApplies = (ruleVal == vc.v);
+				break;
+				
+			case ActionObjectInfluenceRule.ValueType.Range :
+				
+				float max = (float)data.GetMax ();
+				int minVal = (int)(ir.lowRange * max);
+				int maxVal = (int)(ir.highRange * max);
+				ruleApplies = ((vc.v >= minVal) && (vc.v <= maxVal));
+				break;
+			}
+			
+			// Apply influences
+			if (ruleApplies)
+			{
+				// Check math type
+				int currVal = ir.data.Get (vc);
+				int newVal = 0;
+				
+				switch (ir.mathType)
+				{
+					
+				case ActionObjectInfluenceRule.MathTypes.Equals :
+					newVal = (int)ir.mathValue;
+					break;
+					
+				case ActionObjectInfluenceRule.MathTypes.Plus :
+					newVal = currVal + (int)ir.mathValue;
+					break;
+					
+				case ActionObjectInfluenceRule.MathTypes.Minus :
+					newVal = currVal - (int)ir.mathValue;
+					break;
+					
+				case ActionObjectInfluenceRule.MathTypes.Multiply :
+					newVal = Mathf.RoundToInt((float)currVal * ir.mathValue);
+					break;
+					
+				}
+				
+				ir.data.Set (vc, Mathf.Clamp (newVal, 0, ir.data.GetMax()));
+			}
 		}
 
 		protected override void UnlinkEcoBase ()
@@ -204,8 +246,8 @@ namespace Ecosim.SceneData.Action
 
 		public void StartSelecting (UserInteraction ui)
 		{
+			// TODO: Check if it's a combind or collection objects that are selected, maybe move it to this class?
 			EditActionObjects.instance.StartEditActionObjects (scene, objectsGroups.ToArray(), HandleActionGroup);
-			//TerrainMgr.self.ForceRedraw ();
 		}
 
 		public void FinishSelecting (UserInteraction ui, bool isCanceled)

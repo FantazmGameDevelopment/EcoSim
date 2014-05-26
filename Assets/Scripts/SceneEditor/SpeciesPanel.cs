@@ -141,13 +141,13 @@ namespace Ecosim.SceneEditor
 				{
 					currentTab = Tabs.Plants;
 					scrollPos = scrollPosExtra = Vector2.zero;
-					extraPanel = null;
+					DisposeExtraPanel ();
 				}
 				if (GUILayout.Button ("Animals", (currentTab == Tabs.Animals) ? tabSelected : tabNormal))//, GUILayout.Width (width))) 
 				{
 					currentTab = Tabs.Animals;
 					scrollPos = scrollPosExtra= Vector2.zero;
-					extraPanel = null;
+					DisposeExtraPanel ();
 				}
 				//GUILayout.FlexibleSpace ();
 			}
@@ -243,14 +243,14 @@ namespace Ecosim.SceneEditor
 									((AnimalNestsExtraPanel)extraPanel).Dispose ();
 									extraPanel = null;
 								}
+
 								extraPanel = new AnimalNestsExtraPanel (ctrl, ast.animal);
 							}
 
-							if (GUILayout.Button ("Open Rules [WIP]"))
+							// TODO: Open extra panel for Animal rules
+							/*if (GUILayout.Button ("Open Rules"))
 							{
-								Debug.Log ("WIP Rules");
-								// TODO: Open extra panel
-							}
+							}*/
 						}
 						GUILayout.EndHorizontal();
 
@@ -274,7 +274,7 @@ namespace Ecosim.SceneEditor
 								{
 									GUILayout.BeginHorizontal (ctrl.skin.box);
 									{
-										GUILayout.Label (string.Format("Nest #{0} ({1},{2})", idx++, n.x, n.y));
+										GUILayout.Label (string.Format(" Nest #{0} ({1},{2})", idx++, n.x, n.y));
 
 										AnimalNestsExtraPanel animExtraPanel = (AnimalNestsExtraPanel)extraPanel;
 										if (animExtraPanel != null)
@@ -303,7 +303,7 @@ namespace Ecosim.SceneEditor
 									}
 									GUILayout.EndHorizontal ();
 								}
-								GUILayout.FlexibleSpace ();
+								//GUILayout.FlexibleSpace ();
 							}
 						}
 					}
@@ -408,6 +408,7 @@ The current values will be converted by their percentage of the current maximum 
 						{
 							if (GUILayout.Button ("Open Rules", GUILayout.Width (120)))
 							{
+								DisposeExtraPanel ();
 								extraPanel = new PlantRulesExtraPanel (ctrl, ps.plant);
 							}
 						}
@@ -427,6 +428,15 @@ The current values will be converted by their percentage of the current maximum 
 				PlantState state = new PlantState (t);
 				plants.Add (state);
 			}
+		}
+
+		private void DisposeExtraPanel ()
+		{
+			if (extraPanel != null && extraPanel is AnimalNestsExtraPanel) {
+				((AnimalNestsExtraPanel)extraPanel).Dispose ();
+			}
+			
+			extraPanel = null;
 		}
 
 		#region Wrapper Methods
@@ -493,7 +503,6 @@ The current values will be converted by their percentage of the current maximum 
 				}
 				else if (extraPanel is AnimalNestsExtraPanel)
 				{
-					//TODO: AnimalNestsExtraPanel > NeedSidePanel
 					return false;
 				}
 			}
@@ -511,11 +520,7 @@ The current values will be converted by their percentage of the current maximum 
 		
 		public void Deactivate ()
 		{
-			if (extraPanel != null && extraPanel is AnimalNestsExtraPanel) {
-				((AnimalNestsExtraPanel)extraPanel).Dispose ();
-			}
-
-			extraPanel = null;
+			DisposeExtraPanel ();
 		}
 		
 		public void Update ()

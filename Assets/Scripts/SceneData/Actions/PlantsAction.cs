@@ -273,8 +273,8 @@ namespace Ecosim.SceneData.Action
 		{
 			int id = int.Parse (reader.GetAttribute ("id"));
 			PlantsAction action = new PlantsAction (scene, id);
-			action.skipNormalPlantsLogic = bool.Parse (reader.GetAttribute("skipnormalplantslogic"));
-			action.skipNormalPlantsLogic = bool.Parse (reader.GetAttribute("skipnormalspawnlogic"));
+			action.skipNormalPlantsLogic = (reader.GetAttribute("skipnormalplantslogic") == "true") ? true : false;
+			action.skipNormalPlantsLogic = (reader.GetAttribute("skipnormalspawnlogic") == "true") ? true : false;
 
 			if (!reader.IsEmptyElement) 
 			{

@@ -31,7 +31,7 @@ namespace Ecosim.SceneEditor.Helpers
 		
 		protected int maxParamValue = 255;
 		protected int paramStrength = 255;
-		protected string paramStrengthStr = "";
+		protected string paramStrengthStr = "255";
 		
 		public ParameterPaintPanel (EditorCtrl ctrl, MapsPanel parent, Scene scene)
 		{
@@ -51,6 +51,7 @@ namespace Ecosim.SceneEditor.Helpers
 		protected virtual void Setup (string editDataParamName)
 		{
 			paramStrength = maxParamValue;
+			paramStrengthStr = maxParamValue.ToString();
 			gridSettings255 = new GridTextureSettings (false, 0, 16, "MapGrid255", true, "ActiveMapGrid255");
 			
 			edit = EditData.CreateEditData (editDataParamName, data, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {

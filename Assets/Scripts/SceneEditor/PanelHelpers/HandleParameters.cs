@@ -29,20 +29,10 @@ namespace Ecosim.SceneEditor.Helpers
 			
 			if (scene != null) {
 				List<string> pList = new List<string> ();
-				foreach (string p in scene.progression.GetAllDataNames()) {
+				foreach (string p in scene.progression.GetAllDataNames(false)) {
 					Data dataFindNames = scene.progression.GetData (p);
-					if ((dataFindNames.GetMax() < 256) && (!p.StartsWith ("_")))
+					if ((dataFindNames.GetMax() < 256))
 						pList.Add (p);
-				}
-
-				// Exclude the plant data names
-				foreach (PlantType p in scene.plantTypes) {
-					pList.Remove (p.dataName);
-				}
-
-				// Exclude the animals data names
-				foreach (AnimalType a in scene.animalTypes) {
-					pList.Remove (a.dataName);
 				}
 
 				parameters = pList.ToArray ();

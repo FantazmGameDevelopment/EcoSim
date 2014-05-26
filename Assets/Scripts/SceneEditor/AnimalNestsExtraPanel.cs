@@ -19,6 +19,7 @@ namespace Ecosim.SceneEditor
 		private GridTextureSettings areaGrid = null;
 		private Material areaMat = null;
 
+		private bool canCreateNests = false;
 		private bool updateData = false;
 
 		private class NestStates
@@ -34,9 +35,10 @@ namespace Ecosim.SceneEditor
 			this.ctrl = ctrl;
 
 			areaMat = new Material (EcoTerrainElements.GetMaterial ("MapAnimalNestsGrid"));
-			areaGrid = new GridTextureSettings (true, 0, 2, areaMat, true, areaMat);
 
 			SetAnimal (animal);
+			if (animal.nests.Length > 0)
+				EditNest (animal.nests[0]);
 		}
 
 		public bool Render (int mx, int my)
@@ -50,24 +52,38 @@ namespace Ecosim.SceneEditor
 			bool keepOpen = true;
 			GUILayout.BeginHorizontal ();
 			{
-				if (GUILayout.Button (ctrl.foldedOpenSmall)) 
+				if (GUILayout.Button (ctrl.foldedOpenSmall, GUILayout.Width (20))) 
 				{
 					keepOpen = false;
 				}
 				
 				GUILayout.Label ("Animal Nests", GUILayout.Width (100));
-				GUILayout.Label (animal.name);
-				GUILayout.FlexibleSpace ();
+				GUILayout.Label ("'" + animal.name + "'");
+
+				if (animal.nests.Length > 0)
+				{
+					if (GUILayout.Button (canCreateNests ? "Stop creating new nests" : "Start creating new nests", GUILayout.Width (160)))
+					{
+						canCreateNests = !canCreateNests;
+						SetupEditData (canCreateNests);
+					}
+				}
+
+				//GUILayout.FlexibleSpace ();
 			}
 			GUILayout.EndHorizontal ();
 
-			// TODO: Buttons?
 			/*GUILayout.BeginHorizontal (); // Buttons
 			{
 
 			}
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal (); // ~Buttons*/
+
+			if (animal.nests.Length == 0)
+			{
+				GUILayout.Label ("No nests. Click on the terrain to add new nests.");
+			}
 
 			// Nest to edit
 			if (editNest != null)
@@ -80,7 +96,7 @@ namespace Ecosim.SceneEditor
 						editIdx++;
 						if (n == editNest) break;
 					}
-					GUILayout.Label (string.Format("Nest #{0} ({1},{2})", editIdx, editNest.x, editNest.y));
+					GUILayout.Label (string.Format(" Nest #{0} ({1},{2})", editIdx, editNest.x, editNest.y));
 
 					// Variables
 					float labelWidth = 100f;
@@ -92,6 +108,8 @@ namespace Ecosim.SceneEditor
 				}
 				GUILayout.EndScrollView ();
 			}
+
+			if (!keepOpen) Dispose();
 			return keepOpen;
 		}
 
@@ -104,6 +122,7 @@ namespace Ecosim.SceneEditor
 		{
 			if (edit != null) 
 			{
+				edit.ClearData ();
 				edit.Delete ();
 				edit = null;
 			}
@@ -113,30 +132,29 @@ namespace Ecosim.SceneEditor
 		{
 			if (this.animal != animal)
 			{
-				if (edit != null) {
-					edit.Delete ();
-					edit = null;
-				}
-
 				this.animal = animal;
 
 				nestsData = new BitMap8 (ctrl.scene);
-
 				foreach (AnimalType.Nest nest in animal.nests) {
 					nestsData.Set (new Coordinate(nest.x, nest.y), 1);
 				}
 
-				SetupEditData ();
+				// If we don't have any nests, set can create nests default to true.
+				canCreateNests = animal.nests.Length == 0;
+				SetupEditData (canCreateNests);
 			}
 		}
 
-		private void SetupEditData ()
+		private void SetupEditData (bool showZero)
 		{
-			// TODO: We should make an toggle like option so we can create new nests
+			Dispose ();
+
+			areaGrid = new GridTextureSettings (showZero, 0, 2, areaMat, showZero, areaMat);
 
 			edit = EditData.CreateEditData ("nests", nestsData, this.ctrl.scene.progression.managedArea, 
 			delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				return NestStates.Hover;
+				if (canCreateNests) return NestStates.Hover;
+				else return (currentVal > 0) ? NestStates.Hover : -1;
 			}, areaGrid);
 			
 			edit.SetFinalBrushFunction (HandleClick);
@@ -145,13 +163,15 @@ namespace Ecosim.SceneEditor
 		
 		private int HandleClick (int x, int y, int currentVal, float strength, bool shift, bool ctrl) 
 		{
-			// Check the state, 0 = nothing, 1 = mouse selection, 2 = nest, 3 = selected nest
-			int newVal = 0;
+			int newVal = currentVal;
 			switch (currentVal)
 			{
-			case NestStates.None : 
-				newVal = NestStates.Active; 
-				CreateNewNestAt (x, y);
+			case NestStates.None :
+				if (canCreateNests)
+				{
+					newVal = NestStates.Editable; 
+					CreateNewNestAt (x, y);	
+				}
 				break;
 
 			case NestStates.Active : 
@@ -183,7 +203,7 @@ namespace Ecosim.SceneEditor
 				nestsData.Set (new Coordinate(editNest.x, editNest.y), NestStates.Editable);
 			}
 
-			// Update it
+			// Update the (visual) edit data
 			edit.SetData (nestsData);
 		}
 

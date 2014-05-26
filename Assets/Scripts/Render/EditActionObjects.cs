@@ -9,6 +9,8 @@ public class EditActionObjects : EditBuildings
 {
 	// Note: 'instances' list is the list with all toggleable objects
 
+	// TODO: Make a difference between Combined and Collection groups
+
 	public static EditActionObjects instance;
 
 	private List<ActionObjectsGroup> objectGroups;

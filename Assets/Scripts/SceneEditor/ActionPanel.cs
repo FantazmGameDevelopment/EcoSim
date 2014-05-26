@@ -182,6 +182,8 @@ namespace Ecosim.SceneEditor
 
 		void HandleActionObjectAction (ActionObjectAction action)
 		{
+			// TODO: Make a difference between Combined and Collection groups
+
 			// Choose possible action groups
 			int index = 0;
 			GUILayout.BeginVertical (ctrl.skin.box);

@@ -36,7 +36,7 @@ namespace Ecosim.SceneData.PlantRules
 			rule.description = reader.GetAttribute ("description");
 			rule.chance = float.Parse(reader.GetAttribute ("chance"));
 			rule.delta = int.Parse(reader.GetAttribute ("delta"));
-			rule.canSpawn = bool.Parse(reader.GetAttribute ("canspawn"));
+			rule.canSpawn = (reader.GetAttribute ("canspawn") == "true") ? true : false;
 
 			List<ParameterRange> paramConditions = new List<ParameterRange>();
 			List<VegetationCondition> vegConditions = new List<VegetationCondition>();

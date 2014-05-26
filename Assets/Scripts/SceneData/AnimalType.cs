@@ -38,7 +38,7 @@ namespace Ecosim.SceneData
 				nest.malesCapacity = int.Parse (reader.GetAttribute ("malescap"));
 				nest.females = int.Parse (reader.GetAttribute ("femalescap"));
 				//IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
-				return null;
+				return nest;
 			}
 
 			public void Save (XmlTextWriter writer, Scene scene)
@@ -139,7 +139,6 @@ namespace Ecosim.SceneData
 			if (string.IsNullOrEmpty(animal.dataName)) 
 				animal.dataName = string.Format("_animal{0}", StringUtil.MakeValidID(animal.name));
 
-			// TODO: Check if nests are saved/loaded properly
 			List<Nest> nests = new List<Nest>();
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {

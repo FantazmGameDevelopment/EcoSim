@@ -275,7 +275,7 @@ namespace Ecosim.SceneData
 		{
 			return dataDict.ContainsKey (name);
 		}
-		
+
 		/**
 		 * Returns a data type with given name, if necessary the data is loaded in from disk
 		 */
@@ -542,16 +542,51 @@ namespace Ecosim.SceneData
 						variables.Add (name, var);
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "actionobjectgroup")) {
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "actionobjectgroup")) 
+					{
 						string name = reader.GetAttribute ("name");
-						bool enabled = bool.Parse (reader.GetAttribute ("enabled"));
+
+						// Get the correct action group
+						ActionObjectsGroup objGroup = null;
 						foreach (ActionObjectsGroup gr in scene.actionObjectGroups) {
 							if (gr.name == name) {
-								gr.enabled = enabled;
+								objGroup = gr;
 								break;
 							}
 						} 
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ResearchPoint.XML_ELEMENT)) {
+
+						// Check the group type
+						if (objGroup != null)
+						{
+							ActionObjectsGroup.GroupType groupType = (ActionObjectsGroup.GroupType)System.Enum.Parse(typeof(ActionObjectsGroup.GroupType), reader.GetAttribute("grouptype"));
+							switch (groupType)
+							{
+							case ActionObjectsGroup.GroupType.Combined :
+								// We should parse the enabled state of the action object group
+								objGroup.enabled = (reader.GetAttribute ("enabled") == "true") ? true : false;
+								break;
+
+							case ActionObjectsGroup.GroupType.Collection : 
+								//  Get the individual enabled states of all objects in the group
+								int objIdx = 0;
+								while (reader.Read()) 
+								{
+									if ((reader.NodeType == XmlNodeType.Element) && reader.Name.ToLower() == "aobj") {
+										if (objIdx < objGroup.actionObjects.Length) {
+											objGroup.actionObjects[objIdx].enabled = (reader.GetAttribute ("enabled") == "true") ? true : false;
+										}
+										IOUtil.ReadUntilEndElement (reader, "aobj");
+										objIdx++;
+									} else if ((reader.NodeType == XmlNodeType.EndElement) && reader.Name.ToLower() == "actionobjectgroup") {
+										break;
+									}
+								}
+								break;
+							}
+						}
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ResearchPoint.XML_ELEMENT)) {
 						ResearchPoint rp = ResearchPoint.Load (reader, scene);
 						researchPoints.Add (rp);
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "progress")) {
@@ -789,7 +824,23 @@ namespace Ecosim.SceneData
 			foreach (ActionObjectsGroup gr in scene.actionObjectGroups) {
 				writer.WriteStartElement ("actionobjectgroup");
 				writer.WriteAttributeString ("name", gr.name);
-				writer.WriteAttributeString ("enabled", gr.enabled.ToString().ToLower());
+				writer.WriteAttributeString ("grouptype", gr.groupType.ToString());
+
+				switch (gr.groupType)
+				{
+				case ActionObjectsGroup.GroupType.Combined :
+					// We save the 'enabled' state of the combined group
+					writer.WriteAttributeString ("enabled", gr.enabled.ToString().ToLower());
+					break;
+				case ActionObjectsGroup.GroupType.Collection : 
+					// Save the enabled state of every object seperately
+					foreach (ActionObject obj in gr.actionObjects) {
+						writer.WriteStartElement ("aobj");
+						writer.WriteAttributeString ("enabled", obj.enabled.ToString().ToLower());
+						writer.WriteEndElement ();
+					}
+					break;
+				}
 				writer.WriteEndElement ();
 			}
 

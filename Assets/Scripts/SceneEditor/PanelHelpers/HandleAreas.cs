@@ -89,7 +89,7 @@ namespace Ecosim.SceneEditor.Helpers
 				maxParamValue = 1;
 				break;
 			case Areas.Purchasable :
-				// TODO:
+				// TODO: Areas.Purchasable
 				maxParamValue = 10;
 				break;
 			}
