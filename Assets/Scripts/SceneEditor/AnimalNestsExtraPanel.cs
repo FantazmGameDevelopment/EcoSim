@@ -232,11 +232,30 @@ namespace Ecosim.SceneEditor
 
 		public void DeleteNest (AnimalType.Nest nest)
 		{
-			if (editNest != null && editNest == nest) {
-				editNest = null;
+			if (this.animal != null)
+			{
+				// Check if the nest is a part of this animal
+				foreach (AnimalType.Nest n in this.animal.nests)
+				{
+					if (n == nest)
+					{
+						if (editNest == nest) {
+							editNest = null;
+						}
+
+						nestsData = new BitMap8 (ctrl.scene);
+						foreach (AnimalType.Nest an in animal.nests) {
+							if (an != n)
+								nestsData.Set (new Coordinate(an.x, an.y), 1);
+						}
+						
+						// If we don't have any nests, set can create nests default to true.
+						canCreateNests = animal.nests.Length == 0;
+						SetupEditData (canCreateNests);
+						break;
+					}
+				}
 			}
-			nestsData.Set (new Coordinate(nest.x, nest.y), NestStates.None);
-			updateData = true;
 		}
 
 		private AnimalType.Nest GetNestAt (int x, int y)

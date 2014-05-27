@@ -295,10 +295,11 @@ namespace Ecosim.SceneEditor
 										GUILayout.Space (2);
 										if (GUILayout.Button ("-", GUILayout.Width (20))) 
 										{
-											DeleteNest (ast.animal, n);
 											if (animExtraPanel != null) {
 												animExtraPanel.DeleteNest (n);
 											}
+
+											DeleteNest (ast.animal, n);
 										}
 									}
 									GUILayout.EndHorizontal ();
