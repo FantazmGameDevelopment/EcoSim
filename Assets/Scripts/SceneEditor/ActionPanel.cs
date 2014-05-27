@@ -178,6 +178,15 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndHorizontal ();
 		}
 
+		void HandleAnimalsAction (AnimalsAction action)
+		{
+			GUILayout.BeginHorizontal ();
+			{
+				action.skipNormalAnimalsLogic = GUILayout.Toggle (action.skipNormalAnimalsLogic, "Skip normal animals logic");
+			}
+			GUILayout.EndHorizontal ();
+		}
+
 		void HandleActionObjectAction (ActionObjectAction action)
 		{
 			GUILayout.Space (3);
@@ -328,7 +337,8 @@ namespace Ecosim.SceneEditor
 				if (isFoldedOpen) {
 					GUILayout.Space (8);
 					int uiListCount = action.uiList.Count;
-					foreach (UserInteraction ui in action.uiList) {
+					foreach (UserInteraction ui in action.uiList) 
+					{
 						GUILayout.BeginHorizontal (); // 1
 						if (GUILayout.Button (scene.assets.GetIcon (ui.iconId), tabNormal)) {
 							UserInteraction tmpAction = ui;
@@ -392,6 +402,8 @@ namespace Ecosim.SceneEditor
 						HandleSuccessionAction ((SuccessionAction)action);
 					} else if (action is PlantsAction) {
 						HandlePlantsAction ((PlantsAction)action);
+					} else if (action is AnimalsAction) {
+						HandleAnimalsAction ((AnimalsAction)action);
 					} else if (action is ActionObjectAction) {
 						HandleActionObjectAction ((ActionObjectAction)action);
 					}
