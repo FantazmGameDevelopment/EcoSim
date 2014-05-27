@@ -11,17 +11,17 @@ namespace Ecosim.SceneData.Action
 {
 	public class ActionObjectAction : BasicAction
 	{
-		// TODO: EcoBase Linkage
-
-		// TODO: Make a difference between Combined and Collection groups
-
 		public const string XML_ELEMENT = "object";
 
-		public List<ActionObjectsGroup> objectsGroups = new List<ActionObjectsGroup>();
-		public List<ActionObjectsGroup> enabledGroups = new List<ActionObjectsGroup>();
+		public List<ActionObjectsGroup> actionObjectGroups = new List<ActionObjectsGroup>();
+		public bool processInfluenceRules = true;
 
 		private string description;
 		private long backupEstimate;
+
+		private List<ActionObject> selectedObjects = new List<ActionObject>();
+
+		private MethodInfo processInfluencesMI;
 		
 		public ActionObjectAction (Scene scene, int id) : base (scene, id)
 		{
@@ -77,39 +77,73 @@ namespace Ecosim.SceneData.Action
 			uiList[0].estimatedTotalCostForYear = backupEstimate;
 		}
 
-		public void HandleActionGroup (ActionObjectsGroup group, bool currentState)
-		{
-			if (currentState) 
-			{
-				enabledGroups.Add (group);
-				uiList[0].estimatedTotalCostForYear += uiList[0].cost;
+		public void HandleActionObjectClicked (ActionObjectsGroup group, ActionObject actionObject, bool objectState)
+		{	
+			// Remember the 'selected' objects
+			if (objectState) {
+				selectedObjects.Add (actionObject);
+			} else {
+				selectedObjects.Remove (actionObject);
 			}
-			else 
-			{
-				enabledGroups.Remove (group);
-				uiList[0].estimatedTotalCostForYear -= uiList[0].cost;
-			}
+
+			// Add or deduct the costs by the object state
+			uiList[0].estimatedTotalCostForYear += (objectState) ? uiList[0].cost : -uiList[0].cost;
 		}
 
 		public override void DoSuccession ()
 		{
-			// Loop through all enabled groups
-			foreach (ActionObjectsGroup group in enabledGroups)
+			// Loop through all associated object groups and check whether they have changed
+			foreach (ActionObjectsGroup ag in actionObjectGroups)
 			{
-				switch (group.groupType)
+				switch (ag.groupType)
 				{
+				// Check whether there's an action object of this group changed
 				case ActionObjectsGroup.GroupType.Combined :
-					ProcessCombinedGroup (group);
+				{
+					bool processGroup = false;
+					foreach (ActionObject ao in ag.actionObjects) 
+					{
+						if (selectedObjects.Contains (ao))
+						{
+							processGroup = true;
+							selectedObjects.Remove (ao);
+							if (selectedObjects.Count == 0) break;
+						}
+					}
+
+					// Process the combined group
+					if (processGroup) {
+						ProcessCombinedGroup (ag);
+					}
+				}
 					break;
 
+				// Check all objects separate and 
 				case ActionObjectsGroup.GroupType.Collection :
-					ProcessCollectionGroup (group);
+				{
+					List<ActionObject> objsToProcess = new List<ActionObject>();
+					foreach (ActionObject ao in ag.actionObjects) 
+					{
+						if (selectedObjects.Contains (ao))
+						{
+							objsToProcess.Add (ao);
+							selectedObjects.Remove (ao);
+							if (selectedObjects.Count == 0) break;
+						}
+					}
+
+					// Process the collection group
+					if (objsToProcess.Count > 0) {
+						ProcessCollectionGroup (ag, objsToProcess);
+					}
+				}
 					break;
 				}
+
+				if (selectedObjects.Count == 0) break;
 			}
 
-			// Clear the groups
-			enabledGroups.Clear ();
+			selectedObjects.Clear ();
 
 			// Deduct budget
 			scene.progression.budget -= uiList[0].estimatedTotalCostForYear;
@@ -128,28 +162,46 @@ namespace Ecosim.SceneData.Action
 					// Handle the influence rules
 					foreach (ActionObjectInfluenceRule ir in group.influenceRules)
 					{
-						ProcessInfluenceRules (ir, vc, group.combinedData);
+						if (processInfluencesMI != null) {
+							try {
+								processInfluencesMI.Invoke (ecoBase, new object[] { vc, group.name });
+							} catch (Exception e) {
+								Log.LogException (e);
+							}
+						}
+
+						if (processInfluenceRules) {
+							ProcessInfluenceRules (ir, vc, group.combinedData);
+						}
 					}
 				}
 			}
 		}
 
-		private void ProcessCollectionGroup (ActionObjectsGroup group)
+		private void ProcessCollectionGroup (ActionObjectsGroup group, List<ActionObject> objectsToProcess)
 		{
-			// TODO: Debug and test ProcessCollectionGroup
-
 			// Process collection group
-			foreach (ActionObject obj in group.actionObjects)
+			foreach (ActionObject obj in objectsToProcess)
 			{
 				if (obj.enabled)
 				{
 					// Get the data from the object and apply all the rules on the coordinate
 					Data objData = scene.progression.GetData (group.dataName.ToLower() + "_obj" + obj.index);
-					foreach (ValueCoordinate vc in group.combinedData.EnumerateNotZero())
+					foreach (ValueCoordinate vc in objData.EnumerateNotZero())
 					{
 						foreach (ActionObjectInfluenceRule ir in group.influenceRules)
 						{
-							ProcessInfluenceRules (ir, vc, objData);
+							if (processInfluencesMI != null) {
+								try {
+									processInfluencesMI.Invoke (ecoBase, new object[] { vc, group.name });
+								} catch (Exception e) {
+									Log.LogException (e);
+								}
+							}
+
+							if (processInfluenceRules) {
+								ProcessInfluenceRules (ir, vc, objData);
+							}
 						}
 					}
 				}
@@ -220,6 +272,10 @@ namespace Ecosim.SceneData.Action
 			base.LinkEcoBase ();
 			if (ecoBase != null) 
 			{
+				processInfluencesMI = ecoBase.GetType ().GetMethod ("ProcessInfluences",
+				                                                   BindingFlags.NonPublic | BindingFlags.Instance, null,
+				                                                    new Type[] { typeof(ValueCoordinate), typeof(string) }, null);
+
 				/*actionDeselectedMI = ecoBase.GetType ().GetMethod ("ActionDeselected",
 				                                                   BindingFlags.NonPublic | BindingFlags.Instance, null,
 				                                                   new Type[] { typeof(UserInteraction), typeof(bool) }, null);
@@ -246,8 +302,7 @@ namespace Ecosim.SceneData.Action
 
 		public void StartSelecting (UserInteraction ui)
 		{
-			// TODO: Check if it's a combind or collection objects that are selected, maybe move it to this class?
-			EditActionObjects.instance.StartEditActionObjects (scene, objectsGroups.ToArray(), HandleActionGroup);
+			EditActionObjects.instance.StartEditActionObjects (scene, actionObjectGroups.ToArray(), HandleActionObjectClicked);
 		}
 
 		public void FinishSelecting (UserInteraction ui, bool isCanceled)
@@ -274,6 +329,7 @@ namespace Ecosim.SceneData.Action
 			int id = int.Parse (reader.GetAttribute ("id"));
 			ActionObjectAction action = new ActionObjectAction (scene, id);
 			action.SetDescription(reader.GetAttribute ("description"));
+			action.processInfluenceRules = (reader.GetAttribute("doinflrules") == "true") ? true : false;
 			
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
@@ -284,7 +340,7 @@ namespace Ecosim.SceneData.Action
 						string groupName = reader.GetAttribute ("name");
 						foreach (ActionObjectsGroup group in scene.actionObjectGroups) {
 							if (group.name == groupName) {
-								action.objectsGroups.Add (group);
+								action.actionObjectGroups.Add (group);
 							}
 						}
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
@@ -300,10 +356,11 @@ namespace Ecosim.SceneData.Action
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("id", id.ToString ());
 			writer.WriteAttributeString ("description", description);
+			writer.WriteAttributeString ("doinflrules", processInfluenceRules.ToString().ToLower());
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
 			}
-			foreach (ActionObjectsGroup group in objectsGroups) {
+			foreach (ActionObjectsGroup group in actionObjectGroups) {
 				writer.WriteStartElement (ActionObjectsGroup.XML_ELEMENT);
 				writer.WriteAttributeString ("name", group.name);
 				writer.WriteEndElement ();

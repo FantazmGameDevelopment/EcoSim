@@ -46,6 +46,8 @@ namespace Ecosim.SceneData
 		{
 			ActionObject result = new ActionObject (group);
 			result.buildingId = int.Parse(reader.GetAttribute ("buildingid"));
+			int index = 0;
+			if (int.TryParse (reader.GetAttribute ("index"), out index)) result.index = index;
 
 			// Get the building
 			List<Buildings.Building> buildings = scene.buildings.GetAllBuildings ();
@@ -67,6 +69,7 @@ namespace Ecosim.SceneData
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("buildingid", buildingId.ToString());
 			writer.WriteAttributeString ("enabled", enabled.ToString().ToLower());
+			writer.WriteAttributeString ("index", index.ToString());
 			writer.WriteEndElement ();
 		}
 	}
@@ -143,8 +146,8 @@ namespace Ecosim.SceneData
 		 */ 
 		public enum GroupType
 		{
-			Combined,
-			Collection
+			Collection,
+			Combined
 		}
 		public GroupType groupType;
 

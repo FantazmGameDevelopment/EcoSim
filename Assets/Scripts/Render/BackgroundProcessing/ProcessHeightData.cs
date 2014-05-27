@@ -59,6 +59,7 @@ namespace Ecosim.Render.BackgroundProcessing
 			yield return false;
 			
 			// create water meshes...
+			int meshGenCount = 0;
 			Mesh[] meshes = water.GetMeshes ();
 			foreach (Mesh mesh in meshes) {
 				GameObject go = new GameObject ("water");
@@ -73,6 +74,12 @@ namespace Ecosim.Render.BackgroundProcessing
 				MeshRenderer render = go.AddComponent<MeshRenderer> ();
 				render.sharedMaterial = TerrainMgr.self.waterMaterial;
 				cell.AddObject (go);
+
+				if (meshGenCount > 2) {
+					meshGenCount = 0;
+					yield return false;
+				}
+				meshGenCount++;
 			}
 			yield return true;
 		}

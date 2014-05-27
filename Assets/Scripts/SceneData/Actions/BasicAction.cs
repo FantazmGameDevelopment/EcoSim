@@ -17,7 +17,6 @@ namespace Ecosim.SceneData.Action
 	 */
 	public abstract class BasicAction
 	{		
-		
 		public const string GENERATED_DIR = "GeneratedScripts";
 		
 		public volatile bool finishedProcessing;

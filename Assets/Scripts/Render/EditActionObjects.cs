@@ -9,16 +9,51 @@ public class EditActionObjects : EditBuildings
 {
 	// Note: 'instances' list is the list with all toggleable objects
 
-	// TODO: Make a difference between Combined and Collection groups
-
 	public static EditActionObjects instance;
 
-	private List<ActionObjectsGroup> objectGroups;
-	private Dictionary<ActionObjectsGroup, List<BuildingInstance>> objectGroupBuildingInstances;
-	private Dictionary<ActionObjectsGroup, bool> selectionStates;
+	private class ActionObjectGroupsData
+	{
+		public class BuildingInstanceState
+		{
+			public BuildingInstance instance;
+			public ActionObject actionObject;
+			public bool selected;
+
+			public BuildingInstanceState (BuildingInstance instance, ActionObject actionObject)
+			{
+				this.instance = instance;
+				this.actionObject = actionObject;
+				selected = false;
+			}
+		}
+
+		public ActionObjectsGroup group;
+		public List<BuildingInstanceState> buildingInstances;
+
+		public ActionObjectGroupsData (ActionObjectsGroup group)
+		{
+			this.group = group;
+			buildingInstances = new List<BuildingInstanceState>();
+		}
+
+		public void Dispose ()
+		{
+			foreach (BuildingInstanceState bs in buildingInstances) {
+				bs.instance = null;
+				bs.actionObject = null;
+			}
+			buildingInstances.Clear ();
+			buildingInstances = null;
+		}
+	}
+
+	private List<ActionObjectGroupsData> groupsData;
+
+	//private Dictionary<ActionObjectsGroup, List<BuildingInstance>> objectGroupBuildingInstances;
+	//private Dictionary<ActionObjectsGroup, bool> selectionStates;
 	private List<BuildingInstance> purchasableObjects;
 
-	public delegate void ClickHandler (ActionObjectsGroup group, bool state);
+	public delegate void ClickHandler (ActionObjectsGroup group, ActionObject actionObject, bool state);
 	public ClickHandler clickHandler;
 
 	protected override void Awake ()
@@ -40,40 +75,44 @@ public class EditActionObjects : EditBuildings
 		dict = new Dictionary<GameObject, BuildingInstance> ();
 
 		this.clickHandler = handler;
-		
-		objectGroups = new List<ActionObjectsGroup>(groups);
-		objectGroupBuildingInstances = new Dictionary<ActionObjectsGroup, List<BuildingInstance>>();
-		selectionStates = new Dictionary<ActionObjectsGroup, bool>();
+
+		// Setup the groups data list
+		groupsData = new List<ActionObjectGroupsData>();
+		foreach (ActionObjectsGroup group in groups) {
+			groupsData.Add (new ActionObjectGroupsData (group));
+		}
 
 		// We must loop through all buildings and check whether it's a building associated with an action object
 		// if so, we must then check if it's a building that belong to one of our groups
 		List<Buildings.Building> staticBuildings = new List<Buildings.Building>();
 		foreach (Buildings.Building b in scene.buildings.GetAllBuildings ()) 
 		{
-			// Check if it's one of our groups
-			ActionObjectsGroup matchingGroup = null;
-			foreach (ActionObjectsGroup g in objectGroups) {
-				foreach (ActionObject obj in g.actionObjects) {
-					if (obj.building == b) {
-						matchingGroup = g;
+			// Check if it's one of our target groups
+			ActionObjectGroupsData targetGroupData = null;
+			ActionObject targetActionObject = null;
+
+			foreach (ActionObjectGroupsData grD in groupsData) {
+				foreach (ActionObject obj in grD.group.actionObjects) {
+					if (obj.building == b) 
+					{
+						targetGroupData = grD;
+						targetActionObject = obj;
 						break;
 					}
 				}
 			}
 
-			if (matchingGroup != null && !b.isActive)
+			// Check whether the buildings of the group should be combined or loose.
+			// If it's an active building and a part of our group then we should create a loose instance
+			// for the building so we'll be able to click on it
+			if (targetGroupData != null && !b.isActive)
 			{
-				if (!objectGroupBuildingInstances.ContainsKey (matchingGroup)) 
-				{
-					objectGroupBuildingInstances.Add (matchingGroup, new List<BuildingInstance>());
-					selectionStates.Add (matchingGroup, false);
-				}
-
-				BuildingInstance newInst = new BuildingInstance(b);
-				objectGroupBuildingInstances[matchingGroup].Add (newInst);
-				instances.Add (newInst);
+				BuildingInstance bInst = new BuildingInstance (b);
+				targetGroupData.buildingInstances.Add (new ActionObjectGroupsData.BuildingInstanceState(bInst, targetActionObject));
+				instances.Add (bInst);
 			}
 			else 
+				// We add it to the 'static' buildings
 				staticBuildings.Add (b);
 		}
 
@@ -82,28 +121,49 @@ public class EditActionObjects : EditBuildings
 		StartCoroutine (COBlinkSelection());
 	}
 
+	public override void StopEditBuildings (Scene scene)
+	{
+		base.StopEditBuildings (scene);
+
+		if (groupsData != null) 
+		{
+			foreach (ActionObjectGroupsData gd in groupsData) {
+				gd.Dispose ();
+			}
+			groupsData.Clear ();
+			groupsData = null;
+		}
+	}
+
 	protected override IEnumerator COBlinkSelection ()
 	{
+		ActionObjectGroupsData gd;
+		ActionObjectGroupsData.BuildingInstanceState bs;
+
 		while (true) 
 		{
-			// Make the others blink
-			foreach (KeyValuePair<ActionObjectsGroup, bool> pair in selectionStates) {
-				foreach (BuildingInstance bInst in objectGroupBuildingInstances[pair.Key]) {
-					if (bInst.instanceGO && !pair.Value) 
-						ActivateDeactivateRendering (bInst.instanceGO, false);
+			// Blink all non-selected building instances
+			for (int x = 0; x < 2; x++)
+			{
+				// We use the x (only 0 and 1) to prevent double code
+				bool active = (x == 0);
+
+				for (int i = 0; i < groupsData.Count; i++) 
+				{
+					gd = groupsData[i];
+					for (int n = 0; n < gd.buildingInstances.Count; n++) 
+					{
+						bs = gd.buildingInstances[n];
+						if (bs.instance.instanceGO && !bs.selected) 
+						{
+							ActivateDeactivateRendering (bs.instance.instanceGO, active);
+						}
+					}
 				}
+				
+				if (x == 0) yield return new WaitForSeconds(0.325f);
+				else yield return new WaitForSeconds (0.125f);
 			}
-
-			yield return new WaitForSeconds(0.125f);
-
-			foreach (KeyValuePair<ActionObjectsGroup, bool> pair in selectionStates) {
-				foreach (BuildingInstance bInst in objectGroupBuildingInstances[pair.Key]) {
-					if (bInst.instanceGO && !pair.Value) 
-						ActivateDeactivateRendering (bInst.instanceGO, true);
-				}
-			}
-
-			yield return new WaitForSeconds(0.125f);
 		}
 	}
 
@@ -135,91 +195,67 @@ public class EditActionObjects : EditBuildings
 
 	protected void BuildingClicked (Buildings.Building building)
 	{
-		// Get the matching building instance
-		foreach (BuildingInstance instance in instances) 
+		// Loop through all group datas to find the instance this building belongs to
+		foreach (ActionObjectGroupsData grD in groupsData)
 		{
-			// Find the list linked to the action object group where this instance belongs to
-			if (instance.building == building) 
+			foreach (ActionObjectGroupsData.BuildingInstanceState bs in grD.buildingInstances)
 			{
-				foreach (KeyValuePair<ActionObjectsGroup, List<BuildingInstance>> pair in objectGroupBuildingInstances)
+				if (bs.instance.building == building)
 				{
-					if (pair.Value.Contains (instance))
+					// Toggle the instance or instances according the action group type
+					switch (grD.group.groupType)
 					{
-						// Toggle the action object group state
-						bool newState = !selectionStates[pair.Key];
-						selectionStates [pair.Key] = newState;
-
-						if (clickHandler != null)
-							clickHandler (pair.Key, newState);
-
-						// Enable all instances if we're enabled
-						if (newState)
+					case ActionObjectsGroup.GroupType.Combined :
+						// Toggle the state of the entire group and enable the rendering if selected
+						bs.selected = !bs.selected;
+						foreach (ActionObjectGroupsData.BuildingInstanceState b in grD.buildingInstances) 
 						{
-							foreach (BuildingInstance bInst in pair.Value) {
-								if (bInst.instanceGO)
-									ActivateDeactivateRendering (bInst.instanceGO, true);
-							}
+							b.selected = bs.selected;
+							if (b.selected) ActivateDeactivateRendering (b.instance.instanceGO, true);
 						}
-						return;
+						break;
+
+					case ActionObjectsGroup.GroupType.Collection :
+						// Toggle the state of this building only
+						bs.selected = !bs.selected;
+						ActivateDeactivateRendering (bs.instance.instanceGO, true);
+						break;
 					}
+
+					// Return the group the action object and the object's selected state
+					if (this.clickHandler != null)
+						this.clickHandler (grD.group, bs.actionObject, bs.selected); 
 				}
 			}
 		}
-
-		/*foreach (BuildingInstance instance in instances) 
-		{
-			if (instance.building == building) 
-			{
-				ActionObjectsGroup group = GetActionObjectGroup (building);
-				if (group != null)
-				{
-					// Get all instances belonging to the group
-
-
-					// Toggle the state of the building
-					bool currState = selectionStates [instance];
-					currState = !currState;
-
-					// We save the state, we set the isActive of the building in the FinishedSelection
-					selectionStates [instance] = currState;
-
-					if (clickHandler != null)
-						clickHandler (group, currState);
-
-					// TODO: Save the building state in xml
-
-					if (currState && instance.instanceGO)
-						ActivateDeactivateRendering (instance.instanceGO, true);
-				}
-			}
-		}*/
-	}
-
-	private ActionObjectsGroup GetActionObjectGroup (Buildings.Building building)
-	{
-		foreach (ActionObjectsGroup g in objectGroups) {
-			foreach (ActionObject obj in g.actionObjects) {
-				if (obj.building == building) {
-					return g;
-				}
-			}
-		}
-		return null;
 	}
 
 	public void ProcessSelectedObjects ()
 	{
-		foreach (KeyValuePair<ActionObjectsGroup, bool> pair in selectionStates) 
+		foreach (ActionObjectGroupsData grD in groupsData)
 		{
-			if (pair.Value == true)
+			switch (grD.group.groupType)
 			{
-				pair.Key.enabled = true;
-
-				foreach (BuildingInstance bInst in objectGroupBuildingInstances[pair.Key])
+			// If it's a combined group and if only one of the building instances is marked as
+			// selected that means the entire group is selected
+			case ActionObjectsGroup.GroupType.Combined :
+				if (grD.buildingInstances.Count > 0)
+					grD.group.enabled = grD.buildingInstances[0].selected;
+				break;
+			
+			// We should set the active state for every object seperately
+			case ActionObjectsGroup.GroupType.Collection :
+				foreach (ActionObjectGroupsData.BuildingInstanceState bs in grD.buildingInstances)
 				{
-					bInst.building.isActive = true;
+					if (bs.selected) {
+						bs.instance.building.isActive = true;
+						bs.actionObject.enabled = true;
+					}
 				}
+				break;
 			}
+
+
 		}
 	}
 }

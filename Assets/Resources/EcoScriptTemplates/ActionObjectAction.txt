@@ -7,6 +7,10 @@ void LoadProgress(bool initScene) {
 void PrepareSuccession() {
 }
 
+void ProcessInfluences (ValueCoordinate vc, string groupName) {
+	
+}
+
 void DoSuccession() {
 }
 

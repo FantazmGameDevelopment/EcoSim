@@ -297,7 +297,7 @@ public class TerrainCell : MonoBehaviour
 		// keep waiting until processing is done
 		// this is basically a coroutine that yields until finished, important to yield here to wait for next frame before rechecking
 		foreach (bool status in processHeightData.TryFinishWork()) {
-			yield return 0;
+			if (!status) yield return 0;
 		}
 		
 		heights = processHeightData.heights;
@@ -315,7 +315,7 @@ public class TerrainCell : MonoBehaviour
 		// keep waiting until processing is done
 		// this is basically a coroutine that yields until finished, important to yield here to wait for next frame before rechecking
 		foreach (bool status in processBasicTileInfo.TryFinishWork()) {
-			yield return 0;
+			if (!status) yield return 0;
 		}
 		
 		terrain.Flush ();

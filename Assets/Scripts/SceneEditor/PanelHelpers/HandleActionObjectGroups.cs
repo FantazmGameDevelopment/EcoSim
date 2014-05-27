@@ -8,8 +8,21 @@ namespace Ecosim.SceneEditor.Helpers
 {
 	public class HandleActionObjectGroups : HandleBuildings
 	{
-		private Dictionary<ActionObjectsGroup, bool> groupsOpenState;
-		private Dictionary<ActionObjectsGroup, bool> objectsOpenState;
+		private class GroupState
+		{
+			public ActionObjectsGroup group;
+			public bool groupOpened;
+			public bool objectsOpened;
+
+			public GroupState (ActionObjectsGroup group)
+			{
+				this.group = group;
+				groupOpened = false;
+				objectsOpened = false;
+			}
+		}
+
+		private List<GroupState> groupStates;
 		private string newGroupName;
 		private string newGroupType;
 
@@ -31,8 +44,11 @@ namespace Ecosim.SceneEditor.Helpers
 
 		public HandleActionObjectGroups (EditorCtrl ctrl, MapsPanel parent, Scene scene) : base (ctrl, parent, scene)
 		{
-			groupsOpenState = new Dictionary<ActionObjectsGroup, bool>();
-			objectsOpenState = new Dictionary<ActionObjectsGroup, bool>();
+			groupStates = new List<GroupState>();
+			foreach (ActionObjectsGroup g in scene.actionObjectGroups) {
+				groupStates.Add (new GroupState (g));
+			}
+
 			newGroupName = "New Group";
 			newGroupType = System.Enum.GetNames (typeof(ActionObjectsGroup.GroupType))[0];
 
@@ -63,9 +79,8 @@ namespace Ecosim.SceneEditor.Helpers
 
 			scene.actionObjectGroups = list.ToArray();
 			scene.UpdateReferences();
-			
-			groupsOpenState.Remove (group);
-			objectsOpenState.Remove (group);
+
+			groupStates.Remove (groupStates.Find ( g => g.group == group ));
 
 			if (editGroup == group)
 			{
@@ -105,32 +120,7 @@ namespace Ecosim.SceneEditor.Helpers
 						base.BuildingClicked (building);
 					}
 				}
-				return;
 			}
-			else
-			{
-				// Find the group the object belongs to
-				foreach (ActionObjectsGroup group in scene.actionObjectGroups)
-				{
-					foreach (ActionObject actionObject in group.actionObjects) 
-					{ 
-						if (actionObject.building == building) 
-						{
-							editGroup = group;
-							editMode = EditMode.InfluenceMap;
-							building = null;
-
-							if (editGroup.actionObjects.Length > 0) {
-								EditActionObject (0);
-							}
-							base.BuildingClicked (building);
-						}
-					}
-				}
-				return;
-			}
-
-			base.BuildingClicked (building);
 		}
 
 		protected override void BuildingCreated (Buildings.Building newBuilding)
@@ -160,32 +150,26 @@ namespace Ecosim.SceneEditor.Helpers
 			{
 				if (scene.actionObjectGroups.Length > 0)
 				{
-					foreach (ActionObjectsGroup group in scene.actionObjectGroups)
+					foreach (GroupState gs in groupStates)
 					{
-						bool opened = false;
-						if (!groupsOpenState.TryGetValue (group, out opened)) {
-							groupsOpenState.Add (group, opened);
-						}
-
 						GUILayout.BeginVertical (ctrl.skin.box);
 						{
 							// Header
 							GUILayout.BeginHorizontal ();
 							{
-								if (GUILayout.Button (opened ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
+								if (GUILayout.Button (gs.groupOpened ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
 								{
-									opened = !opened;
-									groupsOpenState[group] = opened;
+									gs.groupOpened = !gs.groupOpened;
 								}
-								
-								GUILayout.Label (group.index.ToString(), GUILayout.Width (25));
-								//group.name = GUILayout.TextField (group.name);
-								GUILayout.Label (string.Format("[ {0} ]", group.groupType.ToString()), GUILayout.Width (80));
-								GUILayout.Label (group.name);
+
+								GUILayout.Space (2);
+								GUILayout.Label (gs.group.index.ToString(), GUILayout.Width (25));
+								GUILayout.Label (string.Format("[ {0} ]", gs.group.groupType.ToString()), GUILayout.Width (80));
+								GUILayout.Label (gs.group.name);
 								
 								if (GUILayout.Button ("-", GUILayout.Width (20)))
 								{
-									ActionObjectsGroup tmp = group;
+									ActionObjectsGroup tmp = gs.group;
 									ctrl.StartDialog (string.Format("Delete group '{0}'?", tmp.name), 
 									    newVal => { 
 										DeleteGroup (tmp);
@@ -194,7 +178,7 @@ namespace Ecosim.SceneEditor.Helpers
 							}
 							GUILayout.EndHorizontal(); // ~Header
 
-							if (opened)
+							if (gs.groupOpened)
 							{
 								//GUILayout.BeginVertical (ctrl.skin.box); // Group Body
 								{
@@ -203,14 +187,14 @@ namespace Ecosim.SceneEditor.Helpers
 									{
 										if (GUILayout.Button ("Edit influence area")) 
 										{
-											editGroup = group;
+											editGroup = gs.group;
 											editActionObjectIndex = -1;
 											editActionObject = null;
 
 											editMode = EditMode.InfluenceMap;
 											selectedBuilding = null;
 
-											switch (group.groupType)
+											switch (gs.group.groupType)
 											{
 											// Get the correct influence map
 											case ActionObjectsGroup.GroupType.Combined : 
@@ -219,8 +203,9 @@ namespace Ecosim.SceneEditor.Helpers
 													handleParams = null;
 												}
 
-												Data influenceMap = scene.progression.GetData (group.dataName);
+												Data influenceMap = scene.progression.GetData (gs.group.dataName);
 												handleParams = new HandleParameters (ctrl, parent, scene, influenceMap);
+												base.BuildingClicked (null);
 												break;
 											
 											// Try to select the first action object of the group
@@ -234,9 +219,10 @@ namespace Ecosim.SceneEditor.Helpers
 
 										if  (GUILayout.Button ("Edit influence rules"))
 										{
-											editGroup = group;
+											editGroup = gs.group;
 											editMode = EditMode.InfluenceRules;
 											selectedBuilding = null;
+											base.BuildingClicked (null);
 
 											if (handleParams != null) {
 												handleParams.Disable ();
@@ -246,33 +232,29 @@ namespace Ecosim.SceneEditor.Helpers
 
 										if (GUILayout.Button ("Edit action objects")) //, GUILayout.Width(120))) 
 										{
-											editGroup = group;
+											editGroup = gs.group;
 											editMode = EditMode.Objects;
 											selectedBuilding = null;
-											
+
 											if (handleParams != null) {
 												handleParams.Disable ();
 												handleParams = null;
 											}
+
+											EditActionObject (0);
 										}
 									}
 									GUILayout.EndHorizontal ();
 									GUILayout.Space (3);
 
-									bool objOpened = false;
-									if (!objectsOpenState.TryGetValue (group, out objOpened)) {
-										objectsOpenState.Add (group, objOpened);
-									}
-
 									// Header
 									GUILayout.BeginHorizontal ();
 									{
-										if (group.actionObjects.Length > 0)
+										if (gs.group.actionObjects.Length > 0)
 										{
-											if (GUILayout.Button (objOpened ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
+											if (GUILayout.Button (gs.objectsOpened ? (ctrl.foldedOpenSmall) : (ctrl.foldedCloseSmall), ctrl.icon12x12)) 
 											{
-												objOpened = !objOpened;
-												objectsOpenState[group] = objOpened;
+												gs.objectsOpened = !gs.objectsOpened;
 											}
 											GUILayout.Label ("Objects");
 										} else 
@@ -282,11 +264,11 @@ namespace Ecosim.SceneEditor.Helpers
 									}
 									GUILayout.EndHorizontal ();
 
-									if (objOpened) 
+									if (gs.objectsOpened) 
 									{
 										// Action Objects
 										int aObjIndex = 0;
-										foreach (ActionObject aObj in group.actionObjects)
+										foreach (ActionObject aObj in gs.group.actionObjects)
 										{
 											GUILayout.BeginVertical (ctrl.skin.box);
 											{
@@ -302,14 +284,25 @@ namespace Ecosim.SceneEditor.Helpers
 													{
 														if (GUILayout.Button ("Edit", GUILayout.Width (50))) 
 														{
-															// Same code as "Edit action objects"
-															editGroup = group;
-															editMode = EditMode.Objects;
+															// Same code as "Edit action objects" (almost)
+															editGroup = gs.group;
 															selectedBuilding = null;
 															
 															if (handleParams != null) {
 																handleParams.Disable ();
 																handleParams = null;
+															}
+
+															switch (editGroup.groupType)
+															{
+															case ActionObjectsGroup.GroupType.Combined :
+																editMode = EditMode.Objects;
+																break;
+
+															case ActionObjectsGroup.GroupType.Collection :
+																editMode = EditMode.InfluenceMap;
+																EditActionObject (aObj);
+																break;
 															}
 
 															BuildingClicked (aObj.building);
@@ -334,9 +327,9 @@ namespace Ecosim.SceneEditor.Helpers
 															EditBuildings.self.MarkBuildingSelected (null);
 														EditBuildings.self.DestroyBuilding (aObj.building);
 
-														List<ActionObject> list = new List<ActionObject>(group.actionObjects);
+														List<ActionObject> list = new List<ActionObject>(gs.group.actionObjects);
 														list.Remove (aObj);
-														group.actionObjects = list.ToArray ();
+														gs.group.actionObjects = list.ToArray ();
 
 														editActionObject = null;
 														editActionObjectIndex = -1;
@@ -399,6 +392,7 @@ namespace Ecosim.SceneEditor.Helpers
 							ActionObjectsGroup g = new ActionObjectsGroup (scene, newGroupName);
 							g.groupType = (ActionObjectsGroup.GroupType)System.Enum.Parse (typeof(ActionObjectsGroup.GroupType), newGroupType);
 							groupsScrollPos = new Vector2 (0f, Mathf.Infinity);
+							groupStates.Add (new GroupState(g));
 						}
 						else
 						{
@@ -448,6 +442,8 @@ namespace Ecosim.SceneEditor.Helpers
 					
 					if (editGroup != null) 
 						GUILayout.Label (string.Format("Edit objects of '{0}'", editGroup.name));
+
+					GUILayout.Label ("Press N to place a new building.");
 				}
 				GUILayout.EndHorizontal ();
 				GUILayout.Space (5f);
@@ -478,6 +474,12 @@ namespace Ecosim.SceneEditor.Helpers
 					{
 						editGroup = null;
 						selectedBuilding = null;
+
+						if (handleParams != null) {
+							handleParams.Disable ();
+							handleParams = null;
+						}
+
 						EditBuildings.self.MarkBuildingSelected (selectedBuilding);
 					}
 					
@@ -487,50 +489,53 @@ namespace Ecosim.SceneEditor.Helpers
 				GUILayout.EndHorizontal ();
 				GUILayout.Space (5f);
 
-				GUILayout.BeginHorizontal ();
+				if (editGroup != null)
 				{
-					if (editActionObjectIndex >= 0)
+					GUILayout.BeginHorizontal ();
 					{
-						if (editGroup.groupType == ActionObjectsGroup.GroupType.Collection)
+						if (editActionObjectIndex >= 0)
 						{
-							GUILayout.Label (" Object:", GUILayout.Width (40));
-							string editActionObjectName = string.Format ("#{0} '{1}' [{2}]", editActionObjectIndex, editActionObject.building.name, editActionObject.buildingId);
-							if (GUILayout.Button (editActionObjectName))
+							if (editGroup.groupType == ActionObjectsGroup.GroupType.Collection)
 							{
-								List<string> aObjs = new List<string>();
-								foreach (ActionObject aObj in editGroup.actionObjects) {
-									aObjs.Add (string.Format ("#{0} '{1}' [{2}]", aObjs.Count, aObj.building.name, aObj.buildingId));
-								}
-								
-								ActionObjectsGroup tmpEditGroup = editGroup;
-								ctrl.StartSelection (aObjs.ToArray(), editActionObjectIndex, delegate(int index) {
-									if (tmpEditGroup == editGroup) {
-										EditActionObject (index);
+								GUILayout.Label (" Object:", GUILayout.Width (40));
+								string editActionObjectName = string.Format ("#{0} '{1}' [{2}]", editActionObjectIndex, editActionObject.building.name, editActionObject.buildingId);
+								if (GUILayout.Button (editActionObjectName))
+								{
+									List<string> aObjs = new List<string>();
+									foreach (ActionObject aObj in editGroup.actionObjects) {
+										aObjs.Add (string.Format ("#{0} '{1}' [{2}]", aObjs.Count, aObj.building.name, aObj.buildingId));
 									}
-								});
-							}
+									
+									ActionObjectsGroup tmpEditGroup = editGroup;
+									ctrl.StartSelection (aObjs.ToArray(), editActionObjectIndex, delegate(int index) {
+										if (tmpEditGroup == editGroup) {
+											EditActionObject (index);
+										}
+									});
+								}
 
-							GUILayout.Space (10);
-							GUI.enabled = editActionObjectIndex > 0;
-							if (GUILayout.Button ("<", GUILayout.Width (30)))
-							{
-								EditActionObject (editActionObjectIndex - 1);
+								GUILayout.Space (10);
+								GUI.enabled = editActionObjectIndex > 0;
+								if (GUILayout.Button ("<", GUILayout.Width (30)))
+								{
+									EditActionObject (editActionObjectIndex - 1);
+								}
+								GUI.enabled = editActionObjectIndex < editGroup.actionObjects.Length - 1;
+								if (GUILayout.Button (">",  GUILayout.Width (30)))
+								{
+									EditActionObject (editActionObjectIndex + 1);
+								}
+								GUI.enabled = true;
+								GUILayout.Space (5);
 							}
-							GUI.enabled = editActionObjectIndex < editGroup.actionObjects.Length - 1;
-							if (GUILayout.Button (">",  GUILayout.Width (30)))
-							{
-								EditActionObject (editActionObjectIndex + 1);
-							}
-							GUI.enabled = true;
-							GUILayout.Space (5);
+						}
+
+						if (editGroup.actionObjects.Length == 0) {
+							GUILayout.Label ("Objects of a 'Collection' type group have individual influence maps. Please add objects first.");
 						}
 					}
-
-					if (editGroup.actionObjects.Length == 0) {
-						GUILayout.Label ("Objects of a 'Collection' type group have individual influence maps. Please add objects first.");
-					}
+					GUILayout.EndHorizontal ();
 				}
-				GUILayout.EndHorizontal ();
 
 				if (handleParams != null) 
 					handleParams.Render (mx, my);
@@ -700,6 +705,18 @@ namespace Ecosim.SceneEditor.Helpers
 			GUILayout.EndVertical ();
 		}
 
+		private void EditActionObject (ActionObject obj)
+		{
+			for (int i = 0; i < editGroup.actionObjects.Length; i++) {
+				if (editGroup.actionObjects[i] == obj) 
+				{
+					EditActionObject (i);
+					return;
+				}
+			}
+			EditActionObject (-1);
+		}
+
 		private void EditActionObject (int index)
 		{
 			editActionObjectIndex = index;
@@ -709,15 +726,20 @@ namespace Ecosim.SceneEditor.Helpers
 				handleParams = null;
 			}
 
-			if (editActionObjectIndex >= 0 && editActionObjectIndex < editGroup.actionObjects.Length)
+			if ((editActionObjectIndex >= 0) && (editActionObjectIndex < editGroup.actionObjects.Length))
 			{
 				editActionObject = editGroup.actionObjects[index];
 
 				selectedBuilding = null;
 				BuildingClicked (editActionObject.building);
 
-				Data influenceMap = scene.progression.GetData (editGroup.dataName.ToLower() + "_obj" + editActionObject.index);
-				handleParams = new HandleParameters (ctrl, parent, scene, influenceMap);
+				switch (editMode)
+				{
+				case EditMode.InfluenceMap :
+					Data influenceMap = scene.progression.GetData (editGroup.dataName.ToLower() + "_obj" + editActionObject.index);
+					handleParams = new HandleParameters (ctrl, parent, scene, influenceMap);
+					break;
+				}
 			} 
 			else 
 			{

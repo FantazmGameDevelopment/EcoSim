@@ -495,6 +495,9 @@ namespace Ecosim.SceneData
 				messageUnreadIndex = int.Parse (msgindexstr);
 			}
 
+			// Used for the action object groups
+			List<Buildings.Building> allBuildings = scene.buildings.GetAllBuildings ();
+
 			/**
 			 * After ReadElementContentAsString the reader has already read in next
 			 * element, so we must not do reader.Read here then. We set
@@ -565,6 +568,24 @@ namespace Ecosim.SceneData
 							case ActionObjectsGroup.GroupType.Combined :
 								// We should parse the enabled state of the action object group
 								objGroup.enabled = (reader.GetAttribute ("enabled") == "true") ? true : false;
+								if (objGroup.enabled)
+								{
+									// Find all buildings and mark them as active
+									foreach (ActionObject obj in objGroup.actionObjects) 
+									{
+										foreach (Buildings.Building b in allBuildings) 
+										{
+											// Found a match, mark as active and remove it from 
+											// the list to increase performance
+											if (obj.buildingId == b.id) 
+											{
+												b.isActive = true;
+												allBuildings.Remove (b);
+												break;
+											}
+										}
+									}
+								}
 								break;
 
 							case ActionObjectsGroup.GroupType.Collection : 
@@ -573,8 +594,26 @@ namespace Ecosim.SceneData
 								while (reader.Read()) 
 								{
 									if ((reader.NodeType == XmlNodeType.Element) && reader.Name.ToLower() == "aobj") {
-										if (objIdx < objGroup.actionObjects.Length) {
-											objGroup.actionObjects[objIdx].enabled = (reader.GetAttribute ("enabled") == "true") ? true : false;
+										if (objIdx < objGroup.actionObjects.Length) 
+										{
+											bool enabled = (reader.GetAttribute ("enabled") == "true") ? true : false;
+											objGroup.actionObjects[objIdx].enabled = enabled;
+
+											// Find all buildings and mark them as active
+											if (enabled)
+											{
+												foreach (Buildings.Building b in allBuildings) 
+												{
+													// Found a match, mark as active and remove it from 
+													// the list to increase performance
+													if (objGroup.actionObjects[objIdx].buildingId == b.id) 
+													{
+														b.isActive = true;
+														allBuildings.Remove (b);
+														break;
+													}
+												}
+											}
 										}
 										IOUtil.ReadUntilEndElement (reader, "aobj");
 										objIdx++;

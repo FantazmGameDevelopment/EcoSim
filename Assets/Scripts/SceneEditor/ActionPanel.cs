@@ -33,16 +33,14 @@ namespace Ecosim.SceneEditor
 			hasCompiled = false;
 			if (scene == null)
 				return;
+
 			actionTypeNames = new string[ActionMgr.actionTypes.Length];
 			for (int i = 0; i < actionTypeNames.Length; i++) {
 				string str = ActionMgr.actionTypes [i].ToString ();
 				actionTypeNames [i] = str.Substring (str.LastIndexOf ('.') + 1);
 			}
 
-			actionObjectGroups = new string[scene.actionObjectGroups.Length];
-			for (int i = 0; i < scene.actionObjectGroups.Length; i++) {
-				actionObjectGroups[i] = scene.actionObjectGroups[i].name;
-			}
+			actionObjectGroups = new string[] { };
 		}
 		
 		private HashSet<BasicAction> foldedOpen;
@@ -182,21 +180,49 @@ namespace Ecosim.SceneEditor
 
 		void HandleActionObjectAction (ActionObjectAction action)
 		{
-			// TODO: Make a difference between Combined and Collection groups
+			GUILayout.Space (3);
+			GUILayout.BeginHorizontal ();
+			{
+				GUILayout.Space (2);
+				action.processInfluenceRules = GUILayout.Toggle (action.processInfluenceRules, "Process influence rules");
+				GUILayout.FlexibleSpace ();
+			}
+			GUILayout.EndHorizontal ();
+			GUILayout.Space (3);
+
+			if (actionObjectGroups.Length != scene.actionObjectGroups.Length)
+			{
+				actionObjectGroups = new string[scene.actionObjectGroups.Length];
+				for (int i = 0; i < scene.actionObjectGroups.Length; i++) {
+					actionObjectGroups[i] = string.Format("\"{0}\" ({1})", scene.actionObjectGroups[i].name, scene.actionObjectGroups[i].groupType.ToString());
+				}
+				addActionObjectGroupIndex = 0;
+			}
 
 			// Choose possible action groups
 			int index = 0;
 			GUILayout.BeginVertical (ctrl.skin.box);
 			{
-				foreach (ActionObjectsGroup group in action.objectsGroups)
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Space (3);
+					GUILayout.Label ("Index", GUILayout.Width (35));
+					GUILayout.Label ("Group type", GUILayout.Width (70));
+					GUILayout.Label ("Group name");
+				}
+				GUILayout.EndHorizontal ();
+
+				foreach (ActionObjectsGroup group in action.actionObjectGroups)
 				{
 					GUILayout.BeginHorizontal ();
 					{
-						GUILayout.Label (index++.ToString(), GUILayout.Width (20));
-						GUILayout.Label (group.name);
+						GUILayout.Space (3);
+						GUILayout.Label (index++.ToString(), GUILayout.Width (35));
+						GUILayout.Label (group.groupType.ToString(), GUILayout.Width (70));
+						GUILayout.Label (string.Format("\"{0}\"", group.name));
 						if (GUILayout.Button ("-", GUILayout.Width (20)))
 						{
-							action.objectsGroups.Remove (group);
+							action.actionObjectGroups.Remove (group);
 							break;
 						}
 					}
@@ -205,36 +231,21 @@ namespace Ecosim.SceneEditor
 
 				GUILayout.BeginHorizontal ();
 				{
-					if (GUILayout.Button (actionObjectGroups[addActionObjectGroupIndex]))
-					{
-						ctrl.StartSelection (actionObjectGroups, addActionObjectGroupIndex, newIndex => {
-							addActionObjectGroupIndex = newIndex;
-						});
-					}
-
 					if (scene.actionObjectGroups.Length > 0)
 					{
+						if (GUILayout.Button (actionObjectGroups[addActionObjectGroupIndex]))
+						{
+							ctrl.StartSelection (actionObjectGroups, addActionObjectGroupIndex, newIndex => {
+								addActionObjectGroupIndex = newIndex;
+							});
+						}
+
 						if (GUILayout.Button ("Add", GUILayout.Width (35))) 
 						{
-							if (scene.actionObjectGroups.Length != actionObjectGroups.Length)
-							{
-								actionObjectGroups = new string[scene.actionObjectGroups.Length];
-								for (int i = 0; i < scene.actionObjectGroups.Length; i++) {
-									actionObjectGroups[i] = scene.actionObjectGroups[i].name;
-								}
-								addActionObjectGroupIndex = 0;
-							}
-
-							foreach (ActionObjectsGroup group in scene.actionObjectGroups)
-							{
-								if (group.name == actionObjectGroups[addActionObjectGroupIndex])
-								{
-									if (action.objectsGroups.Contains (group)) {
-										ctrl.StartOkDialog (string.Format("Action object group '{0}' is already added.", group.name), null);
-									} else {
-										action.objectsGroups.Add (group);
-									}
-									break;
+							// Check if the index is still valid and check if we don't already have it added
+							if (addActionObjectGroupIndex < scene.actionObjectGroups.Length) {
+								if (!action.actionObjectGroups.Contains (scene.actionObjectGroups[addActionObjectGroupIndex])) {
+									action.actionObjectGroups.Add (scene.actionObjectGroups[addActionObjectGroupIndex]);
 								}
 							}
 						}

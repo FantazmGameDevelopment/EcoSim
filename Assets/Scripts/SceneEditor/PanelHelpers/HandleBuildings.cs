@@ -380,7 +380,8 @@ namespace Ecosim.SceneEditor.Helpers
 				{
 					GameObject go = hit.collider.gameObject;
 					Buildings.Building building = EditBuildings.self.GetBuildingForGO (go);
-					// TODO: Don't be able to click building that are Action Object buildings
+
+					// TODO: Don't be able to click buildings that are Action Object buildings
 					BuildingClicked (building);
 				}
 			} 
