@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Reflection;
 using Ecosim.SceneData.Action;
 
 namespace Ecosim.SceneData
@@ -14,6 +15,7 @@ namespace Ecosim.SceneData
 		{
 			typeof(SuccessionAction),
 			typeof(PlantsAction),
+			typeof(AnimalsAction),
 			typeof(AreaAction),
 			typeof(InventarisationAction),
 			typeof(ResearchPointAction),
@@ -70,6 +72,7 @@ namespace Ecosim.SceneData
 		{
 			AddAction (new SuccessionAction (scene, 0));
 			AddAction (new PlantsAction (scene, 1));
+			AddAction (new AnimalsAction (scene, 2));
 		}
 
 		/**
@@ -196,60 +199,73 @@ namespace Ecosim.SceneData
 			actionsByID = new Dictionary<int, BasicAction>();
 			uiGroups = new Dictionary<string, UserInteractionGroup>();
 
-			while (reader.Read()) {
+			// Get the xml elements from the action types
+			// and get the "Load" methods
+			List<string> xmlElements = new List<string>();
+			List<MethodInfo> loadMethods = new List<MethodInfo>();
+			for (int i = 0; i < actionTypes.Length; i++)
+			{
+				// XML Element
+				FieldInfo fi = actionTypes[i].GetField ("XML_ELEMENT");
+				if (fi != null) {
+					xmlElements.Add (fi.GetValue (null).ToString());
+				} else {
+					xmlElements.Add (string.Empty);
+				}
+
+				// Load Method
+				loadMethods.Add(actionTypes[i].GetMethod ("Load", new System.Type[] { typeof (Scene), typeof(XmlTextReader) }));
+			}
+
+			// Read
+			while (reader.Read()) 
+			{
 				XmlNodeType nType = reader.NodeType;
-				if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == DialogAction.XML_ELEMENT)) {
-					BasicAction action = DialogAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ScriptAction.XML_ELEMENT)) {
-					BasicAction action = ScriptAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == WaterAction.XML_ELEMENT)) {
-					BasicAction action = WaterAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ConversionAction.XML_ELEMENT)) {
-					BasicAction action = ConversionAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == AreaAction.XML_ELEMENT)) {
-					BasicAction action = AreaAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == InventarisationAction.XML_ELEMENT)) {
-					BasicAction action = InventarisationAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ResearchPointAction.XML_ELEMENT)) {
-					BasicAction action = ResearchPointAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == MarkerAction.XML_ELEMENT)) {
-					BasicAction action = MarkerAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == SuccessionAction.XML_ELEMENT)) {
-					BasicAction action = SuccessionAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == PlantsAction.XML_ELEMENT)) {
-					BasicAction action = PlantsAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ActionObjectAction.XML_ELEMENT)) {
-					BasicAction action = ActionObjectAction.Load (scene, reader);
-					actionQueue.Add (action);
-					actionsByID.Add (action.id, action);
-				} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == UserInteractionGroup.XML_ELEMENT)) {
-					UserInteractionGroup grp = UserInteractionGroup.Load (scene, this, reader);
-					uiGroups.Add (grp.category, grp);
-				} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "actions")) {
+
+				if (nType == XmlNodeType.Element)
+				{
+					// Try to find a matching action type
+					bool foundAction = false;
+					for (int i = 0; i < actionTypes.Length; i++)
+					{
+						try {
+							if (reader.Name.ToLower() == xmlElements[i])
+							{
+								MethodInfo loadMethod = loadMethods[i];
+								if (loadMethod != null) 
+								{
+									BasicAction action = (BasicAction)loadMethod.Invoke (null, new object[] { scene, reader });
+									actionQueue.Add (action);
+									actionsByID.Add (action.id, action);
+								}
+								foundAction = true;
+							}
+						} catch (System.Exception e) {
+							Log.LogException (e);
+						}
+
+						if (foundAction) break;
+					}
+
+					// Check for types that aren't in the Action Type array if we couldn't find a
+					// good action type
+					if (!foundAction) 
+					{
+						switch (reader.Name.ToLower())
+						{
+						case UserInteractionGroup.XML_ELEMENT :
+							{
+								UserInteractionGroup grp = UserInteractionGroup.Load (scene, this, reader);
+								uiGroups.Add (grp.category, grp);
+							}
+							break;
+						}
+					}
+				} 
+				else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "actions")) {
 					break;
 				}
 			}
-			
 		}
 		
 		public static ActionMgr Load (string path, Scene scene)
