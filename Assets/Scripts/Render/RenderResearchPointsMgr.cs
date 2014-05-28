@@ -136,6 +136,12 @@ public class RenderResearchPointsMgr : MonoBehaviour, NotifyTerrainChange
 	private Vector3 oldCameraFwd;
 	private Transform cameraTransform;
 
+	public static void ForceUpdate()
+	{
+		self.oldCameraPos = self.oldCameraFwd = Vector3.zero;
+		self.Update ();
+	}
+
 	void Update() 
 	{
 		if (CameraControl.IsNear && scene != null)

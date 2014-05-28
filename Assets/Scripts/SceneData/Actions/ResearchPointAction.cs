@@ -152,16 +152,19 @@ namespace Ecosim.SceneData.Action
 
 		public override void DoSuccession ()
 		{
-			foreach (KeyValuePair<ResearchPoint.Measurement, Coordinate> pair in newMeasurements)
+			if (newMeasurements != null)
 			{
-				if (createResearchPointStringMI != null) {
-					object msg = createResearchPointStringMI.Invoke (ecoBase, new object[] { pair.Value });
-					pair.Key.message = msg.ToString();
-				} else {
-					pair.Key.message = "WIP";
+				foreach (KeyValuePair<ResearchPoint.Measurement, Coordinate> pair in newMeasurements)
+				{
+					if (createResearchPointStringMI != null) {
+						object msg = createResearchPointStringMI.Invoke (ecoBase, new object[] { pair.Value });
+						pair.Key.message = msg.ToString();
+					} else {
+						pair.Key.message = "No logic defined in the scripts for gathering data.";
+					}
 				}
+				newMeasurements.Clear ();
 			}
-			newMeasurements.Clear ();
 		}
 
 		public override void FinalizeSuccession() 
@@ -208,6 +211,7 @@ namespace Ecosim.SceneData.Action
 				m = rp.AddNewMeasurement (scene, description);
 				m.isTemporary = true;
 				marker.SetVisuals (true);
+				RenderResearchPointsMgr.ForceUpdate ();
 
 				// Update total costs
 				uiList [0].estimatedTotalCostForYear += uiList [0].cost;
@@ -265,6 +269,9 @@ namespace Ecosim.SceneData.Action
 		{
 			int id = int.Parse (reader.GetAttribute ("id"));
 			ResearchPointAction action = new ResearchPointAction (scene, id);
+			action.description = reader.GetAttribute ("description");
+			if (string.IsNullOrEmpty (action.description))
+				action.description = "Research Point Action";
 
 			//List<ParameterString> paramList = new List<ParameterString>();
 			if (!reader.IsEmptyElement) {
@@ -287,6 +294,7 @@ namespace Ecosim.SceneData.Action
 		{
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("id", id.ToString ());
+			writer.WriteAttributeString ("description", description.ToString ());
 			/*foreach (ParameterString p in parameters) {
 				p.Save (writer);
 			}*/
