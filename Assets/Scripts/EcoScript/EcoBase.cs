@@ -10,7 +10,7 @@ namespace Ecosim.EcoScript
 		public readonly Scene scene;
 		public readonly BasicAction basicAction;
 		public Dictionary<string, string> properties;
-		
+
 		public EcoBase (Scene scene, BasicAction basicAction)
 		{
 			this.scene = scene;

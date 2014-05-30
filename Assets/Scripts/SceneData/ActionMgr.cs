@@ -394,5 +394,66 @@ namespace Ecosim.SceneData
 				}
 			}
 		}
+
+		public void MeasureTaken ()
+		{
+			string name = (string)scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()];
+			string group = (string)scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()];
+			int count = (int)scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()];
+
+			foreach (BasicAction action in actionQueue) {
+				if (action.isActive) {
+					try {
+						action.MeasureTaken (name, group, count);
+					} catch (System.Exception e) {
+						Log.LogException (e);
+					}
+				}
+			}
+		}
+
+		public void ResearchConducted ()
+		{
+			string name = (string)scene.progression.variables [Progression.PredefinedVariables.lastResearch.ToString()];
+			string group = (string)scene.progression.variables [Progression.PredefinedVariables.lastResearchGroup.ToString()];
+			int count = (int)scene.progression.variables [Progression.PredefinedVariables.lastResearchCount.ToString()];
+
+			foreach (BasicAction action in actionQueue) {
+				if (action.isActive) {
+					try {
+						action.ResearchConducted (name, group, count);
+					} catch (System.Exception e) {
+						Log.LogException (e);
+					}
+				}
+			}
+		}
+
+		public void EncyclopediaOpened (int itemNr, string itemTitle)
+		{
+			foreach (BasicAction action in actionQueue) {
+				if (action.isActive) {
+					try {
+						action.EncyclopediaOpened (itemNr, itemTitle);
+					} catch (System.Exception e) {
+						Log.LogException (e);
+					}
+				}
+			}
+		}
+
+		public void ClearTempVariables ()
+		{
+			List<string> tmpVars = Progression.predefinedVariables;
+			foreach (string tmpVar in tmpVars) 
+			{
+				object value = scene.progression.variables [tmpVar];
+				if (value is string) {
+					scene.progression.variables [tmpVar] = "";
+				} else if (value is int) {
+					scene.progression.variables [tmpVar] = 0;
+				}
+			}
+		}
 	}
 }

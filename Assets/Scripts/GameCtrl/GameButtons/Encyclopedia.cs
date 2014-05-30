@@ -17,7 +17,8 @@ namespace Ecosim.GameCtrl.GameButtons
 		private int selectedIndex = -1;
 		private Dictionary<char, List<Articles.EncyclopediaEntry>> entries;
 		private List<char> sortedKeys;
-		
+		private Scene scene;
+
 		private Dictionary<string, RenderEntry> encWindows;
 		
 		private class RenderEntry : GameWindow
@@ -109,6 +110,7 @@ namespace Ecosim.GameCtrl.GameButtons
 						isOver |= isOverEE;
 						if (isOverEE && (Event.current.type == EventType.MouseDown)) {
 							new RenderEntry (this, ee);
+							scene.actions.EncyclopediaOpened (ee.id, ee.keyword);
 							Event.current.Use ();
 						}				
 						j++;
@@ -131,6 +133,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		
 		public override void UpdateScene (Scene scene, GameButton button)
 		{
+			this.scene = scene;
 			entries = new Dictionary<char, List<Articles.EncyclopediaEntry>> ();
 			foreach (Articles.EncyclopediaEntry entry in scene.articles.encyclopediaEntries.Values) {
 				if ((entry.keyword != null) && (entry.keyword.Length > 0)) {

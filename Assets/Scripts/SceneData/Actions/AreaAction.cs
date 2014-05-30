@@ -194,10 +194,25 @@ namespace Ecosim.SceneData.Action
 			if (!isCanceled) {
 				// make selection permanent
 				edit.CopyData (selectedArea);
+
+				// Remember the last taken measure values
+				int selectedTilesCount = 0;
+				foreach (ValueCoordinate vc in selectedArea.EnumerateNotZero()) {
+					selectedTilesCount++;
+				}
+
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()] = this.description;
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()] = "Area";
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()] = selectedTilesCount;
 			}
+
 			edit.Delete ();
 			edit = null;
 			RecalculateEstimates (false);
+
+			if (!isCanceled) {
+				scene.actions.MeasureTaken ();
+			}
 		}
 		
 		public void RecalculateEstimates (bool checkTileIsValid)

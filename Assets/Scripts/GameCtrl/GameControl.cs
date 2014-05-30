@@ -284,7 +284,8 @@ public class GameControl : MonoBehaviour
 		SimpleSpinner.ActivateSpinner ();
 		isProcessing = true;
 		yield return 0;
-		
+
+		#pragma warning disable 162
 		isWorking = true;
 		if (GameSettings.SUCCESSION_IN_BG_THREAD) {
 			ThreadPool.QueueUserWorkItem (WorkThread, null);
@@ -292,6 +293,7 @@ public class GameControl : MonoBehaviour
 		else {
 			WorkThread(null);
 		}
+		#pragma warning restore 162
 		
 		while (isWorking) {
 			yield return 0;
@@ -322,5 +324,8 @@ public class GameControl : MonoBehaviour
 			// update editor windows if needed
 			EditorCtrl.self.HandleSuccession ();
 		}
+
+		// Reset predefined variables
+		scene.actions.ClearTempVariables ();
 	}
 }

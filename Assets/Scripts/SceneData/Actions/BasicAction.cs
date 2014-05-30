@@ -35,6 +35,8 @@ namespace Ecosim.SceneData.Action
 		private MethodInfo loadProgressMI;
 		private MethodInfo saveProgressMI;
 		private MethodInfo encyclopediaOpenedMI;
+		private MethodInfo measureTakenMI;
+		private MethodInfo researchConductedMI;
 		private MethodInfo actionSelectedMI;
 		private MethodInfo debugFnMI;
 		
@@ -166,6 +168,8 @@ namespace Ecosim.SceneData.Action
 			loadProgressMI = null;
 			saveProgressMI = null;
 			encyclopediaOpenedMI = null;
+			measureTakenMI = null;
+			researchConductedMI = null;
 			actionSelectedMI = null;
 			debugFnMI = null;
 		}
@@ -185,6 +189,10 @@ namespace Ecosim.SceneData.Action
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] {}, null);
 				encyclopediaOpenedMI = ecoBase.GetType ().GetMethod ("EncyclopediaOpened",
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(int), typeof(string) }, null);
+				measureTakenMI = ecoBase.GetType ().GetMethod ("MeasureTaken",
+				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(string), typeof(string), typeof(int) }, null);
+				researchConductedMI = ecoBase.GetType ().GetMethod ("ResearchConducted",
+				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(string), typeof(string), typeof(int) }, null);
 				actionSelectedMI = ecoBase.GetType ().GetMethod ("ActionSelected",
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(UserInteraction) }, null);
 				debugFnMI = ecoBase.GetType ().GetMethod ("Debug",
@@ -305,17 +313,6 @@ namespace Ecosim.SceneData.Action
 				}
 			}
 		}
-		
-		public virtual void EncyclopediaOpened (int itemNr, string itemTitle)
-		{
-			if (encyclopediaOpenedMI != null) {
-				try {
-					encyclopediaOpenedMI.Invoke (ecoBase, new object[] {itemNr, itemTitle});
-				} catch (Exception e) {
-					Log.LogException (e);
-				}
-			}
-		}
 
 		/**
 		 * When user selects an action from game interface this method is called to present
@@ -387,6 +384,53 @@ namespace Ecosim.SceneData.Action
 				return ecoBase.properties;
 			} else {
 				return null;
+			}
+		}
+
+		/**
+		 * Called when a measure is taken.
+		 */
+		// TODO: Add to .txt script files
+		public virtual void MeasureTaken (string name, string group, int count)
+		{
+			// TODO:
+			if (measureTakenMI != null) {
+				try {
+					measureTakenMI.Invoke (ecoBase, new object[] {name, group, count});
+				} catch (Exception e) {
+					Log.LogException (e);
+				}
+			}
+		}
+
+		/**
+		 * Called when research is conducted.
+		 */
+		// TODO: Add to .txt script files
+		public virtual void ResearchConducted (string name, string group, int count)
+		{
+			// TODO:
+			if (researchConductedMI != null) {
+				try {
+					researchConductedMI.Invoke (ecoBase, new object[] {name, group, count});
+				} catch (Exception e) {
+					Log.LogException (e);
+				}
+			}
+		}
+
+		/**
+		 * Called when a encylcopedia item is consulted.
+		 */
+		// TODO: Add to .txt script files
+		public virtual void EncyclopediaOpened (int itemNr, string itemTitle)
+		{
+			if (encyclopediaOpenedMI != null) {
+				try {
+					encyclopediaOpenedMI.Invoke (ecoBase, new object[] {itemNr, itemTitle});
+				} catch (Exception e) {
+					Log.LogException (e);
+				}
 			}
 		}
 		

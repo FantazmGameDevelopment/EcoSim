@@ -67,8 +67,26 @@ namespace Ecosim.SceneData.Action
 		
 		public void ActionDeselected (UserInteraction ui, bool cancel)
 		{
+			if (!cancel) {
+				// Count the total new markers
+				int newMarkersCount = 0;
+				SparseBitMap8 markers = scene.progression.GetData<SparseBitMap8>(areaName);
+				foreach (ValueCoordinate vc in markers.EnumerateNotZero()) {
+					newMarkersCount++;
+				}
+
+				// Remember the last taken researche values
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()] = this.description;
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()] = "Marker";
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()] = newMarkersCount;
+			}
+
 			if (actionDeselectedMI != null) {
 				actionDeselectedMI.Invoke (ecoBase, new object[] { ui, cancel });
+			}
+
+			if (!cancel) {
+				scene.actions.MeasureTaken ();
 			}
 		}
 

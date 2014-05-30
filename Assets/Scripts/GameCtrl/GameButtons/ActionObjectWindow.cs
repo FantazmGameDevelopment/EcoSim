@@ -5,7 +5,7 @@ using Ecosim.SceneData.Action;
 
 namespace Ecosim.GameCtrl.GameButtons
 {
-	public class ObjectActionWindow : GameWindow
+	public class ActionObjectWindow : GameWindow
 	{
 		const int winWidth = 384;
 		
@@ -20,7 +20,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		private static Texture2D tickboxEmptyH;
 		private bool isAccepted = false;
 		
-		public ObjectActionWindow (UserInteraction ui) : base (-1, -1, winWidth, ui.activeIcon)
+		public ActionObjectWindow (UserInteraction ui) : base (-1, -1, winWidth, ui.activeIcon)
 		{
 			this.ui = ui;
 			GameControl.ExtraHelp (ui.help);

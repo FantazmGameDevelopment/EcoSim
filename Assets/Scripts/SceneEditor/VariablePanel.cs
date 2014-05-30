@@ -17,11 +17,12 @@ namespace Ecosim.SceneEditor
 			"bool[]", "int[]", "long[]", "float[]", "string[]", "coord[]" };
 		private List<string> reserved = new List<string> (new string[] { "if", "for", "foreach", "type", "string", "int",
 			"long", "bool", "float", "double", "while", "break", "case", "else", "void",
-			"private", "protected", "public", "year", "budget", "allowResearch", "allowMeasures", "startYear" });
+			"private", "protected", "public", "year", "budget", "allowResearch", "allowMeasures", "startYear", "lastMeasure", "lastMeasureGroup", "lastMeasureCount",
+			"lastResearch", "lastResearchGroup", "lastResearchCount" });
 		int currentTypeIndex = 4;
 		string newVarName = "";
 		string newVarError = "";
-		
+
 		public List<string> keys;
 		
 		public void Setup (EditorCtrl ctrl, Scene scene)
@@ -42,6 +43,7 @@ namespace Ecosim.SceneEditor
 		{
 			textFieldDict.Clear ();
 			foreach (KeyValuePair<string, object> kv in scene.progression.variables) {
+				if (Progression.predefinedVariables.Contains (kv.Key)) continue;
 				object val = kv.Value;
 				if (val is IList) {
 					int i = 0;
@@ -56,6 +58,9 @@ namespace Ecosim.SceneEditor
 			
 			keys.Clear ();
 			keys.AddRange (scene.progression.variables.Keys);
+			foreach (string k in Progression.predefinedVariables) {
+				keys.Remove (k);
+			}
 			keys.Sort ();
 		}
 		
@@ -218,6 +223,7 @@ namespace Ecosim.SceneEditor
 			GUILayout.Space (8);
 			GUILayout.BeginHorizontal ();
 			newVarName = GUILayout.TextField (newVarName, GUILayout.Width (100));
+			newVarName = newVarName.Replace (" ", "");
 			if (GUILayout.Button (types [currentTypeIndex], GUILayout.Width (40))) {
 				ctrl.StartSelection (types, currentTypeIndex, newIndex => {
 					currentTypeIndex = newIndex;

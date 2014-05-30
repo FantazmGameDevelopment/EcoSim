@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 using Ecosim;
 using Ecosim.SceneData.Action;
@@ -16,6 +17,21 @@ namespace Ecosim.SceneData
 	 */
 	public class Progression
 	{
+		public enum PredefinedVariables
+		{
+			lastMeasure,
+			lastMeasureGroup,
+			lastMeasureCount,
+			lastResearch,
+			lastResearchGroup,
+			lastResearchCount
+		}
+
+		public static List<string> predefinedVariables {
+			get { return new List<string>(System.Enum.GetNames (typeof (PredefinedVariables))); }
+		}
+
+
 		public const string HEIGHTMAP_ID = "heightmap";
 		public const string WATERHEIGHTMAP_ID = "waterheightmap";
 		public const string CALCULATED_WATERHEIGHTMAP_ID = "calculatedwaterheightmap";
@@ -211,6 +227,7 @@ namespace Ecosim.SceneData
 		
 		public void CreateBasicData ()
 		{
+			// Data maps
 			AddData (VEGETATION_ID, new VegetationData (scene));
 			AddData (HEIGHTMAP_ID, new HeightMap (scene));
 			AddData (WATERHEIGHTMAP_ID, new HeightMap (scene));
@@ -227,6 +244,14 @@ namespace Ecosim.SceneData
 			successionArea = GetData <BitMap1> (SUCCESSION_ID);
 			managedArea = GetData <BitMap1> (MANAGED_ID);
 			purchasableArea = GetData <BitMap8> (PURCHASABLE_ID);
+
+			// Default variables
+			variables.Add ("lastMeasure", "");
+			variables.Add ("lastMeasureGroup", "");
+			variables.Add ("lastMeasureCount", 0);
+			variables.Add ("lastResearchAction", "");
+			variables.Add ("lastResearchActionGroup", "");
+			variables.Add ("lastResearchActionCount", 0);
 		}
 		
 		/**
@@ -378,7 +403,7 @@ namespace Ecosim.SceneData
 			}
 			return val.ToString ();
 		}
-		
+
 		object ReadType (XmlTextReader reader, string type)
 		{
 			object result = null;
@@ -542,7 +567,11 @@ namespace Ecosim.SceneData
 						string name = reader.GetAttribute ("name");
 						string type = reader.GetAttribute ("type");
 						object var = ReadType (reader, type);
-						variables.Add (name, var);
+
+						if (!variables.ContainsKey (name)) {
+							variables.Add (name, var);
+						}
+						variables[name] = var;
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
 					} 
@@ -630,6 +659,17 @@ namespace Ecosim.SceneData
 						researchPoints.Add (rp);
 					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "progress")) {
 						break;
+					}
+				}
+			}
+
+			// Add the predefined variables if necessary
+			foreach (string v in predefinedVariables) {
+				if (!variables.ContainsKey (v)) {
+					if (v.Contains ("Count")) {
+						variables.Add (v, 0);
+					} else {
+						variables.Add (v, string.Empty);
 					}
 				}
 			}

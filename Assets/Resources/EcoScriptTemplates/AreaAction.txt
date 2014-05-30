@@ -29,3 +29,9 @@ void FinalizeSuccession() {
 bool CanSelectTile (int x, int y, UserInteraction ui) {
 	return ((x + y) % 2) == 1;
 }
+
+void MeasureTaken (string name, string group, int count) {
+}
+
+void ResearchConducted (string name, string group, int count) {
+}

@@ -69,7 +69,7 @@ namespace Ecosim.SceneData.Action
 			backupEstimate = uiList[0].estimatedTotalCostForYear;
 
 			base.ActionSelected (ui);
-			new Ecosim.GameCtrl.GameButtons.ObjectActionWindow (ui);
+			new Ecosim.GameCtrl.GameButtons.ActionObjectWindow (ui);
 		}
 
 		public void ActionDeselected (UserInteraction ui, bool cancel)
@@ -308,10 +308,19 @@ namespace Ecosim.SceneData.Action
 		public void FinishSelecting (UserInteraction ui, bool isCanceled)
 		{
 			if (!isCanceled) {
+				// Remember the last taken measure values
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()] = this.description;
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()] = "ActionObject";
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()] = selectedObjects.Count;
+
 				EditActionObjects.instance.ProcessSelectedObjects ();
 			}
 			EditActionObjects.instance.StopEditBuildings (scene);
 			TerrainMgr.self.ForceRedraw ();
+
+			if (!isCanceled) {
+				scene.actions.MeasureTaken ();
+			}
 		}
 
 		public override Dictionary<string, string> SaveProgress ()

@@ -127,26 +127,56 @@ namespace Ecosim.SceneData.Action
 				edit = null;
 			}
 
-			if (newMeasurements == null)
+			if (newMeasurements == null) {
 				newMeasurements = new Dictionary<ResearchPoint.Measurement, Coordinate>();
+			}
 
-			foreach (ResearchPoint rp in scene.progression.researchPoints) 
+			ResearchPoint rp = null;
+			for (int i = scene.progression.researchPoints.Count - 1; i >= 0; i--) 
 			{
-				foreach (ResearchPoint.Measurement m in rp.measurements)
-				{
-					// Mark all temporary measurement as false and set their message to null
-					if (m.isTemporary)
+				rp = scene.progression.researchPoints[i];
+				if (cancel) {
+					for (int n = rp.measurements.Count - 1; n >= 0; n--) 
 					{
-						m.isTemporary = false;
-						newMeasurements.Add (m, new Coordinate (rp.x, rp.y));
+						// Delete the measurement when it's temporary
+						if (rp.measurements[n].isTemporary) {
+							rp.DeleteMeasurement (rp.measurements[n]);
+						}
+					}
+				}
+				else {
+					foreach (ResearchPoint.Measurement m in rp.measurements)
+					{
+						// Mark all temporary measurement as false and set their message to null
+						if (m.isTemporary)
+						{
+							m.isTemporary = false;
+							newMeasurements.Add (m, new Coordinate (rp.x, rp.y));
+						}
 					}
 				}
 
 				RenderResearchPointsMgr.GetMarkerOf (rp).SetVisuals (false);
+
+				if (cancel && rp.measurements.Count == 0) {
+					// Delete the research point 
+					RenderResearchPointsMgr.DeleteResearchPoint (rp);
+				}
+			}
+
+			if (!cancel) {
+				// Remember the last taken researche values
+				scene.progression.variables [Progression.PredefinedVariables.lastResearch.ToString()] = this.description;
+				scene.progression.variables [Progression.PredefinedVariables.lastResearchGroup.ToString()] = "ResearchPoint";
+				scene.progression.variables [Progression.PredefinedVariables.lastResearchCount.ToString()] = newMeasurements.Count;
 			}
 
 			if (actionDeselectedMI != null) {
 				actionDeselectedMI.Invoke (ecoBase, new object[] { ui, cancel });
+			}
+
+			if (!cancel) {
+				scene.actions.ResearchConducted ();
 			}
 		}
 

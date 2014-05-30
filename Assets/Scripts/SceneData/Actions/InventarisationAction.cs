@@ -242,10 +242,24 @@ namespace Ecosim.SceneData.Action
 			if (!isCanceled) {
 				// make selection permanent
 				edit.CopyData (selectedArea);
+
+				// Remember the last taken researche values
+				int selectedTilesCount = 0;
+				foreach (ValueCoordinate vc in selectedArea.EnumerateNotZero()) {
+					selectedTilesCount++;
+				}
+				
+				scene.progression.variables [Progression.PredefinedVariables.lastResearch.ToString()] = this.description;
+				scene.progression.variables [Progression.PredefinedVariables.lastResearchGroup.ToString()] = "Inventarisation";
+				scene.progression.variables [Progression.PredefinedVariables.lastResearchCount.ToString()] = selectedTilesCount;
 			}
 			edit.Delete ();
 			edit = null;
 			RecalculateEstimates (false);
+
+			if (!isCanceled) {
+				scene.actions.ResearchConducted ();
+			}
 		}
 
 		public void RecalculateEstimates (bool checkTileIsValid)
