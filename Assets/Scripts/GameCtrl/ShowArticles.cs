@@ -46,7 +46,7 @@ public class ShowArticles : MonoBehaviour {
 			RenderFontToTexture.self.RenderNewsArticle (scene.progression.CurrentMessage ().text, scene, articleTex, false);
 			isShowing = true;
 			yPos = (float) Screen.height;
-			targetYPos = Mathf.Min (Screen.height - articleTex.height, 200);
+			targetYPos = Screen.height - articleTex.height;// Mathf.Min (Screen.height - articleTex.height, 200);
 			ctrl.hideToolBar = true;
 			ctrl.hideSuccessionButton = true;
 		}

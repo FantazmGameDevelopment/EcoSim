@@ -69,7 +69,7 @@ namespace Ecosim.SceneEditor.Helpers
 						newIndex => {
 							if (newIndex != activeParameter) {
 								activeParameter = newIndex;
-								Data data = scene.progression.GetData (parameters [activeParameter]);
+								data = scene.progression.GetData (parameters [activeParameter]);
 								edit.SetData (data);
 								maxParamValue = data.GetMax ();
 								paramStrength = maxParamValue;
@@ -100,7 +100,7 @@ namespace Ecosim.SceneEditor.Helpers
 							parametersList.RemoveAt (activeParameter);
 							parameters = parametersList.ToArray ();
 							activeParameter = 0;
-							data = scene.progression.GetData (parameters [activeParameter]);
+							this.data = scene.progression.GetData (parameters [activeParameter]);
 							edit.SetData (data);
 						}, null);
 					}
@@ -138,7 +138,7 @@ namespace Ecosim.SceneEditor.Helpers
 						} else if (scene.progression.HasData (newParamName)) {
 							ctrl.StartOkDialog ("Name already exists", null);
 						} else {
-							Data data = null;
+							data = null;
 							switch (bitSizeIndex) {
 							case 0 :
 								data = new BitMap1 (scene);

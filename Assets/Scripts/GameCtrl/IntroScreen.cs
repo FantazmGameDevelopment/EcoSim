@@ -4,14 +4,10 @@ using Ecosim;
 
 public class IntroScreen : MonoBehaviour
 {
-
 	private bool isStarted = false;
 	public Texture2D banner;
 	public Texture2D info;
-	public Transform backgroundT;
 	public Transform spinnerT;
-	int width = -1;
-	int height = -1;
 	
 	public GUIStyle boxStyle;
 	
@@ -20,31 +16,6 @@ public class IntroScreen : MonoBehaviour
 		Debug.LogWarning ("Build version: " + GameSettings.VERSION_STR);
 	}
 
-	void Start ()
-	{
-		UpdateBackground ();
-	}
-	
-	void UpdateBackground ()
-	{
-		int newWidth = Screen.width;
-		int newHeight = Screen.height;
-		if ((width != newWidth) || (height != newHeight)) {
-			Camera cam = Camera.main;
-			cam.orthographicSize = newHeight / 2;
-			float aspect = cam.aspect;
-			Texture tex = backgroundT.gameObject.GetComponent<MeshRenderer> ().material.mainTexture;
-			float texAspect = tex.width / tex.height;
-			if (texAspect < aspect) {
-				backgroundT.localScale = new Vector3 (newWidth, 0f, newWidth / texAspect);
-			} else {
-				backgroundT.localScale = new Vector3 (newHeight * texAspect, 0f, newHeight);
-			}
-			height = newHeight;
-			width = newWidth;
-		}
-	}
-	
 	void OnGUI ()
 	{
 		int hheight = Screen.height / 2;
@@ -65,7 +36,6 @@ public class IntroScreen : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-		UpdateBackground ();
 		if (isStarted) {
 			angle = Mathf.Repeat(angle + Time.deltaTime * 18f, 12f);
 			spinnerT.localRotation = Quaternion.Euler (0f, 0f, -Mathf.Round(angle) * 30);

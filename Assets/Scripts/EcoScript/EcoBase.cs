@@ -9,12 +9,14 @@ namespace Ecosim.EcoScript
 	{
 		public readonly Scene scene;
 		public readonly BasicAction basicAction;
+		public readonly int actionId;
 		public Dictionary<string, string> properties;
 
 		public EcoBase (Scene scene, BasicAction basicAction)
 		{
 			this.scene = scene;
 			this.basicAction = basicAction;
+			this.actionId = this.basicAction.id;
 			properties = new Dictionary<string, string> ();
 		}
 		

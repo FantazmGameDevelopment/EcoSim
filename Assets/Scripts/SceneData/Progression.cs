@@ -167,9 +167,13 @@ namespace Ecosim.SceneData
 		public void AddMessage (int id)
 		{
 			Articles.Article article = scene.articles.GetArticleWithId (id);
-			Message msg = new Message (id, RenderFontToTexture.SubstituteExpressions (article.text, scene));
-			messages.Add (msg);
-			ShowArticles.NotifyUnreadMessages ();
+			if (article != null) {
+				Message msg = new Message (id, RenderFontToTexture.SubstituteExpressions (article.text, scene));
+				messages.Add (msg);
+				ShowArticles.NotifyUnreadMessages ();
+			} else {
+				Log.LogError (string.Format("Article with id '{0}' could not be found", id));
+			}
 		}
 		
 		public void AddMessage (string text)
@@ -373,6 +377,36 @@ namespace Ecosim.SceneData
 				dataDict.Add (name, newDataInfo);
 			}
 			return newData;
+		}
+
+		/**
+		 * Helper method: Finds the data name of the given plant name and returns the data, if necessary the data is loaded in from disk
+		 */ 
+		public Data GetPlantData  (string name)
+		{
+			name = name.ToLower();
+			foreach (PlantType t in scene.plantTypes)
+			{
+				if (t.name.ToLower() == name) {
+					return GetData (t.dataName);
+				}
+			}
+			return null;
+		}
+
+		/**
+		 * Helper method: Finds the data name of the given animal name and returns the data, if necessary the data is loaded in from disk
+		 */ 
+		public Data GetAnimalData (string name)
+		{
+			name = name.ToLower();
+			foreach (AnimalType t in scene.animalTypes)
+			{
+				if (t.name.ToLower() == name) {
+					return GetData (t.dataName);
+				}
+			}
+			return null;
 		}
 		
 		/**
@@ -669,7 +703,7 @@ namespace Ecosim.SceneData
 					if (v.Contains ("Count")) {
 						variables.Add (v, 0);
 					} else {
-						variables.Add (v, string.Empty);
+						variables.Add (v, "");
 					}
 				}
 			}

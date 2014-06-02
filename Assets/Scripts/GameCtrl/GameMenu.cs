@@ -9,6 +9,7 @@ public class GameMenu : MonoBehaviour
 	private static GameMenu self;
 	public GUISkin skin;
 	public Texture2D banner;
+	public GameObject background;
 	private Scene scene;
 	GUIStyle styleLightNormalLeft;
 	GUIStyle styleDarkNormalLeft;
@@ -21,6 +22,10 @@ public class GameMenu : MonoBehaviour
 	{
 		self.enabled = true;
 		self.state = State.Main;
+
+		// Don't show the background
+		if (self.background) 
+			self.background.SetActive (false);
 	}
 	
 	void Awake ()
@@ -30,6 +35,18 @@ public class GameMenu : MonoBehaviour
 		if (defaultQuality < 0) {
 			defaultQuality = QualitySettings.GetQualityLevel ();
 		}
+	}
+
+	void OnEnable ()
+	{
+		if (background) 
+			background.SetActive (true);
+	}
+
+	void OnDisable ()
+	{
+		if (background) 
+			background.SetActive (false);
 	}
 	
 	void OnDestroy ()
@@ -86,7 +103,10 @@ public class GameMenu : MonoBehaviour
 				TerrainMgr.self.SetupTerrain (scene);
 				CameraControl.SetupCamera (scene);
 				EditorCtrl.self.SceneIsLoaded (scene);
-				state = State.Main;				
+				state = State.Main;	
+
+				if (background) 
+					background.SetActive (true);
 			}
 		} else {
 			if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
@@ -190,6 +210,7 @@ public class GameMenu : MonoBehaviour
 		TerrainMgr.self.SetupTerrain (scene);
 		CameraControl.SetupCamera (scene);
 		EditorCtrl.self.SceneIsLoaded (scene);
+		//if (background) background.SetActive (false);
 		yield return 0;
 		SimpleSpinner.DeactivateSpinner ();
 		if (scene != null) {
@@ -218,6 +239,7 @@ public class GameMenu : MonoBehaviour
 		TerrainMgr.self.SetupTerrain (scene);
 		CameraControl.SetupCamera (scene);
 		EditorCtrl.self.SceneIsLoaded (scene);
+		//if (background) background.SetActive (false);
 		yield return 0;
 		SimpleSpinner.DeactivateSpinner ();
 		if (scene != null) {
@@ -386,6 +408,7 @@ public class GameMenu : MonoBehaviour
 	{
 		if (state == State.Idle)
 			return;
+
 		sWidth = Screen.width;
 		sHeight = Screen.height;
 		if (EditorCtrl.self.isOpen) {

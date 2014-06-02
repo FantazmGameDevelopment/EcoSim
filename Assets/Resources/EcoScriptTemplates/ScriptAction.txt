@@ -20,3 +20,6 @@ void MeasureTaken (string name, string group, int count) {
 
 void ResearchConducted (string name, string group, int count) {
 }
+
+void EncyclopediaOpened (int itemNr, string itemTitle) {
+}
