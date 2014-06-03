@@ -1,12 +1,16 @@
-float ConvertToFloat (string dataName, int val) {
-	switch (dataName) {
+float ConvertToFloat (string dataName, int val) 
+{
+	switch (dataName) 
+	{
 	case "ph" : return ((float) val) * 14.0f / 255;
 	default : return (float) val;
 	}
 }
 
-string ConvertToString (string dataName, int val) {
-	switch (dataName) {
+string ConvertToString (string dataName, int val) 
+{
+	switch (dataName) 
+	{
 	default : return ConvertToFloat (dataName, val).ToString("0.00");
 	}
 }

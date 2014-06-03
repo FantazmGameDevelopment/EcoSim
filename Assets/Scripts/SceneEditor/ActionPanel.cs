@@ -148,7 +148,7 @@ namespace Ecosim.SceneEditor
 
 		void HandleResearchPointAction (ResearchPointAction action)
 		{
-			GUILayout.Label ("WIP");
+			// TODO: Create an editor where the module builder can create their own string without using the script
 		}
 		
 		void HandleSuccessionAction (SuccessionAction action)

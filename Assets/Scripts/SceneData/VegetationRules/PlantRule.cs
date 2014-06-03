@@ -18,9 +18,9 @@ namespace Ecosim.SceneData.PlantRules
 		public ParameterRange[] parameterConditions;
 		public VegetationCondition[] vegetationConditions;
 
-		public float chance = 1.0f;
+		public float chance = 0.75f;
+		public float spawnChance = 1f;
 		public int delta = 1;
-		public bool canSpawn = true;
 
 		public PlantRule ()
 		{
@@ -36,7 +36,11 @@ namespace Ecosim.SceneData.PlantRules
 			rule.description = reader.GetAttribute ("description");
 			rule.chance = float.Parse(reader.GetAttribute ("chance"));
 			rule.delta = int.Parse(reader.GetAttribute ("delta"));
-			rule.canSpawn = (reader.GetAttribute ("canspawn") == "true") ? true : false;
+
+			float spawnChance = -1f;
+			if (float.TryParse (reader.GetAttribute ("spawnchance"), out spawnChance)) {
+				rule.spawnChance = spawnChance;
+			}
 
 			List<ParameterRange> paramConditions = new List<ParameterRange>();
 			List<VegetationCondition> vegConditions = new List<VegetationCondition>();
@@ -85,7 +89,7 @@ namespace Ecosim.SceneData.PlantRules
 			}
 			clone.chance = chance;
 			clone.delta = delta;
-			clone.canSpawn = canSpawn;
+			clone.spawnChance = spawnChance;
 			return clone;
 		}
 
@@ -95,7 +99,7 @@ namespace Ecosim.SceneData.PlantRules
 			writer.WriteAttributeString ("description", description);
 			writer.WriteAttributeString ("chance", chance.ToString());
 			writer.WriteAttributeString ("delta", delta.ToString());
-			writer.WriteAttributeString ("canspawn", canSpawn.ToString().ToLower());
+			writer.WriteAttributeString ("spawnchance", spawnChance.ToString());
 			foreach (ParameterRange pr in parameterConditions) {
 				pr.Save (writer, scene);
 			}

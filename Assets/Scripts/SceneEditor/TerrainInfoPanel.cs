@@ -84,7 +84,7 @@ namespace Ecosim.SceneEditor
 					Data data = p.GetData (paramName);
 					int val = data.Get (tileX, tileY);
 					if ((val > 0) && (data.GetMax () < 256)) {
-						displayMainText.AppendLine (paramName + '\t' + data.Get (tileX, tileY).ToString () +
+						displayMainText.AppendLine (paramName + " \t" + data.Get (tileX, tileY).ToString () +
 							" (" + scene.progression.ConvertToString (paramName, val) + ")");
 					}
 				}

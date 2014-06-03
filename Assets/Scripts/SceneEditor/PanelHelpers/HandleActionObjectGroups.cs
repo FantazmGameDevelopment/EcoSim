@@ -530,7 +530,7 @@ namespace Ecosim.SceneEditor.Helpers
 							}
 						}
 
-						if (editGroup.actionObjects.Length == 0) {
+						if (editGroup.groupType == ActionObjectsGroup.GroupType.Collection && editGroup.actionObjects.Length == 0) {
 							GUILayout.Label ("Objects of a 'Collection' type group have individual influence maps. Please add objects first.");
 						}
 					}

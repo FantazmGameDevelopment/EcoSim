@@ -13,14 +13,12 @@ namespace Ecosim.SceneEditor
 			public PlantState (PlantType plant)
 			{
 				this.plant = plant;
-				//this.maxPerTileStr = this.plant.maxPerTile.ToString();
 				this.isFoldedOpen = false;
 				this.newMaxPerTile = this.plant.maxPerTile;
 			}
 			
 			public bool isFoldedOpen;
 			public PlantType plant;
-			//public string maxPerTileStr;
 			public int newMaxPerTile;
 		}
 
@@ -365,7 +363,6 @@ namespace Ecosim.SceneEditor
 						GUILayoutOption fieldLayout = GUILayout.Width (40);
 
 						EcoGUI.IntField (" # Spawn seeds attempts", ref ps.plant.spawnCount, labelLayout, fieldLayout); 
-						EcoGUI.IntField (" Spawn seeds multiplier", ref ps.plant.spawnMultiplier, labelLayout, fieldLayout);
 						EcoGUI.IntField (" Spawn seeds dispersion", ref ps.plant.spawnRadius, labelLayout, fieldLayout);
 
 						GUILayout.BeginHorizontal ();

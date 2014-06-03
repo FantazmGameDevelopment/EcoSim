@@ -20,7 +20,6 @@ namespace Ecosim.SceneData
 		public int maxPerTile;
 		public int spawnRadius;
 		public int spawnCount;
-		public int spawnMultiplier;
 
 		public string dataName;
 
@@ -50,7 +49,6 @@ namespace Ecosim.SceneData
 			maxPerTile = 3;
 			spawnRadius = 5;
 			spawnCount = 10;
-			spawnMultiplier = 1;
 
 			// Add to scene
 			List<PlantType> tmpPlantList = new List<PlantType>(scene.plantTypes);
@@ -65,7 +63,6 @@ namespace Ecosim.SceneData
 			plant.maxPerTile = int.Parse(reader.GetAttribute ("maxpertile"));
 			plant.spawnRadius = int.Parse(reader.GetAttribute ("spawnradius"));
 			plant.spawnCount = int.Parse(reader.GetAttribute ("spawncount"));
-			plant.spawnMultiplier = int.Parse(reader.GetAttribute ("spawnmultiplier"));
 			plant.dataName = reader.GetAttribute ("dataname");
 
 			if (string.IsNullOrEmpty(plant.dataName)) 
@@ -105,7 +102,6 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("maxpertile", maxPerTile.ToString());
 			writer.WriteAttributeString ("spawnradius", spawnRadius.ToString());
 			writer.WriteAttributeString ("spawncount", spawnCount.ToString());
-			writer.WriteAttributeString ("spawnmultiplier", spawnMultiplier.ToString());
 			writer.WriteAttributeString ("dataname", dataName);
 			foreach (PlantRule r in rules) {
 				r.Save (writer, scene);

@@ -77,7 +77,8 @@ namespace Ecosim.SceneData.Action
 								if (populationValue > 0) 
 								{
 									VegetationType vegType = progress.vegetation.GetVegetationType (x, y);
-									int cummDelta = 0;
+									int cummPopulationChance = 0;
+									float cummSpawnChance = 0f;
 
 									foreach (PlantRule plantRule in plantType.rules) // Rules
 									{
@@ -102,7 +103,8 @@ namespace Ecosim.SceneData.Action
 													}
 
 													if (paramsMatch) {
-														cummDelta += plantRule.delta;
+														cummPopulationChance += plantRule.delta;
+														cummSpawnChance += plantRule.spawnChance;
 													}
 												}
 											} // ~VegetationCondition foreach
@@ -110,7 +112,7 @@ namespace Ecosim.SceneData.Action
 									} // ~Rules foreach
 
 									// Update the plants population if it's changed
-									int newPopulationValue = UnityEngine.Mathf.Clamp (populationValue + cummDelta, 0, plantType.maxPerTile);
+									int newPopulationValue = UnityEngine.Mathf.Clamp (populationValue + cummPopulationChance, 0, plantType.maxPerTile);
 									if (newPopulationValue != populationValue) {
 										plantData.Set (x, y, newPopulationValue);
 									}
@@ -118,21 +120,25 @@ namespace Ecosim.SceneData.Action
 									// Check if we are going to spawn seedlings
 									if (newPopulationValue > 0)
 									{
-										int spawnCount = plantType.spawnCount + (newPopulationValue * plantType.spawnMultiplier);
-										for (int i = 0; i < spawnCount; i++)
+										// Check if we can spawn
+										if (cummSpawnChance >= rnd.NextDouble())
 										{
-											// Spawn on a random tile
-											float angle = RndUtil.RndRange (ref rnd, 0f, 360f);
-											float range = RndUtil.RndRange (ref rnd, 1f, plantType.spawnRadius);
-											int targetX = Mathf.RoundToInt (Mathf.Sin (angle) * range) + x;
-											int targetY = Mathf.RoundToInt (Mathf.Cos (angle) * range) + y;
-
-											// Check if it's inside the terrain
-											if ((targetX >= 0) && (targetY >= 0) && 
-											    (targetX < this.scene.width) && (targetY < this.scene.height)) 
+											int spawnCount = plantType.spawnCount * newPopulationValue;
+											for (int i = 0; i < spawnCount; i++)
 											{
-												// New spawn
-												tmpSpawnList.Add (new Spawn (plantType, targetX, targetY));
+												// Spawn on a random tile
+												float angle = RndUtil.RndRange (ref rnd, 0f, 360f);
+												float range = RndUtil.RndRange (ref rnd, 1f, plantType.spawnRadius);
+												int targetX = Mathf.RoundToInt (Mathf.Sin (angle) * range) + x;
+												int targetY = Mathf.RoundToInt (Mathf.Cos (angle) * range) + y;
+
+												// Check if it's inside the terrain
+												if ((targetX >= 0) && (targetY >= 0) && 
+												    (targetX < this.scene.width) && (targetY < this.scene.height)) 
+												{
+													// New spawn
+													tmpSpawnList.Add (new Spawn (plantType, targetX, targetY));
+												}
 											}
 										}
 									} // ~Spawn seedlings check

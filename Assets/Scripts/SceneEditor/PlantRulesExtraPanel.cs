@@ -228,12 +228,12 @@ namespace Ecosim.SceneEditor
 
 							if (!plantRuleFoldStates[pr])
 							{
-								RenderChance (ref pr.chance);
+								RenderChance ("Chance", ref pr.chance);
 
 								GUILayout.BeginHorizontal (); // Change
 								{
-									GUILayout.Label ("Change", GUILayout.Width (40));
-									pr.delta = (int)GUILayout.HorizontalSlider (pr.delta, -plant.maxPerTile, plant.maxPerTile, GUILayout.Width (70));
+									GUILayout.Label ("Population change", GUILayout.Width (120));
+									pr.delta = (int)GUILayout.HorizontalSlider (pr.delta, -plant.maxPerTile, plant.maxPerTile, GUILayout.Width (120));
 									string deltaStr = pr.delta.ToString ("0");
 									string newDeltaStr = GUILayout.TextField (deltaStr, GUILayout.Width (40));
 									if (newDeltaStr != deltaStr) {
@@ -242,10 +242,10 @@ namespace Ecosim.SceneEditor
 											pr.delta = outVal;
 										}
 									}
-									
-									pr.canSpawn = GUILayout.Toggle (pr.canSpawn, "Can spawn seeds", GUILayout.Width (130));
 								}
 								GUILayout.EndHorizontal (); // ~Change
+
+								RenderChance ("Spawn chance", ref pr.spawnChance);
 
 								RenderVegetationConditions (ref pr.vegetationConditions);
 								RenderParameterConditions (ref pr.parameterConditions);
@@ -374,7 +374,7 @@ namespace Ecosim.SceneEditor
 
 						if (!germRuleFoldStates[gr])
 						{
-							RenderChance (ref gr.chance);
+							RenderChance ("Chance", ref gr.chance);
 							RenderVegetationConditions (ref gr.vegetationConditions);
 							RenderParameterConditions (ref gr.parameterConditions);
 						}
@@ -399,12 +399,12 @@ namespace Ecosim.SceneEditor
 			return keepOpen;
 		}
 
-		private void RenderChance (ref float chance)
+		private void RenderChance (string name, ref float chance)
 		{
 			GUILayout.Space (1f);
 			GUILayout.BeginHorizontal (); // Chance
 			{
-				GUILayout.Label ("Chance (0..1)", GUILayout.Width (70));
+				GUILayout.Label (name + " (0..1)", GUILayout.Width (120));
 				chance = GUILayout.HorizontalSlider (chance, 0.0f, 1.0f, GUILayout.Width (120));
 				string chanceStr = chance.ToString ("0.00");
 				string newChanceStr = GUILayout.TextField (chanceStr, GUILayout.Width (40));
