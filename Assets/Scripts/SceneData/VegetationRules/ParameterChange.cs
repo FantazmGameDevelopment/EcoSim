@@ -38,13 +38,14 @@ namespace Ecosim.SceneData.VegetationRules
 			}
 			result.paramName = paramName;
 			if (reader.GetAttribute("min") != null) {
-				result.lowRange = int.Parse(reader.GetAttribute("min")) * 100 / 255;
-				result.highRange = int.Parse(reader.GetAttribute("max")) * 100 / 255;
+				result.lowRange = int.Parse(reader.GetAttribute("min"));// * 100 / 255;
+				result.highRange = int.Parse(reader.GetAttribute("max"));// * 100 / 255;
 			}
 			else {
 				result.lowRange = int.Parse(reader.GetAttribute("low"));
 				result.highRange = int.Parse(reader.GetAttribute("high"));
 			}
+
 			IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
 			return result;
 		}

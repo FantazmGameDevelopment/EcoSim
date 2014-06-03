@@ -31,20 +31,29 @@ namespace Ecosim.SceneData.Rules
 			}
 			result.paramName = paramName;
 
-			string lowStr = reader.GetAttribute ("low");
-			string highStr = reader.GetAttribute ("high");
+			// 1.0 old style
+			if (reader.GetAttribute("min") != null) 
+			{
+				result.lowRange = (int)(float.Parse (reader.GetAttribute ("min")) * 255f);
+				result.highRange = (int)(float.Parse (reader.GetAttribute ("max")) * 255f);
+			} 
+			else 
+			{
+				string lowStr = reader.GetAttribute ("low");
+				string highStr = reader.GetAttribute ("high");
 
-			// Check for percentages
-			if (lowStr.IndexOf(".") > -1 || highStr.IndexOf(".") > -1) {
-				result.lowRangePerc = float.Parse(lowStr);
-				result.highRangePerc = float.Parse(highStr);
+				// Check for percentages
+				if (lowStr.IndexOf(".") > -1 || highStr.IndexOf(".") > -1) {
+					result.lowRangePerc = float.Parse(lowStr);
+					result.highRangePerc = float.Parse(highStr);
 
-				lowStr = "0";
-				highStr = "0";
+					lowStr = "0";
+					highStr = "0";
+				}
+
+				result.lowRange = int.Parse(lowStr);
+				result.highRange = int.Parse(highStr);
 			}
-
-			result.lowRange = int.Parse(lowStr);
-			result.highRange = int.Parse(highStr);
 
 			IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
 			return result;
