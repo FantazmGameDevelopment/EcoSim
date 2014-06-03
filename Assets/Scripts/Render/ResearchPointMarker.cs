@@ -73,4 +73,10 @@ public class ResearchPointMarker : MonoBehaviour
 	{
 		RenderResearchPointsMgr.ClearMessage (researchPoint);
 	}
+
+	void OnDestroy ()
+	{
+		// Make sure to remove the message when the marker is destroyed
+		OnMouseExit ();
+	}
 }
