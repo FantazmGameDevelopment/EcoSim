@@ -125,8 +125,16 @@ namespace Ecosim.SceneEditor
 				}
 			}
 		}
-		
-		ExtraPanel extraPanel;
+
+		ExtraPanel _extraPanel;
+		ExtraPanel extraPanel {
+			get { return _extraPanel; }
+			set {
+				if (_extraPanel != null)
+					_extraPanel.Dispose ();
+				_extraPanel = value;
+			}
+		}
 		Vector2 scrollPos;
 		Vector2 scrollPosExtra;
 		Scene scene;

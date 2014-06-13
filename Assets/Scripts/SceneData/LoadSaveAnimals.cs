@@ -21,8 +21,17 @@ namespace Ecosim.SceneData
 					while (reader.Read ()) 
 					{
 						XmlNodeType nType = reader.NodeType;
-						if ((nType == XmlNodeType.Element) && (reader.Name.ToLower() == AnimalType.XML_ELEMENT)) {
-							AnimalType at = AnimalType.Load (reader, scene);
+						if ((nType == XmlNodeType.Element) && (reader.Name.ToLower() == AnimalType.XML_ELEMENT)) 
+						{
+							AnimalType at = null;
+							string animalType = reader.GetAttribute ("type");
+							switch (animalType)
+							{
+							case "Large" : at = LargeAnimalType.Load (reader, scene); break;
+							//case "Normal" : break;
+							//case "Small" : break;
+							}
+
 							if (at != null) {
 								list.Add (at);
 							}

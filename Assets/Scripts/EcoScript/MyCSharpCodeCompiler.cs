@@ -46,7 +46,6 @@ namespace Ecosim.EcoScript
 	using System.Collections.Generic;
 	using Microsoft.CSharp;
 	using Mono.CSharp;
-
 	
 	class MyCSharpCodeCompiler : MyCSharpCodeGenerator, ICodeCompiler
 	{

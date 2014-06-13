@@ -122,5 +122,9 @@ namespace Ecosim.SceneEditor
 			return false;
 		}
 	
+		public void Dispose ()
+		{
+
+		}
 	}
 }

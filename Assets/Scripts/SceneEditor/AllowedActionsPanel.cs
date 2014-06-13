@@ -116,8 +116,7 @@ namespace Ecosim.SceneEditor
 			}
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
-			
-			
+
 			GUILayout.EndScrollView ();
 			return keepOpen;
 		}
@@ -126,6 +125,10 @@ namespace Ecosim.SceneEditor
 		{
 			return false;
 		}
-	
+
+		public void Dispose ()
+		{
+
+		}
 	}
 }

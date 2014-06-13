@@ -1,19 +1,21 @@
+using UnityEngine;
 using System.Collections.Generic;
 using Ecosim.SceneData;
 using Ecosim.SceneData.PlantRules;
 using Ecosim.SceneData.Rules;
-using UnityEngine;
+using Ecosim.SceneData.AnimalPopulationModel;
 
 namespace Ecosim.SceneEditor
 {
 	public class AnimalNestsExtraPanel : ExtraPanel
 	{
-		public AnimalType animal { get; private set; }
+		public LargeAnimalType animal { get; private set; }
 		private EditorCtrl ctrl;
 
 		private Data nestsData;
 		private Vector2 editNestScrollPos;
-		private AnimalType.Nest editNest;
+		private AnimalStartPopulationModel startPopModel;
+		private AnimalStartPopulationModel.Nests.Nest editNest;
 
 		private EditData edit = null;
 		private GridTextureSettings areaGrid = null;
@@ -37,8 +39,8 @@ namespace Ecosim.SceneEditor
 			areaMat = new Material (EcoTerrainElements.GetMaterial ("MapAnimalNestsGrid"));
 
 			SetAnimal (animal);
-			if (animal.nests.Length > 0)
-				EditNest (animal.nests[0]);
+			if (this.startPopModel.nests.nests.Length > 0)
+				EditNest (this.startPopModel.nests.nests[0]);
 		}
 
 		public bool Render (int mx, int my)
@@ -60,7 +62,7 @@ namespace Ecosim.SceneEditor
 				GUILayout.Label ("Animal Nests", GUILayout.Width (100));
 				GUILayout.Label ("'" + animal.name + "'");
 
-				if (animal.nests.Length > 0)
+				if (this.startPopModel.nests.nests.Length > 0)
 				{
 					if (GUILayout.Button (canCreateNests ? "Stop creating new nests" : "Start creating new nests", GUILayout.Width (160)))
 					{
@@ -80,7 +82,7 @@ namespace Ecosim.SceneEditor
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal (); // ~Buttons*/
 
-			if (animal.nests.Length == 0)
+			if (this.startPopModel.nests.nests.Length == 0)
 			{
 				GUILayout.Label ("No nests. Click on the terrain to add new nests.");
 			}
@@ -92,8 +94,8 @@ namespace Ecosim.SceneEditor
 				{
 					// Header
 					int editIdx = 0;
-					foreach (AnimalType.Nest n in animal.nests) {
-						editIdx++;
+					foreach (AnimalStartPopulationModel.Nests.Nest n in this.startPopModel.nests.nests) {
+						editIdx++;						
 						if (n == editNest) break;
 					}
 					GUILayout.Label (string.Format(" Nest #{0} ({1},{2})", editIdx, editNest.x, editNest.y));
@@ -132,15 +134,23 @@ namespace Ecosim.SceneEditor
 		{
 			if (this.animal != animal)
 			{
-				this.animal = animal;
+				this.animal = (LargeAnimalType)animal;
+				foreach (IAnimalPopulationModel m in this.animal.models) {
+					if (m is AnimalStartPopulationModel) {
+						startPopModel = (AnimalStartPopulationModel)m;
+						break;
+					}
+				}
+				if (this.startPopModel.nests.nests == null)
+					this.startPopModel.nests.nests = new AnimalStartPopulationModel.Nests.Nest[0];
 
 				nestsData = new BitMap8 (ctrl.scene);
-				foreach (AnimalType.Nest nest in animal.nests) {
+				foreach (AnimalStartPopulationModel.Nests.Nest nest in this.startPopModel.nests.nests) {
 					nestsData.Set (new Coordinate(nest.x, nest.y), 1);
 				}
 
 				// If we don't have any nests, set can create nests default to true.
-				canCreateNests = animal.nests.Length == 0;
+				canCreateNests = this.startPopModel.nests.nests.Length == 0;
 				SetupEditData (canCreateNests);
 			}
 		}
@@ -188,7 +198,7 @@ namespace Ecosim.SceneEditor
 			return newVal;
 		}
 
-		public void EditNest (AnimalType.Nest nest)
+		public void EditNest (AnimalStartPopulationModel.Nests.Nest nest)
 		{
 			// Get the current data
 			edit.CopyData (nestsData);
@@ -209,18 +219,18 @@ namespace Ecosim.SceneEditor
 
 		private void CreateNewNestAt (int x, int y)
 		{
-			AnimalType.Nest newNest = new AnimalType.Nest ();
+			AnimalStartPopulationModel.Nests.Nest newNest = new AnimalStartPopulationModel.Nests.Nest ();
 			newNest.x = x;
 			newNest.y = y;
 
-			List<AnimalType.Nest> nests = new List<AnimalType.Nest>(animal.nests);
+			List<AnimalStartPopulationModel.Nests.Nest> nests = new List<AnimalStartPopulationModel.Nests.Nest>(this.startPopModel.nests.nests);
 			nests.Add (newNest);
-			animal.nests = nests.ToArray();
+			this.startPopModel.nests.nests = nests.ToArray();
 
 			EditNest (newNest);
 		}
 
-		public void FocusOnNest (AnimalType.Nest nest)
+		public void FocusOnNest (AnimalStartPopulationModel.Nests.Nest nest)
 		{
 			HeightMap heights = ctrl.scene.progression.GetData <HeightMap> (Progression.HEIGHTMAP_ID);
 			float x = nest.x * TerrainMgr.TERRAIN_SCALE;
@@ -230,12 +240,12 @@ namespace Ecosim.SceneEditor
 			CameraControl.FocusOnPosition (pos);
 		}
 
-		public void DeleteNest (AnimalType.Nest nest)
+		public void DeleteNest (AnimalStartPopulationModel.Nests.Nest nest)
 		{
 			if (this.animal != null)
 			{
 				// Check if the nest is a part of this animal
-				foreach (AnimalType.Nest n in this.animal.nests)
+				foreach (AnimalStartPopulationModel.Nests.Nest n in this.startPopModel.nests.nests)
 				{
 					if (n == nest)
 					{
@@ -244,13 +254,13 @@ namespace Ecosim.SceneEditor
 						}
 
 						nestsData = new BitMap8 (ctrl.scene);
-						foreach (AnimalType.Nest an in animal.nests) {
+						foreach (AnimalStartPopulationModel.Nests.Nest an in this.startPopModel.nests.nests) {
 							if (an != n)
 								nestsData.Set (new Coordinate(an.x, an.y), 1);
 						}
 						
 						// If we don't have any nests, set can create nests default to true.
-						canCreateNests = animal.nests.Length == 0;
+						canCreateNests = this.startPopModel.nests.nests.Length == 0;
 						SetupEditData (canCreateNests);
 						break;
 					}
@@ -258,9 +268,9 @@ namespace Ecosim.SceneEditor
 			}
 		}
 
-		private AnimalType.Nest GetNestAt (int x, int y)
+		private AnimalStartPopulationModel.Nests.Nest GetNestAt (int x, int y)
 		{
-			foreach (AnimalType.Nest n in animal.nests) {
+			foreach (AnimalStartPopulationModel.Nests.Nest n in this.startPopModel.nests.nests) {
 				if (n.x == x && n.y == y) {
 					return n;
 				}

@@ -518,6 +518,10 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndVertical ();
 			return true;
 		}
-		
+
+		public void Dispose ()
+		{
+
+		}
 	}
 }

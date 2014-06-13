@@ -180,7 +180,7 @@ namespace Ecosim.SceneData.Action
 			}
 		}
 
-		public override void DoSuccession ()
+		public override void PrepareSuccession ()
 		{
 			if (newMeasurements != null)
 			{
@@ -197,6 +197,11 @@ namespace Ecosim.SceneData.Action
 			}
 		}
 
+		public override void DoSuccession ()
+		{
+			base.DoSuccession ();
+		}
+
 		public override void FinalizeSuccession() 
 		{
 			foreach (UserInteraction ui in uiList) 
@@ -206,6 +211,8 @@ namespace Ecosim.SceneData.Action
 				// set cost to 0 (don't do it for ongoing measures)
 				ui.estimatedTotalCostForYear = 0;
 			}
+
+			base.FinalizeSuccession ();
 		}
 
 		public void StartSelecting (UserInteraction ui)

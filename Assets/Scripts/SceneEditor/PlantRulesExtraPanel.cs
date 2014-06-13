@@ -576,5 +576,10 @@ namespace Ecosim.SceneEditor
 		{
 			return (showGerminationRules);
 		}
+
+		public void Dispose ()
+		{
+
+		}
 	}
 }
