@@ -392,21 +392,6 @@ namespace Ecosim.SceneData
 			}
 			return null;
 		}
-
-		/**
-		 * Helper method: Finds the data name of the given animal name and returns the data, if necessary the data is loaded in from disk
-		 */ 
-		public Data GetAnimalData (string name)
-		{
-			name = name.ToLower();
-			foreach (AnimalType t in scene.animalTypes)
-			{
-				if (t.name.ToLower() == name) {
-					return GetData (t.dataName);
-				}
-			}
-			return null;
-		}
 		
 		/**
 		 * Deletes data with given name, if data doesn't exist, does nothing

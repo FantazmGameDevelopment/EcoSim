@@ -20,8 +20,37 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 		
 		public override void Render (int mx, int my)
 		{
-			// TODO: AnimalPopulationGrowthModelHelper.Render
-			GUILayout.Label ("TODO: AnimalPopulationGrowthModelHelper");
+			GUILayout.BeginVertical ();//EditorCtrl.self.skin.box);
+			{
+				GUILayout.Label (" Population Growth");
+
+				if (this.RenderHeaderStart ("Fixed", this.model.fixedNumber, true))
+				{
+					// Type
+					EcoGUI.EnumButton<AnimalPopulationGrowthModel.FixedNumber.Type>("Type", model.fixedNumber.type, 
+					                                                                delegate(AnimalPopulationGrowthModel.FixedNumber.Type newType) {
+						model.fixedNumber.type = newType;
+					}, GUILayout.Width (50), GUILayout.Width (150)); 
+					
+					// Litter size
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Space (2);
+						GUILayout.Label ("Litter size", GUILayout.Width (50));
+						EcoGUI.skipHorizontal = true;
+						GUILayout.BeginHorizontal ();
+						{
+							EcoGUI.IntField ("Min", ref model.fixedNumber.minLitterSize, GUILayout.Width (20), GUILayout.Width (50));
+							EcoGUI.IntField ("Max", ref model.fixedNumber.maxLitterSize, GUILayout.Width (20), GUILayout.Width (50));
+						}
+						GUILayout.EndHorizontal ();
+						EcoGUI.skipHorizontal = false;
+					}
+					GUILayout.EndHorizontal ();
+				}
+				this.RenderHeaderEnd (this.model.fixedNumber);
+			}
+			GUILayout.EndVertical ();
 		}
 	}
 }

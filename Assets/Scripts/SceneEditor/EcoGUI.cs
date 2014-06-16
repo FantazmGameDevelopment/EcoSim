@@ -26,10 +26,7 @@ namespace Ecosim.SceneEditor
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
-				if (!string.IsNullOrEmpty (name)) {
-					if (nameLayout != null) 	GUILayout.Label (name, nameLayout);
-					else 						GUILayout.Label (name);
-				}
+				RenderName (name, nameLayout);
 
 				string str = val.ToString();
 				if (valLayout != null) 	str = GUILayout.TextField (str, valLayout);
@@ -60,10 +57,7 @@ namespace Ecosim.SceneEditor
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
-				if (!string.IsNullOrEmpty (name)) {
-					if (nameLayout != null) 	GUILayout.Label (name, nameLayout);
-					else 						GUILayout.Label (name);
-				}
+				RenderName (name, nameLayout);
 
 				string formatStr = "0";
 				if (decimals > 0) formatStr += ".";
@@ -90,11 +84,7 @@ namespace Ecosim.SceneEditor
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
-				if (!string.IsNullOrEmpty (name)) {
-					if (nameLayout != null)
-						GUILayout.Label (name, nameLayout);
-					else GUILayout.Label (name);
-				}
+				RenderName (name, nameLayout);
 				
 				GUILayout.Label (minRange.ToString(), GUILayout.Width (25));
 				if (valLayout != null) 	minRange = (int)GUILayout.HorizontalSlider (minRange, min, max, valLayout);
@@ -113,11 +103,7 @@ namespace Ecosim.SceneEditor
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
-				if (!string.IsNullOrEmpty (name)) {
-					if (nameLayout != null)
-						GUILayout.Label (name, nameLayout);
-					else GUILayout.Label (name);
-				}
+				RenderName (name, nameLayout);
 
 				GUILayout.Label (minRange.ToString("0.00"), GUILayout.Width (25));
 				if (valLayout != null) 	minRange = GUILayout.HorizontalSlider (minRange, min, max, valLayout);
@@ -130,6 +116,88 @@ namespace Ecosim.SceneEditor
 				if (maxRange < minRange) maxRange = minRange;
 			}
 			if (!skipHorizontal) GUILayout.EndHorizontal ();
+		}
+
+		public static bool Foldout (string name, ref bool opened, GUILayoutOption nameLayout = null)
+		{
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
+			{
+				if (GUILayout.Button (opened ? EditorCtrl.self.foldedOpenSmall : EditorCtrl.self.foldedCloseSmall, EditorCtrl.self.icon12x12))
+				{
+					opened = !opened;
+				}
+				RenderName (name, nameLayout);
+			}
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
+			return opened;
+		}
+
+		public static bool FoldoutEditableName (ref string name, ref bool opened, GUILayoutOption nameLayout = null)
+		{
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
+			{
+				if (GUILayout.Button (opened ? EditorCtrl.self.foldedOpenSmall : EditorCtrl.self.foldedCloseSmall, EditorCtrl.self.icon12x12))
+				{
+					opened = !opened;
+				}
+					
+				if (!string.IsNullOrEmpty (name)) 
+				{
+					GUILayout.Space (2);
+					if (nameLayout != null) name = GUILayout.TextField (name, nameLayout);
+					else 					name = GUILayout.TextField (name);
+				}
+			}
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
+			return opened;
+		}
+
+		public static bool Toggle (string name, ref bool value, GUILayoutOption nameLayout = null)
+		{
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
+			{
+				//RenderName (name, nameLayout);
+				GUILayout.Space (2);
+				value = GUILayout.Toggle (value, name, nameLayout);
+			}
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
+			return value;
+		}
+
+		public static void EnumButton<T> (string name, T value, System.Action<T> onChanged, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null) where T : struct, System.IConvertible
+		{
+			if (!typeof (T).IsEnum) 
+			{
+				throw new System.ArgumentException("EcoGUI.EnumButton: T must be an enum(erated) type");
+			}
+
+			if (!skipHorizontal) GUILayout.BeginHorizontal ();
+			{
+				RenderName (name, nameLayout);
+				bool clicked = false;
+				if (valLayout != null)  clicked = GUILayout.Button (value.ToString(), valLayout);
+				else 					clicked = GUILayout.Button (value.ToString());
+
+				if (clicked)
+				{
+					List<string> items = new List<string>(System.Enum.GetNames (value.GetType()));
+					int selected = items.IndexOf (value.ToString());
+					EditorCtrl.self.StartSelection (items.ToArray(), selected, delegate(int index) {
+						onChanged ((T)System.Enum.Parse (typeof(T), items[index]));
+					});
+				}
+			}
+			if (!skipHorizontal) GUILayout.EndHorizontal ();
+		}
+
+		private static void RenderName (string name, GUILayoutOption nameLayout = null)
+		{
+			if (!string.IsNullOrEmpty (name)) 
+			{
+				GUILayout.Space (2);
+				if (nameLayout != null) GUILayout.Label (name, nameLayout);
+				else 					GUILayout.Label (name);
+			}
 		}
 	}
 }

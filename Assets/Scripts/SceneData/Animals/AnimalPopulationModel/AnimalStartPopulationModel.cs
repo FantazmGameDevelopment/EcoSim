@@ -8,9 +8,13 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 {
 	public class AnimalStartPopulationModel : IAnimalPopulationModel
 	{
+		public const string XML_ELEMENT = "startpopmodel";
+
 		[System.Serializable]
-		public class Nests : Data
+		public class Nests : AnimalPopulationModelDataBase
 		{
+			public string XML_ELEMENT = "nests";
+
 			public class Nest
 			{
 				public const string XML_ELEMENT = "nest";
@@ -40,7 +44,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					nest.totalCapacity = int.Parse (reader.GetAttribute ("cap"));
 					nest.malesCapacity = int.Parse (reader.GetAttribute ("mcap"));
 					nest.females = int.Parse (reader.GetAttribute ("fcap"));
-					//IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
+					IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
 					return nest;
 				}
 				
@@ -115,13 +119,28 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			}
 		}
 
-		public const string XML_ELEMENT = "startpopmodel";
-
 		public Nests nests = new Nests ();
 
 		public override void Load (XmlTextReader reader, Scene scene)
 		{
-
+			if (!reader.IsEmptyElement) 
+			{
+				while (reader.Read()) 
+				{
+					string readerName = reader.Name.ToLower ();
+					XmlNodeType nType = reader.NodeType;
+					if (nType == XmlNodeType.Element)
+					{
+						// Add more AnimalPopulationModelDataBases
+						if (readerName == nests.XML_ELEMENT) {
+							nests.Load (reader, scene);
+						} 
+					}
+					else if ((nType == XmlNodeType.EndElement) && (readerName == XML_ELEMENT)) {
+						break;
+					}
+				}
+			}
 		}
 		
 		public override void Save (XmlTextWriter writer, Scene scene)

@@ -37,6 +37,8 @@ namespace Ecosim.SceneData
 							}
 						}
 					}
+				} catch (System.Exception ex) {
+					Debug.LogError (ex);
 				} finally {
 					reader.Close ();
 				}

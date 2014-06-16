@@ -11,18 +11,19 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		public const string XML_ELEMENT = "growthmodel";
 
 		[System.Serializable]
-		public class FixedNumber : Data
+		public class FixedNumber : AnimalPopulationModelDataBase
 		{
 			public string XML_ELEMENT = "fixed";
 
 			public enum Type {
-				PerFemale
+				PerFemale,
+				PerPair
 			}
 			public Type type;
 			public int minLitterSize;
 			public int maxLitterSize;
 
-			public override void Load (XmlTextReader reader, Scene scene)
+			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
 				this.type = (Type)System.Enum.Parse(typeof(Type), reader.GetAttribute ("type"));
@@ -31,7 +32,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
 			}
 
-			public override void Save (XmlTextWriter writer, Scene scene)
+			public void Save (XmlTextWriter writer, Scene scene)
 			{
 				writer.WriteStartElement (XML_ELEMENT);
 				base.Save (writer, scene);
@@ -70,6 +71,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					XmlNodeType nType = reader.NodeType;
 					if (nType == XmlNodeType.Element)
 					{
+						// Add more AnimalPopulationModelDataBases
 						if (readerName == fixedNumber.XML_ELEMENT) {
 							fixedNumber.Load (reader, scene);
 						} 

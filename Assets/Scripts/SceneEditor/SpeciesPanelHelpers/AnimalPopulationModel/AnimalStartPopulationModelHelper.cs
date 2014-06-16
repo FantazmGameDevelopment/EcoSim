@@ -31,82 +31,89 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 
 		private void RenderNests ()
 		{
-			this.model.nests.use = GUILayout.Toggle (this.model.nests.use, "Use nests");
-			if (!this.model.nests.use) return;
+			GUILayout.BeginVertical ();//EditorCtrl.self.skin.box);
+			{
+				GUILayout.Label (" Start Population");
 
-			GUILayout.BeginHorizontal ();
-			{
-				if (GUILayout.Button ("Open Nests Editor")) 
+				if (this.RenderHeaderStart ("Nests", this.model.nests, true))
 				{
-					if (this.onCreateExtraPanel != null) {
-						ExtraPanel newPanel;
-						this.onCreateExtraPanel (typeof(AnimalNestsExtraPanel), out newPanel);
-						this.extraPanel = (AnimalNestsExtraPanel)newPanel;
-					}
-				}
-				
-				// TODO: Open extra panel for Animal rules
-				/*if (GUILayout.Button ("Open Rules"))
-				{
-				}*/
-			}
-			GUILayout.EndHorizontal();
-			
-			// Nests
-			if (this.model.nests.nests.Length > 0)
-			{
-				// Nests list
-				GUILayout.BeginHorizontal ();
-				{
-					if (GUILayout.Button (animalState.nestsListFoldedOpen ? (panel.ctrl.foldedOpenSmall) : (panel.ctrl.foldedCloseSmall), panel.ctrl.icon12x12)) {
-						animalState.nestsListFoldedOpen = !animalState.nestsListFoldedOpen;
-					}
-					GUILayout.Label ("Nests", GUILayout.Width (40));
-				}
-				GUILayout.EndHorizontal ();
-				
-				if (animalState.nestsListFoldedOpen)
-				{
-					int idx = 0;
-					foreach (AnimalStartPopulationModel.Nests.Nest n in this.model.nests.nests)
+					GUILayout.BeginHorizontal ();
 					{
-						GUILayout.BeginHorizontal (panel.ctrl.skin.box);
+						if (GUILayout.Button ("Open Nests Editor")) 
 						{
-							GUILayout.Label (string.Format(" Nest #{0} ({1},{2})", idx++, n.x, n.y));
-							
-							AnimalNestsExtraPanel animExtraPanel = (AnimalNestsExtraPanel)panel.extraPanel;
-							if (animExtraPanel != null)
-							{
-								if (GUILayout.Button ("Edit", GUILayout.Width(50))) 
-								{
-									animExtraPanel.SetAnimal (animalState.animal);
-									animExtraPanel.EditNest (n);
-								}
-								GUILayout.Space (2);
-								if (GUILayout.Button ("Focus", GUILayout.Width(50))) 
-								{
-									animExtraPanel.SetAnimal (animalState.animal);
-									animExtraPanel.FocusOnNest (n);
-								}
-							}
-							
-							GUILayout.Space (2);
-							if (GUILayout.Button ("-", GUILayout.Width (20))) 
-							{
-								if (animExtraPanel != null) {
-									animExtraPanel.DeleteNest (n);
-								}
-
-								List<AnimalStartPopulationModel.Nests.Nest> nests = new List<AnimalStartPopulationModel.Nests.Nest> (this.model.nests.nests);
-								nests.Remove (n);
-								this.model.nests.nests = nests.ToArray ();
+							if (this.onCreateExtraPanel != null) {
+								ExtraPanel newPanel;
+								this.onCreateExtraPanel (typeof(AnimalNestsExtraPanel), out newPanel);
+								this.extraPanel = (AnimalNestsExtraPanel)newPanel;
 							}
 						}
-						GUILayout.EndHorizontal ();
+						
+						// TODO: Open extra panel for Animal rules
+						/*if (GUILayout.Button ("Open Rules"))
+						{
+						}*/
 					}
-					//GUILayout.FlexibleSpace ();
+					GUILayout.EndHorizontal();
+					
+					// Nests
+					if (this.model.nests.nests.Length > 0)
+					{
+						// Nests list
+						GUILayout.BeginHorizontal ();
+						{
+							if (GUILayout.Button (animalState.nestsListFoldedOpen ? (panel.ctrl.foldedOpenSmall) : (panel.ctrl.foldedCloseSmall), panel.ctrl.icon12x12)) {
+								animalState.nestsListFoldedOpen = !animalState.nestsListFoldedOpen;
+							}
+							GUILayout.Label ("Nests", GUILayout.Width (40));
+						}
+						GUILayout.EndHorizontal ();
+						
+						if (animalState.nestsListFoldedOpen)
+						{
+							int idx = 0;
+							foreach (AnimalStartPopulationModel.Nests.Nest n in this.model.nests.nests)
+							{
+								GUILayout.BeginHorizontal (panel.ctrl.skin.box);
+								{
+									GUILayout.Label (string.Format(" Nest #{0} ({1},{2})", idx++, n.x, n.y));
+									
+									AnimalNestsExtraPanel animExtraPanel = (AnimalNestsExtraPanel)panel.extraPanel;
+									if (animExtraPanel != null)
+									{
+										if (GUILayout.Button ("Edit", GUILayout.Width(50))) 
+										{
+											animExtraPanel.SetAnimal (animalState.animal);
+											animExtraPanel.EditNest (n);
+										}
+										GUILayout.Space (2);
+										if (GUILayout.Button ("Focus", GUILayout.Width(50))) 
+										{
+											animExtraPanel.SetAnimal (animalState.animal);
+											animExtraPanel.FocusOnNest (n);
+										}
+									}
+									
+									GUILayout.Space (2);
+									if (GUILayout.Button ("-", GUILayout.Width (20))) 
+									{
+										if (animExtraPanel != null) {
+											animExtraPanel.DeleteNest (n);
+										}
+
+										List<AnimalStartPopulationModel.Nests.Nest> nests = new List<AnimalStartPopulationModel.Nests.Nest> (this.model.nests.nests);
+										nests.Remove (n);
+										this.model.nests.nests = nests.ToArray ();
+									}
+								}
+								GUILayout.EndHorizontal ();
+							}
+							//GUILayout.FlexibleSpace ();
+						}
+					}
 				}
+				this.RenderHeaderEnd (this.model.nests);
 			}
+			GUILayout.EndVertical ();
 		}
 
 		public void Dispose ()

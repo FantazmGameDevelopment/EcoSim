@@ -1,3 +1,4 @@
+using UnityEngine;
 using System.Xml;
 using Ecosim;
 using Ecosim.SceneData;
@@ -22,6 +23,40 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 		}
 
 		public abstract void Render (int mx, int my);
+
+		protected bool RenderHeaderStart (string name, IAnimalPopulationModel.AnimalPopulationModelDataBase data, bool renderBox)
+		{
+			if (data.show)
+			{
+				if (renderBox) 	GUILayout.BeginVertical (EditorCtrl.self.skin.box);
+				else 			GUILayout.BeginVertical ();
+				{
+					EcoGUI.skipHorizontal = true;
+					GUILayout.BeginHorizontal ();
+					{
+						EcoGUI.Toggle ("", ref data.use, GUILayout.Width (20));
+						if (data.use) 
+						{
+							EcoGUI.Foldout (null, ref data.opened, GUILayout.Width (20));
+							GUILayout.Space (5);
+						}
+						else GUILayout.Space (19);
+						GUILayout.Label (name);
+					}
+					GUILayout.EndHorizontal ();
+					EcoGUI.skipHorizontal = false;
+				}
+				return (data.use) ? data.opened : false;
+			}
+			return false;
+		}
+		protected void RenderHeaderEnd (IAnimalPopulationModel.AnimalPopulationModelDataBase data)
+		{
+			if (data.show)
+			{
+				GUILayout.EndVertical ();
+			}
+		}
 	}
 }
 

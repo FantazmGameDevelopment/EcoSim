@@ -64,7 +64,6 @@ namespace Ecosim.SceneEditor
 		{
 			List<AnimalType> animalTypes = new List<AnimalType>(scene.animalTypes);
 			animalTypes.Remove (animalState.animal);
-			scene.progression.DeleteData (animalState.animal.dataName);
 
 			scene.animalTypes = animalTypes.ToArray();
 			scene.UpdateReferences ();

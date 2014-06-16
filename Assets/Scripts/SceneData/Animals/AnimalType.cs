@@ -25,8 +25,6 @@ namespace Ecosim.SceneData
 		public float wanderFemale;*/
 
 		public List<IAnimalPopulationModel> models;
-
-		public string dataName;
 		
 		public AnimalType ()
 		{
@@ -36,19 +34,6 @@ namespace Ecosim.SceneData
 		{
 			this.name = name;
 			this.index = scene.animalTypes.Length;
-
-			this.dataName = StringUtil.MakeValidID (name, true);
-			
-			// Data name
-			string newDataName = this.dataName;
-			int tries = 1;
-			while (scene.progression.HasData (newDataName)) {
-				newDataName = this.dataName + tries;
-				tries++;
-			}
-			this.dataName = newDataName;
-
-			scene.progression.AddData (this.dataName, new BitMap8 (scene));
 
 			/*foodParamName = scene.progression.GetAllDataNames (false)[0];
 			foodOverruleParamName = foodParamName;
@@ -78,12 +63,6 @@ namespace Ecosim.SceneData
 			animal.moveDistanceFemale = int.Parse(reader.GetAttribute ("movedistf"));
 			animal.wanderMale = float.Parse(reader.GetAttribute ("wanderm"));
 			animal.wanderFemale = float.Parse(reader.GetAttribute ("wanderf"));*/
-			animal.dataName = reader.GetAttribute ("dataname");
-
-			if (string.IsNullOrEmpty(animal.dataName)) 
-				animal.dataName = string.Format("_animal{0}", StringUtil.MakeValidID(animal.name));
-
-			// TODO: ADD TYPE (S,M,L)
 		}
 		
 		public virtual void Save (XmlTextWriter writer, Scene scene)
@@ -91,8 +70,6 @@ namespace Ecosim.SceneData
 			writer.WriteStartElement (XML_ELEMENT);
 			SaveBase (writer, scene);
 			writer.WriteEndElement ();
-
-			// TODO: ADD TYPE (S,M,L)
 		}
 		protected void SaveBase (XmlTextWriter writer, Scene scene)
 		{
@@ -104,7 +81,6 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("movedistf", moveDistanceFemale.ToString());
 			writer.WriteAttributeString ("wanderm", wanderMale.ToString());
 			writer.WriteAttributeString ("wanderf", wanderFemale.ToString());*/
-			writer.WriteAttributeString ("dataname", dataName);
 		}
 		
 		public virtual void UpdateReferences (Scene scene)

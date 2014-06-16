@@ -32,6 +32,21 @@ namespace Ecosim.SceneData
 			AnimalPopulationGrowthModel gm = new AnimalPopulationGrowthModel ();
 			gm.fixedNumber.show = true;
 			this.models.Add (gm);
+
+			// Decrease population model
+			AnimalPopulationDecreaseModel dm = new AnimalPopulationDecreaseModel ();
+			dm.fixedNumber.show = true;
+			dm.specifiedNumber.show = true;
+			dm.specifiedNumber.naturalDeathRate.show = true;
+			dm.specifiedNumber.starvation.show = true;
+			dm.specifiedNumber.artificialDeath.show = true;
+			this.models.Add (dm);
+
+			// Land use population model
+			AnimalPopulationLandUseModel lu = new AnimalPopulationLandUseModel ();
+			lu.food.show = true;
+			lu.movement.show = true;
+			this.models.Add (lu);
 		}
 
 		public static LargeAnimalType Load (XmlTextReader reader, Scene scene)

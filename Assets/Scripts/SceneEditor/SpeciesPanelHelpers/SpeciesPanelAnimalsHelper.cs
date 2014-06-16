@@ -4,6 +4,7 @@ using Ecosim.SceneData;
 using Ecosim.SceneData.AnimalPopulationModel;
 using Ecosim.SceneEditor;
 using Ecosim.SceneEditor.Helpers.AnimalPopulationModel;
+using System.Reflection;
 
 namespace Ecosim.SceneEditor.Helpers
 {
@@ -27,13 +28,39 @@ namespace Ecosim.SceneEditor.Helpers
 		}
 
 		private static Dictionary<System.Type, System.Type> _modelHelpers;
+		/// <summary>
+		/// Gets the model helpers. The first time the IAnimalPopulationModelHelpers are linked to the IAnimalPopulationModels.
+		/// This is done by retrieving the types from the Assembly. The helpers are searched like this:
+		/// "[IAnimalPopulationModelHelpers namespace].[found type]Helper"
+		/// </summary>
+		/// <value>The model helpers.</value>
 		private static Dictionary<System.Type, System.Type> modelHelpers {
 			get {
 				if (_modelHelpers == null) 
 				{
 					_modelHelpers = new Dictionary<System.Type, System.Type>();
-					_modelHelpers.Add (typeof(AnimalStartPopulationModel), typeof(AnimalStartPopulationModelHelper));
-					_modelHelpers.Add (typeof(AnimalPopulationGrowthModel), typeof(AnimalPopulationGrowthModelHelper));
+
+					List<System.Type> modelTypes = new List<System.Type>();
+					foreach (System.Type type in Assembly.GetAssembly (typeof (IAnimalPopulationModel)).GetTypes ()) 
+					{
+						if (type.IsClass && type.IsSubclassOf (typeof (IAnimalPopulationModel))) {
+							modelTypes.Add (type);
+						}
+					}
+
+					foreach (System.Type modelType in modelTypes) 
+					{
+						string modelStr = modelType.ToString();
+						string modelName = modelStr.Substring (modelStr.LastIndexOf (".") + 1);
+						string mHelperName = string.Format("{0}.{1}Helper", typeof(IAnimalPopulationModelHelper).Namespace, modelName);
+
+						System.Type mHelperType = System.Type.GetType (mHelperName);
+						if (mHelperType != null) {
+							_modelHelpers.Add (modelType, mHelperType);
+						} else {
+							Debug.LogError ("Could not find IAnimalPopulationModelHelper named '" + mHelperName + "'");
+						}
+					}
 				}
 				return _modelHelpers;
 			}
@@ -160,7 +187,7 @@ namespace Ecosim.SceneEditor.Helpers
 			// Render each population model helpers
 			foreach (IAnimalPopulationModelHelper mh in ast.modelHelpers) {
 				mh.Render (mx, my);
-				GUILayout.Space (5f);
+				GUILayout.Space (2f);
 			}
 		}
 	}
