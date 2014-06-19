@@ -124,7 +124,7 @@ namespace Ecosim.SceneEditor.Helpers
 						{
 							SpeciesPanel.AnimalState tmp = ast;
 							ctrl.StartDialog (string.Format("Delete animal '{0}'?", tmp.animal.name), newVal => { 
-								panel.DeleteAnimal (ast);
+								panel.DeleteAnimal (tmp);
 							}, null);
 						}
 					}

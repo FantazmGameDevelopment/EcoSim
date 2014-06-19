@@ -13,12 +13,12 @@ namespace Ecosim.SceneData.Action
 	{
 		public const string XML_ELEMENT = "animals";
 
-		private const int SLICE_SIZE = 128;
-		private volatile int activeThreads;
+		protected const int SLICE_SIZE = 128;
+		protected volatile int activeThreads;
 
 		public bool skipNormalAnimalsLogic = false;
 
-		private Data successionArea = null;
+		protected Data successionArea = null;
 		
 		public AnimalsAction (Scene scene, int id) : base(scene, id)
 		{
@@ -37,7 +37,7 @@ namespace Ecosim.SceneData.Action
 		 * ProcessSlice is started in new thread, arguments should be of type int and is startY position
 		 * of the slice.
 		 */
-		void ProcessSlice (object arguments)
+		protected virtual void ProcessSlice (object arguments)
 		{
 			// Deduct the amount of active threads
 			activeThreads--;
@@ -77,6 +77,11 @@ namespace Ecosim.SceneData.Action
 		{
 			int id = int.Parse (reader.GetAttribute ("id"));
 			AnimalsAction action = new AnimalsAction (scene, id);
+			LoadBase (action, scene, reader);
+			return action;
+		}
+		protected static void LoadBase (AnimalsAction action, Scene scene, XmlTextReader reader)
+		{
 			action.skipNormalAnimalsLogic = (reader.GetAttribute("skipnormalanimalslogic") == "true") ? true : false;
 			
 			if (!reader.IsEmptyElement) 
@@ -90,21 +95,21 @@ namespace Ecosim.SceneData.Action
 					}
 				}
 			}
-			
-			return action;
 		}
 		
 		public override void Save (XmlTextWriter writer)
 		{
 			writer.WriteStartElement (XML_ELEMENT);
-			writer.WriteAttributeString ("id", id.ToString ());
-			writer.WriteAttributeString ("skipnormalanimalslogic", skipNormalAnimalsLogic.ToString().ToLower());
-			
+			SaveBase (this, writer);
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
 			}
-			
 			writer.WriteEndElement ();
-		}		
+		}
+		public virtual void SaveBase (AnimalsAction action, XmlTextWriter writer)
+		{
+			writer.WriteAttributeString ("id", action.id.ToString ());
+			writer.WriteAttributeString ("skipnormalanimalslogic", action.skipNormalAnimalsLogic.ToString().ToLower());
+		}
 	}
 }

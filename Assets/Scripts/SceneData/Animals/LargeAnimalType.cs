@@ -9,6 +9,11 @@ namespace Ecosim.SceneData
 {
 	public class LargeAnimalType : AnimalType
 	{
+		public AnimalStartPopulationModel startPopModel { get; private set; }
+		public AnimalPopulationGrowthModel growthModel { get; private set; }
+		public AnimalPopulationDecreaseModel decreaseModel { get; private set; }
+		public AnimalPopulationLandUseModel landUseModel { get; private set; }
+
 		public LargeAnimalType ()
 		{
 			SetupModels ();
@@ -24,29 +29,29 @@ namespace Ecosim.SceneData
 			this.models = new List<IAnimalPopulationModel> ();
 
 			// Start population model
-			AnimalStartPopulationModel sm = new AnimalStartPopulationModel ();
-			sm.nests.show = true;
-			this.models.Add (sm);
+			startPopModel = new AnimalStartPopulationModel ();
+			startPopModel.nests.show = true;
+			this.models.Add (startPopModel);
 
 			// Growth population model
-			AnimalPopulationGrowthModel gm = new AnimalPopulationGrowthModel ();
-			gm.fixedNumber.show = true;
-			this.models.Add (gm);
+			growthModel = new AnimalPopulationGrowthModel ();
+			growthModel.fixedNumber.show = true;
+			this.models.Add (growthModel);
 
 			// Decrease population model
-			AnimalPopulationDecreaseModel dm = new AnimalPopulationDecreaseModel ();
-			dm.fixedNumber.show = true;
-			dm.specifiedNumber.show = true;
-			dm.specifiedNumber.naturalDeathRate.show = true;
-			dm.specifiedNumber.starvation.show = true;
-			dm.specifiedNumber.artificialDeath.show = true;
-			this.models.Add (dm);
+			decreaseModel = new AnimalPopulationDecreaseModel ();
+			decreaseModel.fixedNumber.show = true;
+			decreaseModel.specifiedNumber.show = true;
+			decreaseModel.specifiedNumber.naturalDeathRate.show = true;
+			decreaseModel.specifiedNumber.starvation.show = true;
+			decreaseModel.specifiedNumber.artificialDeath.show = true;
+			this.models.Add (decreaseModel);
 
 			// Land use population model
-			AnimalPopulationLandUseModel lu = new AnimalPopulationLandUseModel ();
-			lu.food.show = true;
-			lu.movement.show = true;
-			this.models.Add (lu);
+			landUseModel = new AnimalPopulationLandUseModel ();
+			landUseModel.food.show = true;
+			landUseModel.movement.show = true;
+			this.models.Add (landUseModel);
 		}
 
 		public static LargeAnimalType Load (XmlTextReader reader, Scene scene)

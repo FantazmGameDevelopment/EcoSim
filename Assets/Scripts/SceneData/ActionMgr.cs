@@ -15,7 +15,7 @@ namespace Ecosim.SceneData
 		{
 			typeof(SuccessionAction),
 			typeof(PlantsAction),
-			typeof(AnimalsAction),
+			typeof(LargeAnimalsAction),
 			typeof(AreaAction),
 			typeof(InventarisationAction),
 			typeof(ResearchPointAction),

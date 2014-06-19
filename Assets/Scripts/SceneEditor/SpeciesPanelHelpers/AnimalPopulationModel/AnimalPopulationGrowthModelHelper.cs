@@ -27,8 +27,8 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 				if (this.RenderHeaderStart ("Fixed", this.model.fixedNumber, true))
 				{
 					// Type
-					EcoGUI.EnumButton<AnimalPopulationGrowthModel.FixedNumber.Type>("Type", model.fixedNumber.type, 
-					                                                                delegate(AnimalPopulationGrowthModel.FixedNumber.Type newType) {
+					EcoGUI.EnumButton<AnimalPopulationGrowthModel.FixedNumber.Types>("Type", model.fixedNumber.type, 
+					                                                                delegate(AnimalPopulationGrowthModel.FixedNumber.Types newType) {
 						model.fixedNumber.type = newType;
 					}, GUILayout.Width (50), GUILayout.Width (150)); 
 					

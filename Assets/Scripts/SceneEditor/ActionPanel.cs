@@ -180,11 +180,23 @@ namespace Ecosim.SceneEditor
 
 		void HandleAnimalsAction (AnimalsAction action)
 		{
-			GUILayout.BeginHorizontal ();
-			{
+			//GUILayout.BeginHorizontal ();
+			//{
 				action.skipNormalAnimalsLogic = GUILayout.Toggle (action.skipNormalAnimalsLogic, "Skip normal animals logic");
-			}
-			GUILayout.EndHorizontal ();
+			//}
+			//GUILayout.EndHorizontal ();
+		}
+
+		void HandleLargeAnimalsAction (LargeAnimalsAction action)
+		{
+			//GUILayout.BeginHorizontal ();
+			//{
+				action.skipNormalAnimalsLogic = GUILayout.Toggle (action.skipNormalAnimalsLogic, "Skip normal animals logic");
+				action.skipNormalGrowthLogic = GUILayout.Toggle (action.skipNormalGrowthLogic, "Skip normal growth logic");
+				action.skipNormalDecreaseLogic = GUILayout.Toggle (action.skipNormalDecreaseLogic, "Skip normal decrease logic");
+				action.skipNormalLandUseLogic = GUILayout.Toggle (action.skipNormalLandUseLogic, "Skip normal land use logic");
+			//}
+			//GUILayout.EndHorizontal ();
 		}
 
 		void HandleActionObjectAction (ActionObjectAction action)
@@ -402,6 +414,8 @@ namespace Ecosim.SceneEditor
 						HandleSuccessionAction ((SuccessionAction)action);
 					} else if (action is PlantsAction) {
 						HandlePlantsAction ((PlantsAction)action);
+					} else if (action is LargeAnimalsAction) {
+						HandleLargeAnimalsAction ((LargeAnimalsAction)action);
 					} else if (action is AnimalsAction) {
 						HandleAnimalsAction ((AnimalsAction)action);
 					} else if (action is ActionObjectAction) {

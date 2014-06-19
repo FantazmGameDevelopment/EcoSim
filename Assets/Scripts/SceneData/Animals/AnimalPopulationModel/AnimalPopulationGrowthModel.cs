@@ -15,18 +15,18 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		{
 			public string XML_ELEMENT = "fixed";
 
-			public enum Type {
+			public enum Types {
 				PerFemale,
 				PerPair
 			}
-			public Type type;
+			public Types type;
 			public int minLitterSize;
 			public int maxLitterSize;
 
 			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
-				this.type = (Type)System.Enum.Parse(typeof(Type), reader.GetAttribute ("type"));
+				this.type = (Types)System.Enum.Parse(typeof(Types), reader.GetAttribute ("type"));
 				this.minLitterSize = int.Parse (reader.GetAttribute ("minlittersize"));
 				this.maxLitterSize = int.Parse (reader.GetAttribute ("maxlittersize"));
 				IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
