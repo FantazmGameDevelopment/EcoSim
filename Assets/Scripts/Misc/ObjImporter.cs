@@ -32,7 +32,7 @@ namespace Ecosim
 		}
  
 		// Use this for initialization
-		public static Mesh ImportFile (string filePath)
+		public static Mesh ImportFile (string filePath, Vector3 scale)
 		{
 			meshStruct newMesh = createMeshStruct (filePath);
 			populateMeshStruct (ref newMesh);
@@ -45,7 +45,7 @@ namespace Ecosim
         	 * for the appropriate Unity mesh array.
         	 */
 			foreach (Vector3 v in newMesh.faceData) {
-				newVerts [i] = newMesh.vertices [(int)v.x - 1];
+				newVerts [i] = Vector3.Scale (newMesh.vertices [(int)v.x - 1], scale);
 				if (v.y >= 1)
 					newUVs [i] = newMesh.uv [(int)v.y - 1];
  
@@ -157,6 +157,8 @@ namespace Ecosim
 						currentText = currentText.Trim ();
 						brokenString = currentText.Split (splitIdentifier, 50);
 						switch (brokenString [0]) {
+						case "#":
+							break;
 						case "g":
 							break;
 						case "usemtl":

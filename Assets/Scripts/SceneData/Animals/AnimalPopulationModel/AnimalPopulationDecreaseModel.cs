@@ -15,18 +15,18 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		{
 			public string XML_ELEMENT = "fixed";
 			
-			public enum Type {
+			public enum Types {
 				Absolute,
 				Relative
 			}
-			public Type type;
+			public Types type;
 			public int absolute;
 			public float relative;
 			
 			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
-				this.type = (Type)System.Enum.Parse(typeof(Type), reader.GetAttribute ("type"));
+				this.type = (Types)System.Enum.Parse(typeof(Types), reader.GetAttribute ("type"));
 				this.absolute = int.Parse (reader.GetAttribute ("abs"));
 				this.relative = float.Parse (reader.GetAttribute ("rel"));
 				IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
@@ -80,13 +80,15 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			public class Starvation : AnimalPopulationModelDataBase
 			{
 				public string XML_ELEMENT = "starvation";
-				
-				public float minStarveRate;
-				public float maxStarveRate;
+
+				public int foodRequiredPerAnimal;
+				public float minStarveRate = 1f;
+				public float maxStarveRate = 1f;
 				
 				public void Load (XmlTextReader reader, Scene scene)
 				{
 					base.Load (reader, scene);
+					this.foodRequiredPerAnimal = int.Parse (reader.GetAttribute ("foodreq"));
 					this.minStarveRate = float.Parse (reader.GetAttribute ("min"));
 					this.maxStarveRate = float.Parse (reader.GetAttribute ("max"));
 					IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
@@ -96,6 +98,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				{
 					writer.WriteStartElement (XML_ELEMENT);
 					base.Save (writer, scene);
+					writer.WriteAttributeString ("foodreq", this.foodRequiredPerAnimal.ToString());
 					writer.WriteAttributeString ("min", this.minStarveRate.ToString());
 					writer.WriteAttributeString ("max", this.maxStarveRate.ToString());
 					writer.WriteEndElement ();
@@ -354,6 +357,24 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		public override string GetXMLElement ()
 		{
 			return XML_ELEMENT;
+		}
+
+		public override void PrepareSuccession ()
+		{
+			fixedNumber.PrepareSuccession ();
+			specifiedNumber.PrepareSuccession ();
+		}
+		
+		public override void DoSuccession ()
+		{
+			fixedNumber.DoSuccession ();
+			specifiedNumber.DoSuccession ();
+		}
+		
+		public override void FinalizeSuccession ()
+		{
+			fixedNumber.FinalizeSuccession ();
+			specifiedNumber.FinalizeSuccession ();
 		}
 	}
 }

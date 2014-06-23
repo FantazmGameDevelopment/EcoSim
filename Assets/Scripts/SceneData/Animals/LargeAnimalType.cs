@@ -14,6 +14,10 @@ namespace Ecosim.SceneData
 		public AnimalPopulationDecreaseModel decreaseModel { get; private set; }
 		public AnimalPopulationLandUseModel landUseModel { get; private set; }
 
+		public Data movementMap;
+		public Data deathMap;
+		public Data fouragingMap;
+
 		public LargeAnimalType ()
 		{
 			SetupModels ();

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Ecosim;
 using Ecosim.SceneData;
+using Ecosim.SceneData.AnimalPopulationModel;
 using Ecosim.SceneData.Action;
 
 namespace Ecosim.EcoScript
@@ -173,6 +174,10 @@ namespace Ecosim.EcoScript
 				scene.progression.allowMeasures = value;
 			}			
 		}
+
+		public Data GetTargetArea (int index) {
+			return scene.progression.GetData (Progression.TARGET_ID + index.ToString());
+		}
 		
 		public void EnableBuilding (int buildingId, bool enable) {
 			scene.buildings.GetBuilding (buildingId).isActive = enable;
@@ -198,7 +203,23 @@ namespace Ecosim.EcoScript
 			}
 			return idList.ToArray ();
 		}
-		
+
+		public AnimalType GetAnimal (string name)
+		{
+			name = name.ToLower ();
+			name = name.Replace (" ", "");
+			name = name.Trim ();
+			foreach (AnimalType at in scene.animalTypes) {
+				string atName = at.name;
+				atName = atName.ToLower ();
+				atName = atName.Replace (" ", "");
+				atName = atName.Trim ();
+				if (atName == name)
+					return at;
+			}
+			return null;
+		}
+
 		/**
 		 * Enables/Disables action with given id, enable == true => enble action otherwise disable
 		 */

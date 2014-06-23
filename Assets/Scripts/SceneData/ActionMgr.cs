@@ -455,5 +455,15 @@ namespace Ecosim.SceneData
 				}
 			}
 		}
+
+		// Missing actions
+		private static List<string> missingActions = new List<string>();
+		public static void LogMissingAction (string action)
+		{
+			if (!missingActions.Contains (action)) {
+				missingActions.Add (action);
+				UnityEngine.Debug.Log ("Action '" + action + "' is not referencing an AreaAction");
+			}
+		}
 	}
 }

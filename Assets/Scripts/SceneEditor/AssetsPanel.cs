@@ -10,8 +10,6 @@ namespace Ecosim.SceneEditor
 {
 	public class AssetsPanel : Panel
 	{
-		
-		
 		Scene scene;
 		EditorCtrl ctrl;
 		private Vector2 scrollPos;

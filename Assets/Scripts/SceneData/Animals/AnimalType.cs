@@ -87,11 +87,54 @@ namespace Ecosim.SceneData
 		{
 
 		}
+
+		public virtual void PrepareSuccession ()
+		{
+			if (this.models != null)
+			{
+				try {
+					foreach (IAnimalPopulationModel m in this.models) {
+						m.PrepareSuccession ();
+					}
+				} catch (System.Exception e) {
+					Log.LogException (e);
+				}
+			}
+		}
 		
+		public virtual void DoSuccession ()
+		{
+			if (this.models != null)
+			{
+				try {
+					foreach (IAnimalPopulationModel m in this.models) {
+						m.DoSuccession ();
+					}
+				} catch (System.Exception e) {
+					Log.LogException (e);
+				}
+			}
+		}
+		
+		public virtual void FinalizeSuccession ()
+		{
+			if (this.models != null)
+			{
+				try {
+					foreach (IAnimalPopulationModel m in this.models) {
+						m.FinalizeSuccession ();
+					}
+				} catch (System.Exception e) {
+					Log.LogException (e);
+				}
+			}
+		}
+
 		public static AnimalType Find (Scene scene, string name)
 		{
+			name = name.ToLower ();
 			foreach (AnimalType t in scene.animalTypes) {
-				if (t.name == name) return t;
+				if (t.name.ToLower() == name) return t;
 			}
 			return null;
 		}

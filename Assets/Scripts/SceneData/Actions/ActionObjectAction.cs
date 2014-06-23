@@ -186,7 +186,7 @@ namespace Ecosim.SceneData.Action
 				if (obj.enabled)
 				{
 					// Get the data from the object and apply all the rules on the coordinate
-					Data objData = scene.progression.GetData (group.dataName.ToLower() + "_obj" + obj.index);
+					Data objData = obj.data;
 					foreach (ValueCoordinate vc in objData.EnumerateNotZero())
 					{
 						foreach (ActionObjectInfluenceRule ir in group.influenceRules)

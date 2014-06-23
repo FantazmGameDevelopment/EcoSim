@@ -46,7 +46,6 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 					}
 					GUILayout.EndHorizontal ();
 
-					EcoGUI.IntField ("Required food", ref this.model.food.foodRequiredPerAnimal, 100, 50);
 					EcoGUI.IntField ("Carry capacity", ref this.model.food.foodCarryCapacity, 100, 50);
 				}
 				this.RenderHeaderEnd (this.model.food);

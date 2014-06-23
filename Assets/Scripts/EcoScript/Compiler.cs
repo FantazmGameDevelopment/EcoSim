@@ -353,6 +353,7 @@ using System.Collections.Generic;
 using Ecosim;
 using Ecosim.EcoScript;
 using Ecosim.SceneData;
+using Ecosim.SceneData.AnimalPopulationModel;
 using Ecosim.SceneData.VegetationRules;
 using Ecosim.SceneData.Action;
 

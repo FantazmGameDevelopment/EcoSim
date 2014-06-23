@@ -17,7 +17,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 
 			public enum Types {
 				PerFemale,
-				PerPair
+				//PerPair
 			}
 			public Types type;
 			public int minLitterSize;
@@ -98,6 +98,21 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		public override string GetXMLElement ()
 		{
 			return XML_ELEMENT;
+		}
+
+		public override void PrepareSuccession ()
+		{
+			fixedNumber.PrepareSuccession ();
+		}
+		
+		public override void DoSuccession ()
+		{
+			fixedNumber.DoSuccession ();
+		}
+		
+		public override void FinalizeSuccession ()
+		{
+			fixedNumber.FinalizeSuccession ();
 		}
 	}
 }

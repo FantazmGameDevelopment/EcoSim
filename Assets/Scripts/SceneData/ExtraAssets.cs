@@ -247,7 +247,7 @@ namespace Ecosim.SceneData
 			}
 			try {
 				string objectPath = path + "Assets" + Path.DirectorySeparatorChar + name + ".obj";
-				mesh = ObjImporter.ImportFile (objectPath);
+				mesh = ObjImporter.ImportFile (objectPath, Vector3.one * 0.01f); // So it matches the default Unity mesh import settings
 				if (mesh != null) {
 					meshes.Add (name, mesh);
 				}

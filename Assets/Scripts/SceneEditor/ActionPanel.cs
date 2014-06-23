@@ -192,9 +192,9 @@ namespace Ecosim.SceneEditor
 			//GUILayout.BeginHorizontal ();
 			//{
 				action.skipNormalAnimalsLogic = GUILayout.Toggle (action.skipNormalAnimalsLogic, "Skip normal animals logic");
-				action.skipNormalGrowthLogic = GUILayout.Toggle (action.skipNormalGrowthLogic, "Skip normal growth logic");
-				action.skipNormalDecreaseLogic = GUILayout.Toggle (action.skipNormalDecreaseLogic, "Skip normal decrease logic");
-				action.skipNormalLandUseLogic = GUILayout.Toggle (action.skipNormalLandUseLogic, "Skip normal land use logic");
+				//action.skipNormalGrowthLogic = GUILayout.Toggle (action.skipNormalGrowthLogic, "Skip normal growth logic");
+				//action.skipNormalDecreaseLogic = GUILayout.Toggle (action.skipNormalDecreaseLogic, "Skip normal decrease logic");
+				//action.skipNormalLandUseLogic = GUILayout.Toggle (action.skipNormalLandUseLogic, "Skip normal land use logic");
 			//}
 			//GUILayout.EndHorizontal ();
 		}

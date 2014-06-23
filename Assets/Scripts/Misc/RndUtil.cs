@@ -25,7 +25,7 @@ namespace Ecosim
 		{
 			if (max <= min)
 				return min;
-			return min + (max - min) * (float)rnd.NextDouble ();
+			return min + ((max - min) * (float)rnd.NextDouble ());
 		}
 		
 		/**

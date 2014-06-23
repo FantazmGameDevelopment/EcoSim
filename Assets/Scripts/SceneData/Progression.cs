@@ -30,7 +30,6 @@ namespace Ecosim.SceneData
 			get { return new List<string>(System.Enum.GetNames (typeof (PredefinedVariables))); }
 		}
 
-
 		public const string HEIGHTMAP_ID = "heightmap";
 		public const string WATERHEIGHTMAP_ID = "waterheightmap";
 		public const string CALCULATED_WATERHEIGHTMAP_ID = "calculatedwaterheightmap";
@@ -39,6 +38,7 @@ namespace Ecosim.SceneData
 		public const string ANIMAL_ID = "animals";
 		public const string SUCCESSION_ID = "_succession";
 		public const string MANAGED_ID = "_managed";
+		public const string TARGET_ID = "_targetarea";
 		public const string PURCHASABLE_ID = "_purchasable";
 
 		public long budget = 0; // budget left
@@ -47,6 +47,7 @@ namespace Ecosim.SceneData
 		public bool gameEnded = false;
 		public bool allowResearch = true;
 		public bool allowMeasures = true;
+		public int targetAreas = 0;
 		public readonly Scene scene;
 		
 		// important much used data set are stored in variables
@@ -532,7 +533,9 @@ namespace Ecosim.SceneData
 				allowMeasures = false;
 			string gameEndedStr = reader.GetAttribute ("gameended");
 			gameEnded = ((gameEndedStr != null) && (gameEndedStr == "true"));
-			
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("targetareas")))
+				targetAreas = int.Parse (reader.GetAttribute ("targetareas"));
+
 			string msgindexstr = reader.GetAttribute ("messageindex");
 			if (msgindexstr != null) {
 				messageUnreadIndex = int.Parse (msgindexstr);
@@ -800,6 +803,7 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("allowmeasures", allowMeasures ? "true" : "false");
 			writer.WriteAttributeString ("gameended", gameEnded ? "true" : "false");
 			writer.WriteAttributeString ("messageindex", messageUnreadIndex.ToString ());
+			writer.WriteAttributeString ("targetareas", targetAreas.ToString());
 
 			// We write out the data dictionary, the data itself is saved seperately
 			foreach (DataInfo info in dataDict.Values) 

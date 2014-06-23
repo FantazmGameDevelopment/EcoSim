@@ -39,7 +39,7 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 				{
 					GUILayout.BeginHorizontal ();
 					{
-						if (GUILayout.Button ("Open Nests Editor")) 
+						if (GUILayout.Button ("Open Nests Editor", GUILayout.Width (150))) 
 						{
 							if (this.onCreateExtraPanel != null) {
 								ExtraPanel newPanel;

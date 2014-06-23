@@ -59,7 +59,6 @@ namespace Ecosim.SceneEditor
 			tile.vegetationType.tiles = newTiles.ToArray ();
 			tile.vegetationType.UpdateReferences (scene);
 			
-			
 			VegetationData data = scene.progression.vegetation;
 			data.RemoveTileType (tile);
 			TerrainMgr.self.ForceRedraw ();

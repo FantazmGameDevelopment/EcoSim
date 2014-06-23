@@ -67,7 +67,7 @@ namespace Ecosim.SceneEditor.Helpers
 					{
 						ctrl.StartSelection (parameters, activeParameter,
 						newIndex => {
-							if (newIndex != activeParameter) {
+							if (newIndex != activeParameter && edit != null) {
 								activeParameter = newIndex;
 								data = scene.progression.GetData (parameters [activeParameter]);
 								edit.SetData (data);

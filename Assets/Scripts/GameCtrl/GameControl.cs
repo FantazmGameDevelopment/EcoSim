@@ -272,10 +272,23 @@ public class GameControl : MonoBehaviour
 	
 	private volatile bool isWorking = false;
 	
-	private void WorkThread (System.Object arg) {
+	private void WorkThread (System.Object arg) 
+	{
+		foreach (AnimalType a in scene.animalTypes) {
+			a.PrepareSuccession ();
+		}
 		scene.actions.PrepareSuccession ();
+
+		foreach (AnimalType a in scene.animalTypes) {
+			a.DoSuccession ();
+		}
 		scene.actions.DoSuccession ();
+
+		foreach (AnimalType a in scene.animalTypes) {
+			a.FinalizeSuccession ();
+		}
 		scene.actions.FinalizeSuccession ();
+
 		isWorking = false;
 	}
 	

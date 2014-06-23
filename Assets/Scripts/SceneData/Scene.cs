@@ -412,7 +412,7 @@ namespace Ecosim.SceneData
 		{
 			progression.Advance ();
 		}
-		
+
 		public void UpdateReferences ()
 		{
 			actions.UpdateReferences ();

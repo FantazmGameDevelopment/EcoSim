@@ -68,7 +68,6 @@ namespace Ecosim.SceneEditor.Helpers
 		{
 			List<ActionObjectsGroup> list = new List<ActionObjectsGroup>(scene.actionObjectGroups);
 			list.Remove (group);
-			scene.progression.DeleteData (group.dataName);
 
 			// Delete all buildings associated with the action objects
 			foreach (ActionObject ao in group.actionObjects)
@@ -126,7 +125,7 @@ namespace Ecosim.SceneEditor.Helpers
 		protected override void BuildingCreated (Buildings.Building newBuilding)
 		{
 			// Create Action object
-			ActionObject actionObject = new ActionObject (editGroup, newBuilding);
+			ActionObject actionObject = new ActionObject (scene, editGroup, newBuilding);
 			List<ActionObject> actionObjects = new List<ActionObject>(editGroup.actionObjects);
 
 			int highestIndex = 0;
@@ -140,7 +139,6 @@ namespace Ecosim.SceneEditor.Helpers
 			actionObjects.Add (actionObject);
 			editGroup.actionObjects = actionObjects.ToArray();
 
-			scene.progression.AddData (editGroup.dataName.ToLower() + "_obj" + actionObject.index, new BitMap8(scene));
 			base.BuildingCreated (newBuilding);
 		}
 
@@ -203,8 +201,7 @@ namespace Ecosim.SceneEditor.Helpers
 													handleParams = null;
 												}
 
-												Data influenceMap = scene.progression.GetData (gs.group.dataName);
-												handleParams = new HandleParameters (ctrl, parent, scene, influenceMap);
+												handleParams = new HandleParameters (ctrl, parent, scene, gs.group.combinedData);
 												base.BuildingClicked (null);
 												break;
 											
@@ -277,6 +274,8 @@ namespace Ecosim.SceneEditor.Helpers
 												{
 													GUILayout.Space (2);
 													GUILayout.Label ((aObjIndex++).ToString(), GUILayout.Width (40));
+													if (aObj.building == null)
+														Debug.LogWarning (aObj.buildingId);
 													GUILayout.Label (string.Format ("'{0}' [{1}]", aObj.building.name, aObj.buildingId));
 													GUILayout.FlexibleSpace ();
 
@@ -736,8 +735,7 @@ namespace Ecosim.SceneEditor.Helpers
 				switch (editMode)
 				{
 				case EditMode.InfluenceMap :
-					Data influenceMap = scene.progression.GetData (editGroup.dataName.ToLower() + "_obj" + editActionObject.index);
-					handleParams = new HandleParameters (ctrl, parent, scene, influenceMap);
+					handleParams = new HandleParameters (ctrl, parent, scene, editActionObject.data);
 					break;
 				}
 			} 

@@ -7,6 +7,38 @@ using Ecosim.SceneData.Rules;
 
 namespace Ecosim.SceneData
 {
+	public class InfluenceValue
+	{
+		public Coordinate coord;
+		public int value;
+		
+		public InfluenceValue (int x, int y, int value)
+		{
+			this.coord = new Coordinate (x, y);
+			this.value = value;
+		}
+		
+		public InfluenceValue (Coordinate coord, int value)
+		{
+			this.coord = coord;
+			this.value = value;
+		}
+		
+		public static InfluenceValue Load (string str)
+		{
+			string[] split = str.Split (',');
+			int x = int.Parse (split[0]);
+			int y = int.Parse (split[1]);
+			int v = int.Parse (split[2]);
+			return new InfluenceValue (x, y, v);
+		}
+		
+		public override string ToString ()
+		{
+			return string.Format ("{0},{1},{2}", coord.x, coord.y, value);
+		}
+	}
+
 	public class ActionObject
 	{
 		public const string XML_ELEMENT = "actionobject";
@@ -28,34 +60,45 @@ namespace Ecosim.SceneData
 			}
 		}
 
+		public Data data;
+
 		public ActionObject (ActionObjectsGroup group)
 		{
 			this.group = group;
 		}
 
-		public ActionObject (ActionObjectsGroup group, Buildings.Building building)
+		public ActionObject (Scene scene, ActionObjectsGroup group, Buildings.Building building)
 		{
 			this.group = group;
 			this.building = building;
 			this.building.startsActive = false;
 			this.building.isActive = false;
 			this.buildingId = this.building.id;
+			this.data = new BitMap8 (scene);
 		}
 
 		public static ActionObject Load (XmlTextReader reader, Scene scene, ActionObjectsGroup group)
 		{
 			ActionObject result = new ActionObject (group);
-			result.buildingId = int.Parse(reader.GetAttribute ("buildingid"));
-			int index = 0;
+
+			int bId = -1;
+			if (int.TryParse (reader.GetAttribute ("buildingid"), out bId)) result.buildingId = bId;
+
+			int index = -1;
 			if (int.TryParse (reader.GetAttribute ("index"), out index)) result.index = index;
 
 			// Get the building
-			List<Buildings.Building> buildings = scene.buildings.GetAllBuildings ();
-			foreach (Buildings.Building building in buildings) 
+			result.RetrieveBuilding (scene);
+
+			// Influences
+			result.data = new BitMap8 (scene);
+			string influence = reader.GetAttribute ("influence");
+			if (!string.IsNullOrEmpty (influence))
 			{
-				if (building.id == result.buildingId) {
-					result.building = building;
-					break;
+				string[] split = influence.Split ('|');
+				foreach (string s in split) {
+					InfluenceValue i = InfluenceValue.Load (s);
+					result.data.Set (i.coord, i.value);
 				}
 			}
 
@@ -70,7 +113,30 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("buildingid", buildingId.ToString());
 			writer.WriteAttributeString ("enabled", enabled.ToString().ToLower());
 			writer.WriteAttributeString ("index", index.ToString());
+
+			// Influences
+			string influence = "";
+			foreach (ValueCoordinate vc in this.data.EnumerateNotZero()) {
+				influence += string.Format ("{0},{1},{2}|", vc.x, vc.y, vc.v);
+			}
+			// Remove the trailing |
+			if (influence.Length > 0) influence = influence.Substring (0, influence.Length - 1);
+			writer.WriteAttributeString ("influence", influence);
+
 			writer.WriteEndElement ();
+		}
+
+		public void RetrieveBuilding (Scene scene)
+		{
+			// Get the building
+			List<Buildings.Building> buildings = scene.buildings.GetAllBuildings ();
+			foreach (Buildings.Building b in buildings) 
+			{
+				if (b.id == buildingId) {
+					this.building = b;
+					break;
+				}
+			}
 		}
 	}
 
@@ -115,6 +181,9 @@ namespace Ecosim.SceneData
 			result.mathType = (MathTypes)System.Enum.Parse (typeof(MathTypes), reader.GetAttribute ("mathtype"));
 			result.mathValue = float.Parse (reader.GetAttribute ("mathvalue"));
 			result.valueType = (ValueType)System.Enum.Parse (typeof(ValueType), reader.GetAttribute ("valuetype"));
+
+
+
 			IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
 			return result;
 		}
@@ -151,9 +220,9 @@ namespace Ecosim.SceneData
 		}
 		public GroupType groupType;
 
+		public Scene scene;
 		public string name;
 		public string description;
-		public string dataName;
 
 		public int index;
 
@@ -189,32 +258,22 @@ namespace Ecosim.SceneData
 		/// The combined data data reference. Only used when groupType equals Combined.
 		/// </summary>
 		public Data combinedData;
-		
+
 		public ActionObjectsGroup ()
 		{
 		}
 		
 		public ActionObjectsGroup (Scene scene, string name)
 		{
+			this.scene = scene;
 			this.name = name;
 			this.description = "";
-			this.dataName = StringUtil.MakeValidID (name, true);
-			
-			// Data name
-			string newDataName = this.dataName;
-			int tries = 1;
-			while (scene.progression.HasData (newDataName)) {
-				newDataName = this.dataName + tries;
-				tries++;
-			}
-			this.dataName = newDataName;
-			scene.progression.AddData (dataName, new BitMap8 (scene));
-			
-			index = scene.actionObjectGroups.Length;
+			this.index = scene.actionObjectGroups.Length;
 
 			actionObjects = new ActionObject[] { };
 			influenceRules = new ActionObjectInfluenceRule[] { };
-			
+			this.combinedData = new BitMap8 (scene);
+
 			// Add to scene
 			List<ActionObjectsGroup> tmpList = new List<ActionObjectsGroup>(scene.actionObjectGroups);
 			tmpList.Add (this);
@@ -225,14 +284,21 @@ namespace Ecosim.SceneData
 		{
 			ActionObjectsGroup result = new ActionObjectsGroup ();
 			result.name = reader.GetAttribute ("name");
-			result.dataName = reader.GetAttribute ("dataname");
 			result.description = reader.GetAttribute ("description");
 
 			if (!string.IsNullOrEmpty(reader.GetAttribute ("grouptype")))
 				result.groupType = (GroupType)System.Enum.Parse(typeof(GroupType), reader.GetAttribute ("grouptype"));
 
-			if (string.IsNullOrEmpty(result.dataName)) {
-				result.dataName = string.Format("_actiongroup{0}", StringUtil.MakeValidID(result.name));
+			// Influences
+			result.combinedData = new BitMap8 (scene);
+			string influence = reader.GetAttribute ("influence");
+			if (!string.IsNullOrEmpty (influence))
+			{
+				string[] split = influence.Split ('|');
+				foreach (string s in split) {
+					InfluenceValue i = InfluenceValue.Load (s);
+					result.combinedData.Set (i.coord, i.value);
+				}
 			}
 
 			List<ActionObject> actionObjs = new List<ActionObject>();
@@ -247,6 +313,19 @@ namespace Ecosim.SceneData
 					{
 						ActionObject ao = ActionObject.Load (reader, scene, result);
 						if (ao != null) {
+							// Check index
+							if (ao.index <= 0) {
+								if (actionObjs.Count > 0)
+									ao.index = actionObjs[actionObjs.Count - 1].index + 1;
+								else ao.index = 1;
+							}
+							// Check building id
+							if (ao.buildingId <= 0) {
+								if (actionObjs.Count > 0)
+									ao.buildingId = actionObjs[actionObjs.Count - 1].buildingId + 1;
+								else ao.buildingId = 1;
+								ao.RetrieveBuilding (scene);
+							}
 							actionObjs.Add (ao);
 						}
 					} 
@@ -271,9 +350,17 @@ namespace Ecosim.SceneData
 		{
 			writer.WriteStartElement (XML_ELEMENT);
 			writer.WriteAttributeString ("name", name);
-			writer.WriteAttributeString ("dataname", dataName);
 			writer.WriteAttributeString ("description", description);
 			writer.WriteAttributeString ("grouptype", groupType.ToString());
+
+			// Influences
+			string influence = "";
+			foreach (ValueCoordinate vc in this.combinedData.EnumerateNotZero()) {
+				influence += string.Format ("{0},{1},{2}|", vc.x, vc.y, vc.v);
+			}
+			// Remove the trailing |
+			if (influence.Length > 0) influence = influence.Substring (0, influence.Length - 1);
+			writer.WriteAttributeString ("influence", influence);
 
 			foreach (ActionObject aObj in actionObjects) {
 				aObj.Save (writer, scene);
@@ -286,8 +373,6 @@ namespace Ecosim.SceneData
 		
 		public void UpdateReferences (Scene scene)
 		{
-			combinedData = scene.progression.GetData (dataName);
-
 			foreach (ActionObjectInfluenceRule rule in influenceRules)
 			{
 				rule.UpdateReferences (scene);

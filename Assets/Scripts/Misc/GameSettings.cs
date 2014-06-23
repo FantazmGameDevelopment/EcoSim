@@ -20,7 +20,7 @@ namespace Ecosim
 		public const bool SUCCESSION_IN_BG_THREAD = true;
 		public const bool VEGETATION_SUCCESSION_MULTITHREADED = true;
 		public const bool PLANTS_LOGIC_MULTITHREADED = true;
-		public const bool ANIMALS_LOGIC_MULTITHREADED = true;
+		public const bool ANIMALS_LOGIC_MULTITHREADED = false;
 		public const bool ALLOW_EDITOR = true;
 		public const int MAX_SAVEGAME_SLOTS = 9;
 		private static PlatformType platformType = PlatformType.UNKNOWN;

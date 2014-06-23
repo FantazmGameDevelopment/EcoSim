@@ -299,8 +299,9 @@ public class EcoTerrainElements : MonoBehaviour
 	
 	public static BuildingPrototype GetBuilding (string name)
 	{
+		name = name.ToLower();
 		foreach (BuildingPrototype building in self.buildings) {
-			if (building.name == name)
+			if (building.name.ToLower() == name)
 				return building;
 		}
 		return null;

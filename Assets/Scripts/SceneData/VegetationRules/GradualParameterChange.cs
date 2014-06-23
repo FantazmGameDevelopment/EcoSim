@@ -81,7 +81,7 @@ namespace Ecosim.SceneData.VegetationRules
 				if ((ui != null) && (ui.action is AreaAction)) {
 					action = ui;
 				} else {
-					UnityEngine.Debug.Log ("Action '" + actionName + "' is not referencing an AreaAction");
+					ActionMgr.LogMissingAction (actionName);
 				}
 			}
 			

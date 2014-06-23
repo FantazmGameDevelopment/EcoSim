@@ -101,7 +101,12 @@ namespace Ecosim.SceneData
 		
 		void LoadBuilding (XmlTextReader reader)
 		{
-			int id = int.Parse (reader.GetAttribute ("id"));
+			// Get ID
+			int id = -1;
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("id")))
+				id = int.Parse (reader.GetAttribute ("id"));
+			else id = nextId;
+
 			string name = reader.GetAttribute ("name");
 			EcoTerrainElements.BuildingPrototype prefab = EcoTerrainElements.GetBuilding (name);
 			if (prefab == null) {
@@ -146,7 +151,7 @@ namespace Ecosim.SceneData
 			while (reader.Read()) {
 				XmlNodeType nType = reader.NodeType;
 				if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "building")) {
-					b.LoadBuilding (reader);	
+					b.LoadBuilding (reader);
 				}
 			}
 			reader.Close ();

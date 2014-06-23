@@ -36,12 +36,19 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			}
 
 			public virtual void UpdateReferences (Scene scene) { }
+			public virtual void PrepareSuccession () { }
+			public virtual void DoSuccession () { }
+			public virtual void FinalizeSuccession () { }
 		}
 
 		public abstract void Load (XmlTextReader reader, Scene scene);
 		public abstract void Save (XmlTextWriter writer, Scene scene);
 		public abstract void UpdateReferences (Scene scene);
 		public abstract string GetXMLElement ();
+
+		public abstract void PrepareSuccession ();
+		public abstract void DoSuccession ();
+		public abstract void FinalizeSuccession ();
 	}
 }
 

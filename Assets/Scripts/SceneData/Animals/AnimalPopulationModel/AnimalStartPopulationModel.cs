@@ -24,7 +24,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				
 				public int males;
 				public int females;
-				public int food;
+				public int currentFood;
 				
 				public int totalCapacity;
 				public int malesCapacity;
@@ -43,7 +43,8 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					nest.females = int.Parse(reader.GetAttribute ("f"));
 					nest.totalCapacity = int.Parse (reader.GetAttribute ("cap"));
 					nest.malesCapacity = int.Parse (reader.GetAttribute ("mcap"));
-					nest.females = int.Parse (reader.GetAttribute ("fcap"));
+					nest.femalesCapacity = int.Parse (reader.GetAttribute ("fcap"));
+					nest.currentFood = int.Parse (reader.GetAttribute ("food"));
 					IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
 					return nest;
 				}
@@ -58,6 +59,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					writer.WriteAttributeString ("cap", totalCapacity.ToString());
 					writer.WriteAttributeString ("mcap", malesCapacity.ToString());
 					writer.WriteAttributeString ("fcap", femalesCapacity.ToString());
+					writer.WriteAttributeString ("food", currentFood.ToString());
 					writer.WriteEndElement ();
 				}
 				
@@ -158,6 +160,21 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		public override string GetXMLElement ()
 		{
 			return XML_ELEMENT;
+		}
+
+		public override void PrepareSuccession ()
+		{
+			nests.PrepareSuccession ();
+		}
+
+		public override void DoSuccession ()
+		{
+			nests.DoSuccession ();
+		}
+
+		public override void FinalizeSuccession ()
+		{
+			nests.FinalizeSuccession ();
 		}
 	}
 }

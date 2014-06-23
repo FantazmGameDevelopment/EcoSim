@@ -17,10 +17,10 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 
 			//public string gender;
 			public string parameterName = "none";
-			public int foodRequiredPerAnimal;
 			public int foodCarryCapacity;
 
-			public Data data;
+			private Data _foodArea;
+			public Data foodArea;
 
 			/*public Food (string gender)
 			{
@@ -31,7 +31,6 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			{
 				base.Load (reader, scene);
 				this.parameterName = reader.GetAttribute ("param");
-				this.foodRequiredPerAnimal = int.Parse (reader.GetAttribute ("foodreq"));
 				this.foodCarryCapacity = int.Parse (reader.GetAttribute ("carrycap"));
 				IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
 			}
@@ -41,14 +40,24 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				writer.WriteStartElement (XML_ELEMENT);
 				base.Save (writer, scene);
 				writer.WriteAttributeString ("param", this.parameterName);
-				writer.WriteAttributeString ("foodreq", this.foodRequiredPerAnimal.ToString());
 				writer.WriteAttributeString ("carrycap", this.foodCarryCapacity.ToString());
 				writer.WriteEndElement ();
 			}
 
 			public void UpdateReferences (Scene scene)
 			{
-				this.data = scene.progression.GetData (parameterName);
+				this._foodArea = scene.progression.GetData (parameterName);
+			}
+
+			public override void PrepareSuccession ()
+			{
+				if (this.use)
+				{
+					// Create new food area
+					if (this.foodArea == null)
+						this.foodArea = (Data)System.Activator.CreateInstance (this._foodArea.GetType(), this._foodArea.scene);
+					this._foodArea.CopyTo (this.foodArea);
+				}
 			}
 		}
 		public Food food = new Food ();
@@ -146,6 +155,24 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		public override string GetXMLElement ()
 		{
 			return XML_ELEMENT;
+		}
+
+		public override void PrepareSuccession ()
+		{
+			food.PrepareSuccession ();
+			movement.PrepareSuccession ();
+		}
+		
+		public override void DoSuccession ()
+		{
+			food.DoSuccession ();
+			movement.DoSuccession ();
+		}
+		
+		public override void FinalizeSuccession ()
+		{
+			food.DoSuccession ();
+			movement.DoSuccession ();
 		}
 	}
 }
