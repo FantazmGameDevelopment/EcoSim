@@ -66,6 +66,7 @@ namespace Ecosim.SceneData.Action
 
 						a.movementMap = new BitMap8 (scene);
 						a.deathMap = new BitMap8 (scene);
+						a.birthMap = new BitMap8 (scene);
 						a.fouragingMap = new BitMap8 (scene);
 					}
 				}
@@ -102,8 +103,23 @@ namespace Ecosim.SceneData.Action
 			System.Random rnd = new System.Random (); // When multithreading, you need a random generator per thread
 
 			LargeAnimalType animal = arguments as LargeAnimalType;
+
+			// Log all nests before
+			string nests = "";
+			foreach (AnimalStartPopulationModel.Nests.Nest n in animal.startPopModel.nests.nests) {
+				nests += "\t" + n.ToString () + "\n";
+			}
+			Debug.Log (string.Format("[LargeAnimalAction] ProcessAnimal Start: '{0}'\n{1}", animal.name, nests), null);
+
 			ProcessAnimalMovement (animal, rnd);
 			ProcessAnimalPopulationDecrease (animal, rnd);
+
+			// Log all nests after
+			nests = "";
+			foreach (AnimalStartPopulationModel.Nests.Nest n in animal.startPopModel.nests.nests) {
+				nests += "\t" + n.ToString () + "\n";
+			}
+			Debug.Log (string.Format("[LargeAnimalAction] ProcessAnimal End: '{0}'\n{1}", animal.name, nests), null);
 		}
 
 		protected void ProcessAnimalOnTile (AnimalSuccessionData data)
@@ -216,8 +232,10 @@ namespace Ecosim.SceneData.Action
 
 						for (int i = 0; i < 2; i++)
 						{
+							survived = 0;
 							bool processMales = (i == 0);
 							int total = (processMales) ? nest.males : nest.females;
+
 							for (int n = 0; n < total; n++) 
 							{
 								AnimalSuccessionData data = new AnimalSuccessionData (animal, rnd, new Vector2 (nest.x, nest.y));
@@ -240,6 +258,8 @@ namespace Ecosim.SceneData.Action
 							else nest.females = survived;
 							nest.currentFood += foundFood;
 						}
+
+						Debug.Log (string.Format("[LargeAnimalAction] All animals in the nest have moved.\nCurrent nest state:\n\t{0}", nest.ToString ()), null);
 
 						// Check nest decrease
 						ProcessAnimalNestDecrease (animal, nest, rnd);
@@ -288,7 +308,7 @@ namespace Ecosim.SceneData.Action
 				Vector2 newPos = data.currPos + Direction.directions[d];
 				if ((newPos.x >= 0) && (newPos.y >= 0) && 
 				    (newPos.x < this.scene.width) && (newPos.y < this.scene.height) &&
-				    scene.progression.successionArea.Get ((int)newPos.x, (int)newPos.y) > 0) 
+				    successionArea.Get ((int)newPos.x, (int)newPos.y) > 0) 
 				{
 					// Direction is valid, check the chance
 					Vector2 dir = Direction.directions[d];
@@ -361,6 +381,8 @@ namespace Ecosim.SceneData.Action
 						// Check death
 						if (data.rnd.NextDouble () <= deathChance)
 						{
+							Debug.Log (string.Format("[LargeAnimalAction] Animal died on tile ({0},{1})", data.currPos.x.ToString(), data.currPos.y.ToString()), null);
+
 							data.hasDied = true;
 
 							// Save the death in the map
@@ -403,7 +425,7 @@ namespace Ecosim.SceneData.Action
 								starvedMales++;
 						}
 
-						// Females,  check if we have some left to check
+						// Females, check if we have some left to check
 						if (i < nest.females) {
 							if (ProcessAnimalStarvation (animal, nest, rnd))
 								starvedFemales++;
@@ -413,6 +435,8 @@ namespace Ecosim.SceneData.Action
 					// Update the nests population
 					nest.males -= starvedMales;
 					nest.females -= starvedFemales;
+
+					Debug.Log (string.Format("[LargeAnimalAction] {0} males and {1} females starved\nCurrent nest state:\n\t{2}", starvedMales.ToString(), starvedFemales.ToString(), nest.ToString ()), null);
 				}
 
 				// Natural death rate
@@ -443,6 +467,8 @@ namespace Ecosim.SceneData.Action
 						// Update the nests population
 						nest.males -= maleDeaths;
 						nest.females -= femaleDeaths;
+
+						Debug.Log (string.Format("[LargeAnimalAction] {0} males and {1} females died of natural causes\nCurrent nest state:\n\t{2}", maleDeaths.ToString(), femaleDeaths.ToString(), nest.ToString ()), null);
 					}
 				}
 			}
@@ -563,6 +589,8 @@ namespace Ecosim.SceneData.Action
 					food.foodArea.Set (coord, foodCount - foundFood);
 					data.carriedFood += foundFood;
 
+					Debug.Log (string.Format("[LargeAnimalAction] Animal found {0} food units on tile ({1},{2})", foundFood, data.currPos.x.ToString(), data.currPos.y.ToString()), null);
+
 					// Save the fouraging in the map
 					Coordinate c = data.GetCurrentCoordinate ();
 					int val = data.animal.fouragingMap.Get (c);
@@ -609,10 +637,14 @@ namespace Ecosim.SceneData.Action
 					// TODO: Check if we have males or females, for now it's just 50/50
 					int offspringM = Mathf.CeilToInt ((float)offspring * 0.5f);
 					int offspringF = Mathf.CeilToInt ((float)offspring * 0.5f);
-					
+
+					Debug.Log (string.Format("[LargeAnimalAction] {0} baby males and {1} baby females were born", offspringM.ToString(), offspringF.ToString()), null);
+
 					// TODO: Should we check the amount of room per gender when determining the m/f offspring count?
 					nest.males = Mathf.Clamp (nest.males + offspringM, 0, nest.malesCapacity);
 					nest.females = Mathf.Clamp (nest.females + offspringF, 0, nest.femalesCapacity);
+
+					Debug.Log (string.Format("\tCurrent nest state:\n\t{0}", nest.ToString ()), null);
 
 					// TODO: Check if surplus logic is correct and if we want to use it
 					int total = nest.males + nest.females;
@@ -641,6 +673,12 @@ namespace Ecosim.SceneData.Action
 							if (surplus <= 0) break;
 						}
 					}
+
+					// Save the birth in the map
+					Coordinate c = new Coordinate (nest.x, nest.y);
+					int val = animal.birthMap.Get (c);
+					animal.birthMap.Set (c, val + offspringM + offspringF);
+					break;
 				}
 				break;
 				}

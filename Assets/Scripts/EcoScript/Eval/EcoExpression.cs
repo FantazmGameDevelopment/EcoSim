@@ -30,19 +30,19 @@ namespace Ecosim.EcoScript.Eval
 			bool isMale = (scene.playerInfo == null) || (scene.playerInfo.isMale);
 			bool startsUpper = (id.Length > 0) && (char.IsUpper (id [0]));
 			string lower = id.ToLower ();
-			if (lower == "heshe") {
+			if (lower == "heshe" || lower == "hijzij") {
 				if (isMale)
 					return startsUpper ? "He" : "he";
 				else
 					return startsUpper ? "She" : "she";
 			}
-			if (lower == "hisher") {
+			if (lower == "hisher" || lower == "zijnhaar") {
 				if (isMale)
 					return startsUpper ? "His" : "his";
 				else
 					return startsUpper ? "Her" : "her";
 			}
-			if (lower == "himher") {
+			if (lower == "himher" || lower == "zijnhaar") {
 				if (isMale)
 					return startsUpper ? "Him" : "him";
 				else
@@ -54,10 +54,10 @@ namespace Ecosim.EcoScript.Eval
 			if (lower == "mrms") {
 				return (isMale)?"Mr.":"Ms.";
 			}
-			if (lower == "firstname") {
+			if (lower == "firstname" || lower == "voornaam") {
 				return (scene.playerInfo == null)?"John":(scene.playerInfo.firstName);
 			}
-			if (lower == "familyname") {
+			if (lower == "familyname" || lower == "sirname" || lower == "achternaam") {
 				return (scene.playerInfo == null)?"Fisher":(scene.playerInfo.familyName);
 			}
 			return null;

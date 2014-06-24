@@ -16,6 +16,7 @@ namespace Ecosim.SceneData
 
 		public Data movementMap;
 		public Data deathMap;
+		public Data birthMap;
 		public Data fouragingMap;
 
 		public LargeAnimalType ()

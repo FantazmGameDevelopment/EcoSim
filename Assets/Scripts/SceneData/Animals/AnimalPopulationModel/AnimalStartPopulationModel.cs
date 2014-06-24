@@ -67,6 +67,18 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				{
 					
 				}
+
+				public override string ToString ()
+				{
+					return string.Format ("[Nest] ({0},{1}) Males:{2}/{3}, Females:{4}/{5}, Food:{6}", 
+					                      x.ToString(), 
+					                      y.ToString(), 
+					                      males.ToString(), 
+					                      malesCapacity.ToString(), 
+					                      females.ToString(), 
+					                      femalesCapacity.ToString(), 
+					                      currentFood);
+				}
 			}
 
 			public Nest[] nests = new Nest[0];

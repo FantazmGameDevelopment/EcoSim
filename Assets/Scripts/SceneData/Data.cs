@@ -169,6 +169,38 @@ namespace Ecosim.SceneData
 		
 		/* maximum value supported by data */
 		public abstract int GetMax();
+
+		/**
+		 * Gets the total sum of all values.
+		 */ 
+		public virtual int GetSum () {
+			int sum = 0;
+			foreach (ValueCoordinate vc in EnumerateNotZero ()) {
+				sum += vc.v;
+			}
+			return sum;
+		}
+
+		/**
+		 * Gets the average value of all coordinates. We include all tiles in the calculation.
+		 */ 
+		public virtual float GetAverage () {
+			return GetAverage (true);
+		}
+
+		/**
+		 * Gets the average value of all coordinates. The includeZeroes determines whether we count tiles with a value of 0.
+		 */ 
+		public virtual float GetAverage (bool includeZeroes) {
+			int sum = 0;
+			int notZeroes = 0;
+			foreach (ValueCoordinate vc in EnumerateNotZero ()) {
+				sum += vc.v;
+				notZeroes ++;
+			}
+			int total = (includeZeroes) ? (width * height) : notZeroes;
+			return (float)sum / (float)total;
+		}
 		
 		/**
 		 * Calles function fn for every element not zero, passing x, y, value of element and data to fn.

@@ -84,7 +84,6 @@ namespace Ecosim.GameCtrl.GameButtons
 				this.scene = scene;
 			}
 			button.isVisible = (helpDescrTex != null);
-			Debug.Log ("Update Help button : " + button.isVisible);
 			base.UpdateScene (scene, button);
 		}
 		
@@ -93,7 +92,6 @@ namespace Ecosim.GameCtrl.GameButtons
 			button.isVisible = (helpDescrTex != null);
 			button.alwaysRender = false;
 			helpWindow = null;
-			Debug.Log ("Help button : " + button.isVisible);
 		}			
 	}
 }

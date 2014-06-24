@@ -53,17 +53,6 @@ namespace Ecosim.SceneData.Action
 			return true;
 		}
 
-		/**
-		 * Overriden CompileScript to add constants
-		 */
-		public override bool CompileScript ()
-		{
-			//Dictionary <string, string> consts = new Dictionary<string, string> ();
-			//consts.Add ("string AREA", "\"" + areaName + "\"");
-			//return CompileScript (consts);
-			return true;
-		}
-
 		public override void ActionSelected (UserInteraction ui)
 		{
 			backupEstimate = uiList[0].estimatedTotalCostForYear;
@@ -159,18 +148,17 @@ namespace Ecosim.SceneData.Action
 				// Loop through all tiles who have the groups data on them
 				foreach (ValueCoordinate vc in group.combinedData.EnumerateNotZero())
 				{
-					// Handle the influence rules
-					foreach (ActionObjectInfluenceRule ir in group.influenceRules)
-					{
-						if (processInfluencesMI != null) {
-							try {
-								processInfluencesMI.Invoke (ecoBase, new object[] { vc, group.name });
-							} catch (Exception e) {
-								Log.LogException (e);
-							}
+					if (processInfluencesMI != null) {
+						try {
+							processInfluencesMI.Invoke (ecoBase, new object[] { vc, group.name });
+						} catch (Exception e) {
+							Log.LogException (e);
 						}
+					}
 
-						if (processInfluenceRules) {
+					// Handle the influence rules
+					if (processInfluenceRules) {
+						foreach (ActionObjectInfluenceRule ir in group.influenceRules){
 							ProcessInfluenceRules (ir, vc, group.combinedData);
 						}
 					}
@@ -189,17 +177,16 @@ namespace Ecosim.SceneData.Action
 					Data objData = obj.data;
 					foreach (ValueCoordinate vc in objData.EnumerateNotZero())
 					{
-						foreach (ActionObjectInfluenceRule ir in group.influenceRules)
-						{
-							if (processInfluencesMI != null) {
-								try {
-									processInfluencesMI.Invoke (ecoBase, new object[] { vc, group.name });
-								} catch (Exception e) {
-									Log.LogException (e);
-								}
+						if (processInfluencesMI != null) {
+							try {
+								processInfluencesMI.Invoke (ecoBase, new object[] { vc, group.name });
+							} catch (Exception e) {
+								Log.LogException (e);
 							}
+						}
 
-							if (processInfluenceRules) {
+						if (processInfluenceRules) {
+							foreach (ActionObjectInfluenceRule ir in group.influenceRules) {
 								ProcessInfluenceRules (ir, vc, objData);
 							}
 						}
@@ -273,8 +260,7 @@ namespace Ecosim.SceneData.Action
 			if (ecoBase != null) 
 			{
 				processInfluencesMI = ecoBase.GetType ().GetMethod ("ProcessInfluences",
-				                                                   BindingFlags.NonPublic | BindingFlags.Instance, null,
-				                                                    new Type[] { typeof(ValueCoordinate), typeof(string) }, null);
+				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(ValueCoordinate), typeof(string) }, null);
 
 				/*actionDeselectedMI = ecoBase.GetType ().GetMethod ("ActionDeselected",
 				                                                   BindingFlags.NonPublic | BindingFlags.Instance, null,

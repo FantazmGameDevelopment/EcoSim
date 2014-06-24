@@ -260,7 +260,8 @@ namespace Ecosim.SceneData.Action
 				if (!Directory.Exists(dir)) {
 					Directory.CreateDirectory (dir);
 				}
-				File.WriteAllText (dir + Path.DirectorySeparatorChar + ClassName() + ".cs", script);
+				string path = dir + Path.DirectorySeparatorChar + ClassName() + ".cs";
+				File.WriteAllText (path, script);
 				// ecoBase = Compiler.EcoCompile (scene, this, script, out errors);
 				return true;
 			}
