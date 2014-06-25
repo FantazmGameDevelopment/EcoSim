@@ -10,16 +10,28 @@ namespace Ecosim.SceneData
 		public const string XML_ELEMENT = "reports";
 		private readonly Scene scene;
 
+		public bool useShowQuestionnaireAtStart;
+		public bool useShowQuestionnaireAtEnd;
+		public int showQuestionnaireAtStartId;
+		public int showQuestionnaireAtEndId;
+
 		public List<Questionnaire> questionnaires;
 
 		public ReportsMgr (Scene scene)
 		{
 			this.scene = scene;
 			this.questionnaires = new List<Questionnaire>();
+			showQuestionnaireAtStartId = 1;
+			showQuestionnaireAtEndId = 1;
 		}
 
 		private void Load (XmlTextReader reader)
 		{
+			useShowQuestionnaireAtStart = bool.Parse (reader.GetAttribute ("showqstart"));
+			useShowQuestionnaireAtEnd = bool.Parse (reader.GetAttribute ("showqend"));
+			showQuestionnaireAtEndId = int.Parse (reader.GetAttribute ("qstartid"));
+			showQuestionnaireAtEndId = int.Parse (reader.GetAttribute ("qendid"));
+
 			while (reader.Read()) 
 			{
 				XmlNodeType nType = reader.NodeType;
@@ -62,6 +74,10 @@ namespace Ecosim.SceneData
 			XmlTextWriter writer = new XmlTextWriter (path + XML_ELEMENT + ".xml", System.Text.Encoding.UTF8);
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement (XML_ELEMENT);
+			writer.WriteAttributeString ("showqstart", useShowQuestionnaireAtStart.ToString().ToLower());
+			writer.WriteAttributeString ("showqend", useShowQuestionnaireAtEnd.ToString().ToLower());
+			writer.WriteAttributeString ("qstartid", showQuestionnaireAtStartId.ToString());
+			writer.WriteAttributeString ("qendid", showQuestionnaireAtEndId.ToString());
 			foreach (Questionnaire q in questionnaires) {
 				q.Save (writer, scene);
 			}

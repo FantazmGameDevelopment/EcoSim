@@ -154,7 +154,8 @@ namespace Ecosim.SceneData
 		public class OpenAnswer : Answer
 		{
 			public const string XML_ELEMENT = "answer";
-			
+
+			public bool useMaxWords;
 			public int maxWords;
 			public bool copyToReport;
 			public List<int> reportIndices;
@@ -166,6 +167,7 @@ namespace Ecosim.SceneData
 				body = "Write your answer";
 				feedback = "Feedback";
 				maxWords = 0;
+				useMaxWords = false;
 				copyToReport = false;
 				reportIndices = new List<int>();
 				reportIndices.Add (0);
@@ -176,6 +178,7 @@ namespace Ecosim.SceneData
 				writer.WriteStartElement (XML_ELEMENT);
 				writer.WriteAttributeString ("body", body);
 				writer.WriteAttributeString ("feedback", feedback);
+				writer.WriteAttributeString ("usemaxwords", useMaxWords.ToString().ToLower());
 				writer.WriteAttributeString ("maxwords", maxWords.ToString());
 				writer.WriteAttributeString ("copytoreport", copyToReport.ToString().ToLower());
 
@@ -183,7 +186,7 @@ namespace Ecosim.SceneData
 				foreach (int i in reportIndices) {
 					reportIndicesStr += i.ToString() + ",";
 				}
-				reportIndicesStr.TrimEnd (',');
+				reportIndicesStr = reportIndicesStr.TrimEnd (',');
 				writer.WriteAttributeString ("copytoreports", reportIndicesStr);
 
 				writer.WriteEndElement ();
@@ -194,6 +197,7 @@ namespace Ecosim.SceneData
 				body = reader.GetAttribute ("body");
 				feedback = reader.GetAttribute ("feedback");
 				maxWords = int.Parse (reader.GetAttribute ("maxwords"));
+				useMaxWords = bool.Parse (reader.GetAttribute ("usemaxwords"));
 				copyToReport = bool.Parse (reader.GetAttribute ("copytoreport"));
 
 				string indicesStr = reader.GetAttribute ("copytoreports");
@@ -201,7 +205,11 @@ namespace Ecosim.SceneData
 				reportIndices = new List<int> ();
 				if (indicesStr.Length > 0) {
 					foreach (string i in indices) {
-						reportIndices.Add (int.Parse (i));
+						Debug.Log (i);
+						int idx = 0;
+						if (int.TryParse (i, out idx)) {
+							reportIndices.Add (idx);
+						}
 					}
 				}
 

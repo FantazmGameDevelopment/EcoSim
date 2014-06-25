@@ -276,6 +276,24 @@ namespace Ecosim.SceneEditor
 				else q.id = 1;
 				scene.reports.questionnaires.Add (q);
 			}
+			
+			GUILayout.BeginHorizontal ();
+			{
+				scene.reports.useShowQuestionnaireAtStart = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtStart, "Show questionnaire at game start", GUILayout.Width (200));
+				if (scene.reports.useShowQuestionnaireAtStart) {
+					EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtStartId, 20, 50);
+				}
+			}
+			GUILayout.EndHorizontal ();
+			GUILayout.BeginHorizontal ();
+			{
+				scene.reports.useShowQuestionnaireAtEnd = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtEnd, "Show questionnaire at game end", GUILayout.Width (200));
+				if (scene.reports.useShowQuestionnaireAtEnd) {
+					EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtEndId, 20, 50);
+				}
+			}
+			GUILayout.EndHorizontal ();
+			GUILayout.Space (5);
 		}
 		private void RenderMPCQuestion (Questionnaire q, MPCQuestion question, int index)
 		{
@@ -310,10 +328,26 @@ namespace Ecosim.SceneEditor
 
 								if (a.opened)
 								{
+									a.startFromBeginning = GUILayout.Toggle (a.startFromBeginning, "Start from beginning");
+									if (a.startFromBeginning) {
+										// We must use feedback if we startFromBeginning enabled
+										a.useFeedback = true;
+									}
+									a.allowRetry = GUILayout.Toggle (a.allowRetry, "Allow retry");
+									if (a.allowRetry) {
+										// We must use feedback if we have allowRetry enabled
+										a.useFeedback = true;
+									}
+
 									// Feedback
 									GUILayout.BeginHorizontal ();
 									{
+										GUI.enabled = true;
+										if (a.allowRetry) GUI.enabled = false;
+										if (a.startFromBeginning) GUI.enabled = false;
+
 										a.useFeedback = GUILayout.Toggle (a.useFeedback, "", GUILayout.Width (20));
+										GUI.enabled = true;
 										if (a.useFeedback)
 										{
 											EcoGUI.skipHorizontal = true;
@@ -330,9 +364,7 @@ namespace Ecosim.SceneEditor
 									if (a.feedbackOpened) {
 										a.feedback = GUILayout.TextArea (a.feedback);
 									}
-
-									a.startFromBeginning = GUILayout.Toggle (a.startFromBeginning, "Start from beginning");
-									a.allowRetry = GUILayout.Toggle (a.allowRetry, "Allow retry");
+							
 									if (q.useRequiredScore) {
 										EcoGUI.IntField ("Score", ref a.score, 80, 80);
 									}
@@ -355,7 +387,9 @@ namespace Ecosim.SceneEditor
 
 				if (question.opened)
 				{
-					GUILayout.BeginHorizontal ();
+					question.answersOpened = true;
+
+					/*GUILayout.BeginHorizontal ();
 					{
 						EcoGUI.skipHorizontal = true;
 						EcoGUI.Foldout ("Answers", ref question.answersOpened);
@@ -366,7 +400,7 @@ namespace Ecosim.SceneEditor
 							question.answers.Add (new OpenQuestion.OpenAnswer ());
 						}
 					}
-					GUILayout.EndHorizontal ();
+					GUILayout.EndHorizontal ();*/
 					
 					if (question.answersOpened)
 					{
@@ -380,39 +414,69 @@ namespace Ecosim.SceneEditor
 								
 								if (a.opened)
 								{
-									EcoGUI.IntField ("Max. words", ref a.maxWords, 100);
+									GUILayout.BeginHorizontal ();
+									{
+										a.useMaxWords = GUILayout.Toggle (a.useMaxWords, "", GUILayout.Width (20));
+										if (a.useMaxWords)
+										{
+											EcoGUI.skipHorizontal = true;
+											EcoGUI.IntField ("Max. words", ref a.maxWords, 100, 100);
+											EcoGUI.skipHorizontal = false;
+										} 
+										else {
+											a.maxWords = 0;
+											GUILayout.Space (2);
+											GUILayout.Label ("Max. words");
+										}
+									}
+									GUILayout.EndHorizontal ();
 
 									// Copy to reports
 									GUILayout.BeginHorizontal ();
 									{
-										a.copyToReport = GUILayout.Toggle (a.copyToReport, "", GUILayout.Width (5));
-										if (a.copyToReport) {
-											EcoGUI.Foldout ("Copy to report(s)", ref a.reportIndicesOpened);
-										} else a.reportIndicesOpened = false;
-
-										if (a.reportIndicesOpened)
+										a.copyToReport = GUILayout.Toggle (a.copyToReport, "", GUILayout.Width (20));
+										if (a.copyToReport) 
 										{
-											for (int n = 0; n < a.reportIndices.Count; n++) 
-											{
-												GUILayout.BeginHorizontal ();
-												{
-													GUILayout.Label (n.ToString(), GUILayout.Width (20));
-													int reportIndex = a.reportIndices [n];
-													EcoGUI.IntField (null, ref reportIndex, 0, 60);
-													a.reportIndices [n] = reportIndex;
-
-													// Delete
-													if (n > 0 && GUILayout.Button ("-")) 
-													{
-														a.reportIndices.RemoveAt (n);
-														break;
-													}
-												}
-												GUILayout.EndHorizontal ();
-											}
+											EcoGUI.Foldout ("Copy to report(s)", ref a.reportIndicesOpened);
+										} else 
+										{
+											GUILayout.Label ("Copy to report(s)");
+											a.reportIndicesOpened = false;
 										}
 									}
 									GUILayout.EndHorizontal ();
+
+									if (a.reportIndicesOpened)
+									{
+										for (int n = 0; n < a.reportIndices.Count; n++) 
+										{
+											GUILayout.BeginHorizontal ();
+											{
+												GUILayout.Space (10);
+												GUILayout.Label ((n + 1).ToString(), GUILayout.Width (15));
+												int reportIndex = a.reportIndices [n];
+												EcoGUI.IntField (null, ref reportIndex, 0, 50);
+												a.reportIndices [n] = reportIndex;
+
+												// Delete
+												if (n > 0 && GUILayout.Button ("-", GUILayout.Width (20))) 
+												{
+													a.reportIndices.RemoveAt (n);
+													break;
+												}
+											}
+											GUILayout.EndHorizontal ();
+										}
+
+										if (GUILayout.Button ("+", GUILayout.Width (20))) 
+										{
+											int id = 0;
+											if (a.reportIndices.Count > 0) {
+												id = a.reportIndices [a.reportIndices.Count - 1] + 1;
+											}
+											a.reportIndices.Add (id);
+										}
+									}
 								}
 							}
 							GUILayout.EndVertical ();
