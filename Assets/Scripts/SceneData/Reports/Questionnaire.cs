@@ -289,6 +289,8 @@ namespace Ecosim.SceneData
 
 		private Scene scene;
 
+		// TODO: All todo's mean they have to be processed in the Editor interface
+
 		public int id;
 		public string name;
 		public bool enabled;
