@@ -294,14 +294,21 @@ namespace Ecosim.SceneData
 		public bool enabled;
 		public bool useIntroduction;
 		public string introduction;
+		public bool useConclusion; // TODO:
+		public string conclusion; // TODO:
 		public bool useRequiredScore;
 		public int requiredScore;
+		public bool useReqScoreFeedback; // TODO:
+		public string reqScoreFeedback; // TODO:
 		public bool usePassedFeedback;
 		public bool useFailedFeedback;
 		public string passedFeedback;
 		public string failedFeedback;
 		public bool startOverOnFailed;
 		public List<Question> questions;
+		public bool useBudget; // TODO:
+		public bool useBudgetFeedback; // TODO:
+		public string budgetFeedback; // TODO:
 
 		public bool opened;
 		public bool questionsOpened;
@@ -328,13 +335,20 @@ namespace Ecosim.SceneData
 			q.enabled = bool.Parse (reader.GetAttribute ("enabled"));
 			q.useIntroduction = bool.Parse (reader.GetAttribute ("useintro"));
 			q.introduction = reader.GetAttribute ("intro");
+			q.useConclusion = bool.Parse (reader.GetAttribute ("useconcl"));
+			q.conclusion = reader.GetAttribute ("concl");
 			q.useRequiredScore = bool.Parse (reader.GetAttribute ("usereqscore"));
 			q.requiredScore = int.Parse (reader.GetAttribute ("reqscore"));
+			q.useReqScoreFeedback = bool.Parse (reader.GetAttribute ("usereqscorefb"));
+			q.reqScoreFeedback = reader.GetAttribute ("reqscorefb");
 			q.usePassedFeedback = bool.Parse (reader.GetAttribute ("usepassedfb"));
 			q.useFailedFeedback = bool.Parse (reader.GetAttribute ("usefailedfb"));
 			q.passedFeedback = reader.GetAttribute ("passedfb");
 			q.failedFeedback = reader.GetAttribute ("failedfb");
 			q.startOverOnFailed = bool.Parse (reader.GetAttribute ("failstartover"));
+			q.useBudget = bool.Parse (reader.GetAttribute ("usebudget"));
+			q.useBudgetFeedback = bool.Parse (reader.GetAttribute ("usebudgetfb"));
+			q.budgetFeedback = reader.GetAttribute ("budgetfb");
 
 			while (reader.Read ())
 			{
@@ -376,13 +390,20 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("enabled", enabled.ToString().ToLower());
 			writer.WriteAttributeString ("useintro", useIntroduction.ToString().ToLower());
 			writer.WriteAttributeString ("intro", introduction);
+			writer.WriteAttributeString ("useconcl", useConclusion.ToString().ToLower());
+			writer.WriteAttributeString ("concl", conclusion);
 			writer.WriteAttributeString ("usereqscore", useRequiredScore.ToString().ToLower());
 			writer.WriteAttributeString ("reqscore", requiredScore.ToString());
+			writer.WriteAttributeString ("usereqscorefb", useReqScoreFeedback.ToString().ToLower());
+			writer.WriteAttributeString ("reqscorefb", reqScoreFeedback.ToString());
 			writer.WriteAttributeString ("usepassedfb", usePassedFeedback.ToString().ToLower());
 			writer.WriteAttributeString ("usefailedfb", useFailedFeedback.ToString().ToLower());
 			writer.WriteAttributeString ("passedfb", passedFeedback);
 			writer.WriteAttributeString ("failedfb", failedFeedback);
 			writer.WriteAttributeString ("failstartover", startOverOnFailed.ToString().ToLower());
+			writer.WriteAttributeString ("usebudget", useBudget.ToString().ToLower());
+			writer.WriteAttributeString ("usebudgetfb", useBudgetFeedback.ToString().ToLower());
+			writer.WriteAttributeString ("budgetfb", budgetFeedback.ToString());
 			foreach (Question q in this.questions) {
 				q.Save (writer, scene);
 			}
