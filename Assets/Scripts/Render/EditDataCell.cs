@@ -18,7 +18,8 @@ public class EditDataCell
 	private const int TERRAIN_CELL_SIZE = TerrainMgr.CELL_SIZE;
 	private const float TERRAIN_SCALE = TerrainMgr.TERRAIN_SCALE;
 	private const float VERTICAL_HEIGHT = TerrainMgr.VERTICAL_HEIGHT;
-	private const float VERTICAL_OFFSET = 1.0f;
+	public static float VERTICAL_OFFSET = 1.0f;
+
 	Mesh mesh; // mesh of displayed data (can be null if no data is displayed for this cell)
 	GameObject go; // gameobject of displayed data (can be null)
 	Mesh selectionMesh; // mesh for selection (can be null)

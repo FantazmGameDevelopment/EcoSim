@@ -10,11 +10,12 @@ namespace Ecosim.SceneData
 		public const string XML_ELEMENT = "reports";
 		private readonly Scene scene;
 
-		public Questionnaire questionnaire;
+		public List<Questionnaire> questionnaires;
 
 		public ReportsMgr (Scene scene)
 		{
 			this.scene = scene;
+			this.questionnaires = new List<Questionnaire>();
 		}
 
 		private void Load (XmlTextReader reader)
@@ -27,7 +28,7 @@ namespace Ecosim.SceneData
 					switch (reader.Name.ToLower())
 					{
 					case Questionnaire.XML_ELEMENT : 
-						this.questionnaire = Questionnaire.Load (reader, scene);
+						this.questionnaires.Add (Questionnaire.Load (reader, scene));
 						break;
 					}
 				} 
@@ -61,7 +62,9 @@ namespace Ecosim.SceneData
 			XmlTextWriter writer = new XmlTextWriter (path + XML_ELEMENT + ".xml", System.Text.Encoding.UTF8);
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement (XML_ELEMENT);
-			questionnaire.Save (writer, scene);
+			foreach (Questionnaire q in questionnaires) {
+				q.Save (writer, scene);
+			}
 			writer.WriteEndElement ();
 			writer.WriteEndDocument ();
 			writer.Close ();		
@@ -69,7 +72,9 @@ namespace Ecosim.SceneData
 		
 		public void UpdateReferences ()
 		{
-			questionnaire.UpdateReferences (scene);
+			foreach (Questionnaire q in questionnaires) {
+				q.UpdateReferences (scene);
+			}
 		}
 	}
 }

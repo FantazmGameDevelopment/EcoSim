@@ -107,6 +107,9 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			public Starvation starvation = new Starvation ();
 
 			[System.Serializable]
+			/**
+			 * AKA "Human induced death"
+			 */ 
 			public class ArtificialDeath : AnimalPopulationModelDataBase
 			{
 				[System.Serializable]

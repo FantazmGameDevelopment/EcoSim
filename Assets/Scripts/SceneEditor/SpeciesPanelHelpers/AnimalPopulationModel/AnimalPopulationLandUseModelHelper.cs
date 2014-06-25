@@ -46,7 +46,7 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 					}
 					GUILayout.EndHorizontal ();
 
-					EcoGUI.IntField ("Carry capacity", ref this.model.food.foodCarryCapacity, 100, 50);
+					EcoGUI.IntField ("Carrying capacity", ref this.model.food.foodCarryCapacity, 100, 50);
 				}
 				this.RenderHeaderEnd (this.model.food);
 
@@ -74,7 +74,7 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 					EcoGUI.skipHorizontal = true;
 					GUILayout.BeginHorizontal ();
 					{
-						GUILayout.Label ("Walk distance", GUILayout.Width (100));
+						GUILayout.Label (" Walk distance", GUILayout.Width (100));
 						EcoGUI.IntField ("Min", ref this.model.movement.minWalkDistance, GUILayout.Width (20), GUILayout.Width (50));
 						EcoGUI.IntField ("Max", ref this.model.movement.maxWalkDistance, GUILayout.Width (20), GUILayout.Width (50));
 					}

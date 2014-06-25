@@ -34,6 +34,7 @@ namespace Ecosim.SceneEditor
 
 				if (str != val.ToString())
 				{
+					if (str.Length == 0) str = "0";
 					int newVal;
 					if (int.TryParse (str, out newVal)) {
 						val = newVal;
@@ -71,6 +72,7 @@ namespace Ecosim.SceneEditor
 
 				if (newValStr != valStr)
 				{
+					if (newValStr.Length == 0) newValStr = "0";
 					float newVal;
 					if (float.TryParse (newValStr, out newVal)) {
 						val = newVal;
@@ -140,13 +142,11 @@ namespace Ecosim.SceneEditor
 				{
 					opened = !opened;
 				}
-					
-				if (!string.IsNullOrEmpty (name)) 
-				{
-					GUILayout.Space (2);
-					if (nameLayout != null) name = GUILayout.TextField (name, nameLayout);
-					else 					name = GUILayout.TextField (name);
-				}
+
+				if (name == null) name = "";
+				GUILayout.Space (2);
+				if (nameLayout != null) name = GUILayout.TextField (name, nameLayout);
+				else 					name = GUILayout.TextField (name);
 			}
 			if (!skipHorizontal) GUILayout.EndHorizontal ();
 			return opened;

@@ -54,20 +54,30 @@ namespace Ecosim.SceneEditor
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label ("Terrain range", GUILayout.Width (65));
-			int currentRange = TerrainMgr.self.range;
-			int newRange = (int)GUILayout.HorizontalSlider (currentRange, 64, 256, GUILayout.Width (100));
-			GUILayout.Label (newRange.ToString ());
-			if (newRange != currentRange) {
-				if ((currentRange <= 128) && (newRange > 128)) {
-					ctrl.StartDialog ("Values > 128 should only used on powerful systems in 64-bit mode. Continue?", result => {
+			{
+				GUILayout.Label ("Terrain range", GUILayout.Width (65));
+				int currentRange = TerrainMgr.self.range;
+				int newRange = (int)GUILayout.HorizontalSlider (currentRange, 64, 256, GUILayout.Width (100));
+				GUILayout.Label (newRange.ToString ());
+				if (newRange != currentRange) {
+					if ((currentRange <= 128) && (newRange > 128)) {
+						ctrl.StartDialog ("Values > 128 should only used on powerful systems in 64-bit mode. Continue?", result => {
+							TerrainMgr.self.range = newRange;
+						}, null);
+					} else {
 						TerrainMgr.self.range = newRange;
-					}, null);
-				} else {
-					TerrainMgr.self.range = newRange;
+					}
 				}
+				GUILayout.FlexibleSpace ();
 			}
-			GUILayout.FlexibleSpace ();
+			GUILayout.EndHorizontal ();
+
+			GUILayout.Space (4);
+
+			GUILayout.BeginHorizontal ();
+			{
+				EcoGUI.FloatField ("Edit grid height offset", ref EditDataCell.VERTICAL_OFFSET, 2, 100, 80);
+			}
 			GUILayout.EndHorizontal ();
 
 			GUILayout.Space (4);

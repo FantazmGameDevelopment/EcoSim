@@ -9,6 +9,11 @@ namespace Ecosim.SceneData
 	public abstract class Question
 	{
 		public string body;
+
+		public bool opened;
+		public bool answersOpened;
+		public List<Answer> answers;
+
 		public abstract void Save (XmlTextWriter writer, Scene scene);
 		public abstract void Load (XmlTextReader reader, Scene scene);
 		public abstract void UpdateReferences (Scene scene);
@@ -18,6 +23,11 @@ namespace Ecosim.SceneData
 	{
 		public string body;
 		public string feedback;
+		public bool useFeedback;
+
+		public bool opened;
+		public bool feedbackOpened;
+
 		public abstract void Save (XmlTextWriter writer, Scene scene);
 		public abstract void Load (XmlTextReader reader, Scene scene);
 		public abstract void UpdateReferences (Scene scene);
@@ -37,6 +47,7 @@ namespace Ecosim.SceneData
 			public MPCAnswer ()
 			{
 				body = "New answer";
+				feedback = "Feedback";
 				moneyGained = 0;
 				score = 0;
 				startFromBeginning = false;
@@ -88,11 +99,12 @@ namespace Ecosim.SceneData
 
 		public const string XML_ELEMENT = "mpc";
 
-		public List<MPCAnswer> answers;
-
 		public MPCQuestion ()
 		{
-			this.answers = new List<MPCAnswer> ();
+			this.answers = new List<Answer> ();
+			this.answers.Add (new MPCAnswer ());
+			this.answers.Add (new MPCAnswer ());
+			this.body = "New multiple choice question";
 		}
 
 		override public void Save (XmlTextWriter writer, Scene scene)
@@ -145,12 +157,18 @@ namespace Ecosim.SceneData
 			
 			public int maxWords;
 			public bool copyToReport;
+			public List<int> reportIndices;
+
+			public bool reportIndicesOpened;
 			
 			public OpenAnswer ()
 			{
-				body = "New answer";
+				body = "Write your answer";
+				feedback = "Feedback";
 				maxWords = 0;
 				copyToReport = false;
+				reportIndices = new List<int>();
+				reportIndices.Add (0);
 			}
 			
 			override public void Save (XmlTextWriter writer, Scene scene)
@@ -160,6 +178,14 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("feedback", feedback);
 				writer.WriteAttributeString ("maxwords", maxWords.ToString());
 				writer.WriteAttributeString ("copytoreport", copyToReport.ToString().ToLower());
+
+				string reportIndicesStr = "";
+				foreach (int i in reportIndices) {
+					reportIndicesStr += i.ToString() + ",";
+				}
+				reportIndicesStr.TrimEnd (',');
+				writer.WriteAttributeString ("copytoreports", reportIndicesStr);
+
 				writer.WriteEndElement ();
 			}
 			
@@ -169,7 +195,16 @@ namespace Ecosim.SceneData
 				feedback = reader.GetAttribute ("feedback");
 				maxWords = int.Parse (reader.GetAttribute ("maxwords"));
 				copyToReport = bool.Parse (reader.GetAttribute ("copytoreport"));
-				
+
+				string indicesStr = reader.GetAttribute ("copytoreports");
+				string[] indices = indicesStr.Split (',');
+				reportIndices = new List<int> ();
+				if (indicesStr.Length > 0) {
+					foreach (string i in indices) {
+						reportIndices.Add (int.Parse (i));
+					}
+				}
+
 				while (reader.Read ())
 				{
 					XmlNodeType nt = reader.NodeType;
@@ -193,11 +228,11 @@ namespace Ecosim.SceneData
 
 		public const string XML_ELEMENT = "open";
 
-		public List<OpenAnswer> answers;
-
 		public OpenQuestion ()
 		{
-			answers = new List<OpenAnswer> ();
+			answers = new List<Answer> ();
+			answers.Add (new OpenAnswer());
+			this.body = "New open question";
 		}
 
 		override public void Save (XmlTextWriter writer, Scene scene)
@@ -246,30 +281,52 @@ namespace Ecosim.SceneData
 
 		private Scene scene;
 
-		public bool use;
+		public int id;
+		public string name;
+		public bool enabled;
 		public bool useIntroduction;
 		public string introduction;
 		public bool useRequiredScore;
 		public int requiredScore;
+		public bool usePassedFeedback;
+		public bool useFailedFeedback;
 		public string passedFeedback;
 		public string failedFeedback;
+		public bool startOverOnFailed;
 		public List<Question> questions;
-		
+
+		public bool opened;
+		public bool questionsOpened;
+		public bool introOpened;
+		public bool reqScoreOpened;
+		public bool passedFeedbackOpened;
+		public bool failedFeedbackOpened;
+
 		public Questionnaire ()
 		{
 			this.questions = new List<Question>();
+			this.name = "New questionnaire";
+			this.introduction = "Intro";
+			this.requiredScore = 100;
+			this.passedFeedback = "Passed";
+			this.failedFeedback = "Failed";
 		}
 
 		public static Questionnaire Load (XmlTextReader reader, Scene scene)
 		{
-			Questionnaire questionnaire = new Questionnaire ();
-			questionnaire.use = bool.Parse (reader.GetAttribute ("use"));
-			questionnaire.useIntroduction = bool.Parse (reader.GetAttribute ("useintro"));
-			questionnaire.introduction = reader.GetAttribute ("intro");
-			questionnaire.useRequiredScore = bool.Parse (reader.GetAttribute ("usereqscore"));
-			questionnaire.requiredScore = int.Parse (reader.GetAttribute ("reqscore"));
-			questionnaire.passedFeedback = reader.GetAttribute ("passedfb");
-			questionnaire.failedFeedback = reader.GetAttribute ("failedfb");
+			Questionnaire q = new Questionnaire ();
+			q.id = int.Parse (reader.GetAttribute ("id"));
+			q.name = reader.GetAttribute ("name");
+			q.enabled = bool.Parse (reader.GetAttribute ("enabled"));
+			q.useIntroduction = bool.Parse (reader.GetAttribute ("useintro"));
+			q.introduction = reader.GetAttribute ("intro");
+			q.useRequiredScore = bool.Parse (reader.GetAttribute ("usereqscore"));
+			q.requiredScore = int.Parse (reader.GetAttribute ("reqscore"));
+			q.usePassedFeedback = bool.Parse (reader.GetAttribute ("usepassedfb"));
+			q.useFailedFeedback = bool.Parse (reader.GetAttribute ("usefailedfb"));
+			q.passedFeedback = reader.GetAttribute ("passedfb");
+			q.failedFeedback = reader.GetAttribute ("failedfb");
+			q.startOverOnFailed = bool.Parse (reader.GetAttribute ("failstartover"));
 
 			while (reader.Read ())
 			{
@@ -280,17 +337,17 @@ namespace Ecosim.SceneData
 					{
 					case OpenQuestion.XML_ELEMENT :
 					{
-						OpenQuestion q = new OpenQuestion ();
-						q.Load (reader, scene);
-						questionnaire.questions.Add (q);
+						OpenQuestion newQ = new OpenQuestion ();
+						newQ.Load (reader, scene);
+						q.questions.Add (newQ);
 					}
 					break;
 
 					case MPCQuestion.XML_ELEMENT:
 					{
-						MPCQuestion q = new MPCQuestion ();
-						q.Load (reader, scene);
-						questionnaire.questions.Add (q);
+						MPCQuestion newQ = new MPCQuestion ();
+						newQ.Load (reader, scene);
+						q.questions.Add (newQ);
 					}
 					break;
 					}
@@ -300,19 +357,24 @@ namespace Ecosim.SceneData
 				}
 			}
 
-			return questionnaire;
+			return q;
 		}
 		
 		public void Save (XmlTextWriter writer, Scene scene)
 		{
 			writer.WriteStartElement (XML_ELEMENT);
-			writer.WriteAttributeString ("use", use.ToString().ToLower());
+			writer.WriteAttributeString ("id", id.ToString());
+			writer.WriteAttributeString ("name", name);
+			writer.WriteAttributeString ("enabled", enabled.ToString().ToLower());
 			writer.WriteAttributeString ("useintro", useIntroduction.ToString().ToLower());
 			writer.WriteAttributeString ("intro", introduction);
 			writer.WriteAttributeString ("usereqscore", useRequiredScore.ToString().ToLower());
 			writer.WriteAttributeString ("reqscore", requiredScore.ToString());
+			writer.WriteAttributeString ("usepassedfb", usePassedFeedback.ToString().ToLower());
+			writer.WriteAttributeString ("usefailedfb", useFailedFeedback.ToString().ToLower());
 			writer.WriteAttributeString ("passedfb", passedFeedback);
 			writer.WriteAttributeString ("failedfb", failedFeedback);
+			writer.WriteAttributeString ("failstartover", startOverOnFailed.ToString().ToLower());
 			foreach (Question q in this.questions) {
 				q.Save (writer, scene);
 			}

@@ -92,7 +92,7 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 
 					// TODO: Add "?" to explain the starve rate starvation = (starvation chance) * (starve rate)
 
-					if (this.RenderHeaderStart ("Artificial Death", this.model.specifiedNumber.artificialDeath, true))
+					if (this.RenderHeaderStart ("Human induced death", this.model.specifiedNumber.artificialDeath, true))
 					{
 						GUILayout.Space (2);
 						GUILayout.Label ("Entries");
