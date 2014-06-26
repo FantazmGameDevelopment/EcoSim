@@ -326,7 +326,7 @@ public class QuestionnaireWindow
 		Questionnaire q = questionnaire;
 		Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (q.id);
 		
-		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); // TODO: Scroll style
+		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); 
 		{
 			// Check if we passed
 			bool passed = true;
@@ -338,7 +338,7 @@ public class QuestionnaireWindow
 			GUILayout.Label ("Questionnaire results:\n" + q.name, headerDark, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 			
-			this.scrollPosition = GUILayout.BeginScrollView (this.scrollPosition);
+			this.scrollPosition = GUILayout.BeginScrollView (this.scrollPosition); // TODO: Scroll style
 			{
 				// Questions
 				int qidx = 0;
