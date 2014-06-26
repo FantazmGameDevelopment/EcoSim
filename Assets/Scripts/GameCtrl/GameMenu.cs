@@ -218,6 +218,7 @@ public class GameMenu : MonoBehaviour
 			enabled = false;
 			GameControl.ActivateGameControl (scene);
 			scene.InitActions (true);
+			scene.InitReports (true);
 			GameControl.InterfaceChanged ();
 		} else {
 			state = State.Main;
@@ -247,6 +248,7 @@ public class GameMenu : MonoBehaviour
 			enabled = false;
 			GameControl.ActivateGameControl (scene);
 			scene.InitActions (false);
+			scene.InitReports (false);
 			GameControl.InterfaceChanged ();
 		} else {
 			state = State.Main;

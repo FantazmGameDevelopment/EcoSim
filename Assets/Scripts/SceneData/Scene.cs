@@ -68,6 +68,18 @@ namespace Ecosim.SceneData
 				progression.Save ();
 			}
 		}
+
+		/**
+		 * We do InitActions separate from StartNewGame / LoadExistingGame
+		 * to make sure all contexts (like scene variable) have been completely
+		 * set up and scripts will work correctly when accessing scene or progression
+		 * properties.
+		 */
+		public void InitReports (bool isNewGame) {
+			if (isNewGame) {
+				reports.Init ();
+			}
+		}
 		
 		/**
 		 * Start a new game with scene named name, progress of the game is saved
@@ -295,12 +307,12 @@ namespace Ecosim.SceneData
 			CalculatedData.Calculation.Save (path, calculations, this);
 
 			assets.Save (path);
-			actions.Save (path);
 			reports.Save (path);
 			buildings.Save (path);
 			roads.Save (path);
 			progression.Save ();
 			articles.Save (path);
+			actions.Save (path);
 		}
 
 		static Scene Load (string name, XmlTextReader reader)

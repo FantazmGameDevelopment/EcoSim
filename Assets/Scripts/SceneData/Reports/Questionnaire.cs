@@ -59,6 +59,7 @@ namespace Ecosim.SceneData
 				writer.WriteStartElement (XML_ELEMENT);
 				writer.WriteAttributeString ("body", body);
 				writer.WriteAttributeString ("feedback", feedback);
+				writer.WriteAttributeString ("usefb", useFeedback.ToString().ToLower());
 				writer.WriteAttributeString ("startover", startFromBeginning.ToString().ToLower());
 				writer.WriteAttributeString ("money", moneyGained.ToString());
 				writer.WriteAttributeString ("score", score.ToString());
@@ -70,23 +71,27 @@ namespace Ecosim.SceneData
 			{
 				body = reader.GetAttribute ("body");
 				feedback = reader.GetAttribute ("feedback");
+				useFeedback = bool.Parse (reader.GetAttribute ("usefb"));
 				startFromBeginning = bool.Parse (reader.GetAttribute ("startover"));
 				moneyGained = int.Parse (reader.GetAttribute ("money"));
 				score = int.Parse (reader.GetAttribute ("score"));
 				allowRetry = bool.Parse (reader.GetAttribute ("allowretry"));
 
-				while (reader.Read ())
+				if (!reader.IsEmptyElement)
 				{
-					XmlNodeType nt = reader.NodeType;
-					if (nt == XmlNodeType.Element) 
+					while (reader.Read ())
 					{
-						/*switch (reader.Name.ToLower ())
-					{
-						case "" : break;
-					}*/
-					}
-					else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
-						break;
+						XmlNodeType nt = reader.NodeType;
+						if (nt == XmlNodeType.Element) 
+						{
+							/*switch (reader.Name.ToLower ())
+						{
+							case "" : break;
+						}*/
+						}
+						else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
+							break;
+						}
 					}
 				}
 			}
@@ -119,24 +124,28 @@ namespace Ecosim.SceneData
 
 		override public void Load (XmlTextReader reader, Scene scene)
 		{
+			this.answers = new List<Answer> ();
 			body = reader.GetAttribute ("body");
 
-			while (reader.Read ())
+			if (!reader.IsEmptyElement)
 			{
-				XmlNodeType nt = reader.NodeType;
-				if (nt == XmlNodeType.Element) 
+				while (reader.Read ())
 				{
-					switch (reader.Name.ToLower ())
+					XmlNodeType nt = reader.NodeType;
+					if (nt == XmlNodeType.Element) 
 					{
-					case MPCAnswer.XML_ELEMENT :
-						MPCAnswer a = new MPCAnswer();
-						a.Load (reader, scene);
-						this.answers.Add (a);
+						switch (reader.Name.ToLower ())
+						{
+						case MPCAnswer.XML_ELEMENT :
+							MPCAnswer a = new MPCAnswer();
+							a.Load (reader, scene);
+							this.answers.Add (a);
+							break;
+						}
+					}
+					else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
 						break;
 					}
-				}
-				else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
-					break;
 				}
 			}
 		}
@@ -155,8 +164,8 @@ namespace Ecosim.SceneData
 		{
 			public const string XML_ELEMENT = "answer";
 
-			public bool useMaxWords;
-			public int maxWords;
+			public bool useMaxChars;
+			public int maxChars;
 			public bool copyToReport;
 			public List<int> reportIndices;
 
@@ -166,8 +175,8 @@ namespace Ecosim.SceneData
 			{
 				body = "Write your answer";
 				feedback = "Feedback";
-				maxWords = 0;
-				useMaxWords = false;
+				maxChars = 0;
+				useMaxChars = false;
 				copyToReport = false;
 				reportIndices = new List<int>();
 				reportIndices.Add (0);
@@ -178,8 +187,9 @@ namespace Ecosim.SceneData
 				writer.WriteStartElement (XML_ELEMENT);
 				writer.WriteAttributeString ("body", body);
 				writer.WriteAttributeString ("feedback", feedback);
-				writer.WriteAttributeString ("usemaxwords", useMaxWords.ToString().ToLower());
-				writer.WriteAttributeString ("maxwords", maxWords.ToString());
+				writer.WriteAttributeString ("usefb", useFeedback.ToString().ToLower());
+				writer.WriteAttributeString ("usemaxchars", useMaxChars.ToString().ToLower());
+				writer.WriteAttributeString ("maxchars", maxChars.ToString());
 				writer.WriteAttributeString ("copytoreport", copyToReport.ToString().ToLower());
 
 				string reportIndicesStr = "";
@@ -196,8 +206,9 @@ namespace Ecosim.SceneData
 			{
 				body = reader.GetAttribute ("body");
 				feedback = reader.GetAttribute ("feedback");
-				maxWords = int.Parse (reader.GetAttribute ("maxwords"));
-				useMaxWords = bool.Parse (reader.GetAttribute ("usemaxwords"));
+				useFeedback = bool.Parse (reader.GetAttribute ("usefb"));
+				maxChars = int.Parse (reader.GetAttribute ("maxchars"));
+				useMaxChars = bool.Parse (reader.GetAttribute ("usemaxchars"));
 				copyToReport = bool.Parse (reader.GetAttribute ("copytoreport"));
 
 				string indicesStr = reader.GetAttribute ("copytoreports");
@@ -205,7 +216,6 @@ namespace Ecosim.SceneData
 				reportIndices = new List<int> ();
 				if (indicesStr.Length > 0) {
 					foreach (string i in indices) {
-						Debug.Log (i);
 						int idx = 0;
 						if (int.TryParse (i, out idx)) {
 							reportIndices.Add (idx);
@@ -213,18 +223,21 @@ namespace Ecosim.SceneData
 					}
 				}
 
-				while (reader.Read ())
+				if (!reader.IsEmptyElement)
 				{
-					XmlNodeType nt = reader.NodeType;
-					if (nt == XmlNodeType.Element) 
+					while (reader.Read ())
 					{
-						/*switch (reader.Name.ToLower ())
-					{
-						case "" : break;
-					}*/
-					}
-					else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
-						break;
+						XmlNodeType nt = reader.NodeType;
+						if (nt == XmlNodeType.Element) 
+						{
+							/*switch (reader.Name.ToLower ())
+						{
+							case "" : break;
+						}*/
+						}
+						else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
+							break;
+						}
 					}
 				}
 			}
@@ -255,22 +268,27 @@ namespace Ecosim.SceneData
 		
 		override public void Load (XmlTextReader reader, Scene scene)
 		{
-			while (reader.Read ())
+			this.answers = new List<Answer> ();
+
+			if (!reader.IsEmptyElement)
 			{
-				XmlNodeType nt = reader.NodeType;
-				if (nt == XmlNodeType.Element) 
+				while (reader.Read ())
 				{
-					switch (reader.Name.ToLower ())
+					XmlNodeType nt = reader.NodeType;
+					if (nt == XmlNodeType.Element) 
 					{
-					case OpenAnswer.XML_ELEMENT : 
-						OpenAnswer a = new OpenAnswer ();
-						a.Load (reader, scene);
-						this.answers.Add (a);
+						switch (reader.Name.ToLower ())
+						{
+						case OpenAnswer.XML_ELEMENT : 
+							OpenAnswer a = new OpenAnswer ();
+							a.Load (reader, scene);
+							this.answers.Add (a);
+							break;
+						}
+					}
+					else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
 						break;
 					}
-				}
-				else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
-					break;
 				}
 			}
 		}
@@ -296,37 +314,49 @@ namespace Ecosim.SceneData
 		public bool enabled;
 		public bool useIntroduction;
 		public string introduction;
-		public bool useConclusion; // TODO:
-		public string conclusion; // TODO:
+		public bool useConclusion;
+		public string conclusion;
 		public bool useRequiredScore;
 		public int requiredScore;
-		public bool useReqScoreFeedback; // TODO:
-		public string reqScoreFeedback; // TODO:
+		public bool useReqScoreFeedback;
+		public string reqScoreFeedback;
 		public bool usePassedFeedback;
 		public bool useFailedFeedback;
 		public string passedFeedback;
 		public string failedFeedback;
 		public bool startOverOnFailed;
 		public List<Question> questions;
-		public bool useBudget; // TODO:
-		public bool useBudgetFeedback; // TODO:
-		public string budgetFeedback; // TODO:
+		public bool useBudget;
+		public bool useBudgetFeedback;
+		public string budgetFeedback;
 
 		public bool opened;
 		public bool questionsOpened;
 		public bool introOpened;
 		public bool reqScoreOpened;
+		public bool reqScoreFeedbackOpened;
+		public bool budgetOpened;
+		public bool budgetFeedbackOpened;
 		public bool passedFeedbackOpened;
 		public bool failedFeedbackOpened;
+		public bool conclusionOpened;
+
+		public int currentQuestionIndex;
+		public bool introShown;
+		public bool conclusionShown;
 
 		public Questionnaire ()
 		{
 			this.questions = new List<Question>();
 			this.name = "New questionnaire";
 			this.introduction = "Intro";
+			this.conclusion = "Conclusion";
 			this.requiredScore = 100;
 			this.passedFeedback = "Passed";
 			this.failedFeedback = "Failed";
+			this.budgetFeedback = "Explanation";
+			this.reqScoreFeedback = "Explanation";
+			this.currentQuestionIndex = 0;
 		}
 
 		public static Questionnaire Load (XmlTextReader reader, Scene scene)
@@ -352,32 +382,35 @@ namespace Ecosim.SceneData
 			q.useBudgetFeedback = bool.Parse (reader.GetAttribute ("usebudgetfb"));
 			q.budgetFeedback = reader.GetAttribute ("budgetfb");
 
-			while (reader.Read ())
+			if (!reader.IsEmptyElement)
 			{
-				XmlNodeType nt = reader.NodeType;
-				if (nt == XmlNodeType.Element) 
+				while (reader.Read ())
 				{
-					switch (reader.Name.ToLower ())
+					XmlNodeType nt = reader.NodeType;
+					if (nt == XmlNodeType.Element) 
 					{
-					case OpenQuestion.XML_ELEMENT :
-					{
-						OpenQuestion newQ = new OpenQuestion ();
-						newQ.Load (reader, scene);
-						q.questions.Add (newQ);
-					}
-					break;
+						switch (reader.Name.ToLower ())
+						{
+						case OpenQuestion.XML_ELEMENT :
+						{
+							OpenQuestion newQ = new OpenQuestion ();
+							newQ.Load (reader, scene);
+							q.questions.Add (newQ);
+						}
+						break;
 
-					case MPCQuestion.XML_ELEMENT:
-					{
-						MPCQuestion newQ = new MPCQuestion ();
-						newQ.Load (reader, scene);
-						q.questions.Add (newQ);
+						case MPCQuestion.XML_ELEMENT:
+						{
+							MPCQuestion newQ = new MPCQuestion ();
+							newQ.Load (reader, scene);
+							q.questions.Add (newQ);
+						}
+						break;
+						}
 					}
-					break;
+					else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
+						break;
 					}
-				}
-				else if (nt == XmlNodeType.EndElement && reader.Name.ToLower () == XML_ELEMENT) {
-					break;
 				}
 			}
 

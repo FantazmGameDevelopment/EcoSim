@@ -16,6 +16,9 @@ public class ShowArticles : MonoBehaviour {
 	private float yPos = 0;
 	private float targetYPos = 0;
 	private static volatile bool hasUnreadMessages = false;
+	public static bool HasUnreadMessages {
+		get { return hasUnreadMessages; }
+	}
 	
 	/**
 	 * Notify ShowArticles there are messages that need to be displayed
@@ -35,6 +38,7 @@ public class ShowArticles : MonoBehaviour {
 	}
 	
 	void OnGUI () {
+
 		GameControl ctrl = GameControl.self;
 		Scene scene = ctrl.scene;
 		if ((scene != null) && hasUnreadMessages && (!isShowing)) {
@@ -63,10 +67,12 @@ public class ShowArticles : MonoBehaviour {
 			SimpleGUI.Label (new Rect ((sWidth - articleTex.width ) / 2, yPos, articleTex.width, articleTex.height), articleTex, GUIStyle.none);
 			if (Event.current.type == EventType.MouseDown) {
 				Event.current.Use ();
-				ctrl.hideToolBar = false;
-				ctrl.hideSuccessionButton = false;
-				isShowing = false;
 				hasUnreadMessages = ctrl.scene.progression.ToNextMessage ();
+				if (!hasUnreadMessages) {
+					ctrl.hideToolBar = false;
+					ctrl.hideSuccessionButton = false;
+					isShowing = false;
+				}
 			}
 		}
 	}

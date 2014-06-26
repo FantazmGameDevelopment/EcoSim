@@ -132,7 +132,49 @@ namespace Ecosim.SceneData
 				}
 			}
 		}
-		
+
+		public class QuestionnaireState
+		{
+			public static string XML_ELEMENT = "questionnaire";
+
+			public int id;
+			public List<QuestionState> questionStates;
+			public int totalScore {
+				get {
+					int total = 0;
+					foreach (QuestionState qs in questionStates) {
+						total += qs.score;
+					}
+					return total;
+				}
+			}
+			public int totalMoneyEarned {
+				get {
+					int total = 0;
+					foreach (QuestionState qs in questionStates) {
+						total += qs.moneyGained;
+					}
+					return total;
+				}
+			}
+
+			public class QuestionState
+			{
+				public static string XML_ELEMENT = "qs";
+
+				public string questionName;
+				public string questionAnswer;
+				public int moneyGained;
+				public int score;
+			}
+
+			public QuestionnaireState (int id)
+			{
+				this.id = id;
+				this.questionStates = new List<QuestionState>();
+			}
+		}
+
 		/**
 		 * Stores a message/article/report. Messages can be derived from articles using id
 		 * or created on the fly using a text string. The text stored in the Message class
@@ -158,12 +200,30 @@ namespace Ecosim.SceneData
 		private int messageIndex = 0; // message currently looking at...
 		public List<Message> messages;
 		public List<Message> reports;
+		public List<QuestionnaireState> questionnaireStates; // TODO: Save this!
 		public List<InventarisationResult> inventarisations;
 		public List<ResearchPoint> researchPoints;
 		public Dictionary<string, object> variables;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
-		
+
+		public QuestionnaireState GetQuestionnaireState (int id)
+		{
+			foreach (QuestionnaireState qs in this.questionnaireStates) {
+				if (qs.id == id) 
+					return qs;
+			}
+			QuestionnaireState newQs = new QuestionnaireState (id);
+			this.questionnaireStates.Add (newQs);
+			return newQs;
+		}
+
+		public void AddQuestionState (QuestionnaireState.QuestionState qState, int questionnaireId)
+		{
+			QuestionnaireState qs = GetQuestionnaireState (questionnaireId);
+			qs.questionStates.Add (qState);
+		}
+
 		public void AddMessage (int id)
 		{
 			Articles.Article article = scene.articles.GetArticleWithId (id);
@@ -223,6 +283,7 @@ namespace Ecosim.SceneData
 			dataDict = new Dictionary<string, DataInfo> ();
 			variables = new Dictionary<string, object> ();
 			actionStates = new List<ActionState> ();
+			questionnaireStates = new List<QuestionnaireState>();
 			messages = new List<Message> ();
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
@@ -494,7 +555,35 @@ namespace Ecosim.SceneData
 			IOUtil.ReadUntilEndElement (reader, "variable");
 			return result;
 		}
-		
+
+		void LoadQuestionnaireState (XmlTextReader reader)
+		{
+			int id = int.Parse (reader.GetAttribute ("id"));
+			QuestionnaireState qs = new QuestionnaireState (id);
+			qs.questionStates = new List<QuestionnaireState.QuestionState> ();
+
+			if (!reader.IsEmptyElement) {
+				while (reader.Read()) {
+					XmlNodeType nType = reader.NodeType;
+					if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == QuestionnaireState.QuestionState.XML_ELEMENT)) 
+					{
+						QuestionnaireState.QuestionState questionState = new QuestionnaireState.QuestionState();
+						questionState.moneyGained = int.Parse (reader.GetAttribute ("money"));
+						questionState.score = int.Parse (reader.GetAttribute ("score"));
+						questionState.questionAnswer = reader.GetAttribute ("qanswer");
+						questionState.questionName = reader.GetAttribute ("qname");
+						qs.questionStates.Add (questionState);
+						IOUtil.ReadUntilEndElement (reader, QuestionnaireState.QuestionState.XML_ELEMENT);
+					} 
+					else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == QuestionnaireState.XML_ELEMENT)) {
+						break;
+					}
+				}
+			}
+
+			this.questionnaireStates.Add (qs);
+		}
+
 		void LoadActionState (XmlTextReader reader)
 		{
 			int id = int.Parse (reader.GetAttribute ("id"));
@@ -596,6 +685,9 @@ namespace Ecosim.SceneData
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
 					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == QuestionnaireState.XML_ELEMENT)) {
+						LoadQuestionnaireState (reader);
+					}
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "actionobjectgroup")) 
 					{
 						string name = reader.GetAttribute ("name");
@@ -918,6 +1010,20 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("name", ir.name);
 				writer.WriteAttributeString ("areaname", ir.areaName);
 				writer.WriteAttributeString ("actionid", ir.actionId.ToString ());
+				writer.WriteEndElement ();
+			}
+
+			foreach (QuestionnaireState qs in this.questionnaireStates) {
+				writer.WriteStartElement (QuestionnaireState.XML_ELEMENT);
+				writer.WriteAttributeString ("id", qs.id.ToString());
+				foreach (QuestionnaireState.QuestionState q in qs.questionStates) {
+					writer.WriteStartElement (QuestionnaireState.QuestionState.XML_ELEMENT);
+					writer.WriteAttributeString ("money", q.moneyGained.ToString());
+					writer.WriteAttributeString ("score", q.score.ToString());
+					writer.WriteAttributeString ("qanswer", q.questionAnswer);
+					writer.WriteAttributeString ("qname", q.questionName);
+					writer.WriteEndElement ();
+				}
 				writer.WriteEndElement ();
 			}
 

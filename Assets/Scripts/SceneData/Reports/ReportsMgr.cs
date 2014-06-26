@@ -17,6 +17,9 @@ namespace Ecosim.SceneData
 
 		public List<Questionnaire> questionnaires;
 
+		private int queueIndex;
+		public List<object> queue;
+
 		public ReportsMgr (Scene scene)
 		{
 			this.scene = scene;
@@ -25,11 +28,53 @@ namespace Ecosim.SceneData
 			showQuestionnaireAtEndId = 1;
 		}
 
+		public void Init ()
+		{
+			this.queue = new List<object> ();
+			this.queueIndex = 0;
+
+			// Check if we have start questionnaires
+			if (this.useShowQuestionnaireAtStart)
+			{
+				foreach (Questionnaire q in this.questionnaires) {
+					if (q.id == this.showQuestionnaireAtStartId) {
+						queue.Add (q);
+						break;
+					}
+				}
+			}
+
+			if (this.queue.Count > 0) {
+				ShowReports.NotifyQueueChange ();
+			}
+		}
+
+		public void EndGame ()
+		{
+			// TODO: EndGame
+		}
+
+		public object CurrentInQueue ()
+		{
+			if (queueIndex < queue.Count) {
+				return queue[queueIndex];
+			}
+			return null;
+		}
+		
+		public bool ToNextInQueue ()
+		{
+			if (queueIndex < queue.Count) {
+				queueIndex++;
+			}
+			return (queueIndex < queue.Count);
+		}
+
 		private void Load (XmlTextReader reader)
 		{
 			useShowQuestionnaireAtStart = bool.Parse (reader.GetAttribute ("showqstart"));
 			useShowQuestionnaireAtEnd = bool.Parse (reader.GetAttribute ("showqend"));
-			showQuestionnaireAtEndId = int.Parse (reader.GetAttribute ("qstartid"));
+			showQuestionnaireAtStartId = int.Parse (reader.GetAttribute ("qstartid"));
 			showQuestionnaireAtEndId = int.Parse (reader.GetAttribute ("qendid"));
 
 			while (reader.Read()) 

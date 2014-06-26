@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using Ecosim.SceneData;
 
@@ -173,6 +173,12 @@ namespace Ecosim.SceneEditor
 							{
 								GUILayout.BeginVertical (ctrl.skin.box);
 								{
+									q.startOverOnFailed = GUILayout.Toggle (q.startOverOnFailed, "Start from beginning when failed");
+									// We must have failed feedback
+									if (q.startOverOnFailed) {
+										q.useFailedFeedback = true;
+									}
+
 									// Passed Feedback
 									GUILayout.BeginHorizontal ();
 									{
@@ -197,7 +203,10 @@ namespace Ecosim.SceneEditor
 									// Failed Feedback
 									GUILayout.BeginHorizontal ();
 									{
+										GUI.enabled = !q.startOverOnFailed;
 										q.useFailedFeedback = GUILayout.Toggle (q.useFailedFeedback, "", GUILayout.Width (20));
+										GUI.enabled = true;
+
 										if (q.useFailedFeedback)
 										{
 											EcoGUI.skipHorizontal = true;
@@ -215,12 +224,80 @@ namespace Ecosim.SceneEditor
 										q.failedFeedback = GUILayout.TextArea (q.failedFeedback);
 									}
 
-									q.startOverOnFailed = GUILayout.Toggle (q.startOverOnFailed, "Start from beginning when failed");
+									// Feedback
+									GUILayout.BeginHorizontal ();
+									{
+										q.useReqScoreFeedback = GUILayout.Toggle (q.useReqScoreFeedback, "", GUILayout.Width (20));
+										if (q.useReqScoreFeedback)
+										{
+											EcoGUI.skipHorizontal = true;
+											EcoGUI.Foldout ("Explanation", ref q.reqScoreFeedbackOpened);
+											EcoGUI.skipHorizontal = false;
+										}
+										else 
+										{
+											GUILayout.Label ("Explanation");
+											q.useReqScoreFeedback = false;
+										}
+									}
+									GUILayout.EndHorizontal ();
+									if (q.reqScoreFeedbackOpened) {
+										q.reqScoreFeedback = GUILayout.TextArea (q.reqScoreFeedback);
+									}
 								}
 								GUILayout.EndVertical ();
 							}
 						}
 						GUILayout.EndVertical (); // ~Required score
+
+						// Budget
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+							GUILayout.BeginHorizontal ();
+							{
+								q.useBudget = GUILayout.Toggle (q.useBudget, "", GUILayout.Width (20));
+								if (q.useBudget) 
+								{
+									EcoGUI.skipHorizontal = true;
+									EcoGUI.Foldout ("Earn extra budget", ref q.budgetOpened, GUILayout.Width (100));
+									EcoGUI.skipHorizontal = false;
+								}
+								else 
+								{
+									GUILayout.Label ("Earn extra budget");
+									q.budgetOpened = false;
+								}
+							}
+							GUILayout.EndHorizontal ();
+							if (q.budgetOpened)
+							{
+								GUILayout.BeginVertical (ctrl.skin.box);
+								{
+									// Feedback
+									GUILayout.BeginHorizontal ();
+									{
+										q.useBudgetFeedback = GUILayout.Toggle (q.useBudgetFeedback, "", GUILayout.Width (20));
+										if (q.useBudgetFeedback)
+										{
+											EcoGUI.skipHorizontal = true;
+											EcoGUI.Foldout ("Explanation", ref q.budgetFeedbackOpened);
+											EcoGUI.skipHorizontal = false;
+										}
+										else 
+										{
+											GUILayout.Label ("Explanation");
+											q.budgetFeedbackOpened = false;
+										}
+									}
+									GUILayout.EndHorizontal ();
+									if (q.budgetFeedbackOpened) {
+										q.budgetFeedback = GUILayout.TextArea (q.budgetFeedback);
+									}
+								}
+								GUILayout.EndVertical ();
+							}
+						}
+						GUILayout.EndVertical (); // ~Budget
 
 						// Questions
 						EcoGUI.Foldout ("Questions", ref q.questionsOpened);
@@ -258,7 +335,32 @@ namespace Ecosim.SceneEditor
 								}
 							}
 							GUILayout.EndHorizontal (); // ~Add buttons
+						} // ~Questions
+
+						// Conclusion
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+							GUILayout.BeginHorizontal ();
+							{
+								q.useConclusion = GUILayout.Toggle (q.useConclusion, "", GUILayout.Width (20));
+								if (q.useConclusion) 
+								{
+									EcoGUI.skipHorizontal = true;
+									EcoGUI.Foldout ("Conclusion", ref q.conclusionOpened);
+									EcoGUI.skipHorizontal = false;
+								}
+								else 
+								{
+									GUILayout.Label ("Conclusion");
+									q.conclusionOpened = false;
+								}
+							}
+							GUILayout.EndHorizontal ();
+							if (q.conclusionOpened) {
+								q.conclusion = GUILayout.TextArea (q.conclusion);
+							}
 						}
+						GUILayout.EndVertical (); // ~Conclusion
 					}
 					GUILayout.Space (3);
 				}
@@ -368,7 +470,9 @@ namespace Ecosim.SceneEditor
 									if (q.useRequiredScore) {
 										EcoGUI.IntField ("Score", ref a.score, 80, 80);
 									}
-									EcoGUI.IntField ("Money gained", ref a.moneyGained, 80, 80);
+									if (q.useBudget) {
+										EcoGUI.IntField ("Money gained", ref a.moneyGained, 80, 80);
+									}
 								}
 							}
 							GUILayout.EndVertical ();
@@ -416,17 +520,17 @@ namespace Ecosim.SceneEditor
 								{
 									GUILayout.BeginHorizontal ();
 									{
-										a.useMaxWords = GUILayout.Toggle (a.useMaxWords, "", GUILayout.Width (20));
-										if (a.useMaxWords)
+										a.useMaxChars = GUILayout.Toggle (a.useMaxChars, "", GUILayout.Width (20));
+										if (a.useMaxChars)
 										{
 											EcoGUI.skipHorizontal = true;
-											EcoGUI.IntField ("Max. words", ref a.maxWords, 100, 100);
+											EcoGUI.IntField ("Max. characters", ref a.maxChars, 120, 100);
 											EcoGUI.skipHorizontal = false;
 										} 
 										else {
-											a.maxWords = 0;
+											a.maxChars = 0;
 											GUILayout.Space (2);
-											GUILayout.Label ("Max. words");
+											GUILayout.Label ("Max. characters");
 										}
 									}
 									GUILayout.EndHorizontal ();
