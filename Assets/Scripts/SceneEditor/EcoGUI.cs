@@ -136,6 +136,11 @@ namespace Ecosim.SceneEditor
 
 		public static bool FoldoutEditableName (ref string name, ref bool opened, GUILayoutOption nameLayout = null)
 		{
+			return FoldoutEditableName (ref name, ref opened, false, nameLayout);
+		}
+
+		public static bool FoldoutEditableName (ref string name, ref bool opened, bool multiline, GUILayoutOption nameLayout = null)
+		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				if (GUILayout.Button (opened ? EditorCtrl.self.foldedOpenSmall : EditorCtrl.self.foldedCloseSmall, EditorCtrl.self.icon12x12))
@@ -145,10 +150,11 @@ namespace Ecosim.SceneEditor
 
 				if (name == null) name = "";
 				GUILayout.Space (2);
-				if (nameLayout != null) name = GUILayout.TextField (name, nameLayout);
-				else 					name = GUILayout.TextField (name);
+				if (nameLayout != null) name = (multiline) ? GUILayout.TextArea (name, nameLayout) : GUILayout.TextField (name, nameLayout);
+				else 					name = (multiline) ? GUILayout.TextArea (name) : GUILayout.TextField (name);
 			}
 			if (!skipHorizontal) GUILayout.EndHorizontal ();
+			if (multiline) GUILayout.Space (3);
 			return opened;
 		}
 
