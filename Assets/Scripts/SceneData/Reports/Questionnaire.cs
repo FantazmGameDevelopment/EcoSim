@@ -301,21 +301,14 @@ namespace Ecosim.SceneData
 		}
 	}
 
-	public class Questionnaire
+	public class Questionnaire : ReportBase
 	{
 		public const string XML_ELEMENT = "questionnaire";
 
 		private Scene scene;
 
 		// TODO: All todo's mean they have to be processed in the Editor interface
-
-		public int id;
-		public string name;
-		public bool enabled;
-		public bool useIntroduction;
-		public string introduction;
-		public bool useConclusion;
-		public string conclusion;
+		
 		public bool useRequiredScore;
 		public int requiredScore;
 		public bool useReqScoreFeedback;
@@ -330,27 +323,20 @@ namespace Ecosim.SceneData
 		public bool useBudgetFeedback;
 		public string budgetFeedback;
 
-		public bool opened;
 		public bool questionsOpened;
-		public bool introOpened;
 		public bool reqScoreOpened;
 		public bool reqScoreFeedbackOpened;
 		public bool budgetOpened;
 		public bool budgetFeedbackOpened;
 		public bool passedFeedbackOpened;
 		public bool failedFeedbackOpened;
-		public bool conclusionOpened;
 
 		public int currentQuestionIndex;
-		public bool introShown;
-		public bool conclusionShown;
 
-		public Questionnaire ()
+		public Questionnaire () : base()
 		{
 			this.questions = new List<Question>();
 			this.name = "New questionnaire";
-			this.introduction = "Intro";
-			this.conclusion = "Conclusion";
 			this.requiredScore = 100;
 			this.passedFeedback = "Passed";
 			this.failedFeedback = "Failed";
@@ -362,13 +348,7 @@ namespace Ecosim.SceneData
 		public static Questionnaire Load (XmlTextReader reader, Scene scene)
 		{
 			Questionnaire q = new Questionnaire ();
-			q.id = int.Parse (reader.GetAttribute ("id"));
-			q.name = reader.GetAttribute ("name");
-			q.enabled = bool.Parse (reader.GetAttribute ("enabled"));
-			q.useIntroduction = bool.Parse (reader.GetAttribute ("useintro"));
-			q.introduction = reader.GetAttribute ("intro");
-			q.useConclusion = bool.Parse (reader.GetAttribute ("useconcl"));
-			q.conclusion = reader.GetAttribute ("concl");
+			q.LoadBase (reader, scene);
 			q.useRequiredScore = bool.Parse (reader.GetAttribute ("usereqscore"));
 			q.requiredScore = int.Parse (reader.GetAttribute ("reqscore"));
 			q.useReqScoreFeedback = bool.Parse (reader.GetAttribute ("usereqscorefb"));
@@ -420,13 +400,7 @@ namespace Ecosim.SceneData
 		public void Save (XmlTextWriter writer, Scene scene)
 		{
 			writer.WriteStartElement (XML_ELEMENT);
-			writer.WriteAttributeString ("id", id.ToString());
-			writer.WriteAttributeString ("name", name);
-			writer.WriteAttributeString ("enabled", enabled.ToString().ToLower());
-			writer.WriteAttributeString ("useintro", useIntroduction.ToString().ToLower());
-			writer.WriteAttributeString ("intro", introduction);
-			writer.WriteAttributeString ("useconcl", useConclusion.ToString().ToLower());
-			writer.WriteAttributeString ("concl", conclusion);
+			this.SaveBase (writer, scene);
 			writer.WriteAttributeString ("usereqscore", useRequiredScore.ToString().ToLower());
 			writer.WriteAttributeString ("reqscore", requiredScore.ToString());
 			writer.WriteAttributeString ("usereqscorefb", useReqScoreFeedback.ToString().ToLower());
@@ -445,7 +419,7 @@ namespace Ecosim.SceneData
 			writer.WriteEndElement ();
 		}
 		
-		public void UpdateReferences (Scene scene)
+		public override void UpdateReferences (Scene scene)
 		{
 			foreach (Question q in this.questions) {
 				q.UpdateReferences (scene);

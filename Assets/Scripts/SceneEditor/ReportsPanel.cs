@@ -91,63 +91,13 @@ namespace Ecosim.SceneEditor
 				GUILayout.BeginVertical (ctrl.skin.box);
 				{
 					// Header
-					GUILayout.BeginHorizontal ();
-					{
-						q.enabled = GUILayout.Toggle (q.enabled, "", GUILayout.Width (20));
-						if (q.enabled) 
-						{
-							EcoGUI.skipHorizontal = true;
-							EcoGUI.FoldoutEditableName (ref q.name, ref q.opened);
-							EcoGUI.skipHorizontal = false;
-						} else {
-							q.opened = false;
-							GUILayout.Space (5f);
-							q.name = GUILayout.TextField (q.name);
-						}
-						GUILayout.Space (5f);
-						GUILayout.Label ("ID:" + q.id, GUILayout.Width (30));
-						GUILayout.Space (5f);
-
-						if (GUILayout.Button ("-", GUILayout.Width (20))) 
-						{
-							Questionnaire tmpQ = q;
-							ctrl.StartDialog (string.Format ("Are you sure you want to delete questionnaire '{0}' (ID:{1})", tmpQ.name, tmpQ.id.ToString()), 
-							delegate(bool result) {
-								if (result) {
-									scene.reports.questionnaires.Remove (tmpQ);
-								}
-							}, null);
-						}
-					}
-					GUILayout.EndHorizontal (); // ~Header
+					RenderReportBaseHeader (q);
 
 					// Body
 					if (q.opened)
 					{
 						// Intro
-						GUILayout.BeginVertical (ctrl.skin.box);
-						{
-							GUILayout.BeginHorizontal ();
-							{
-								q.useIntroduction = GUILayout.Toggle (q.useIntroduction, "", GUILayout.Width (20));
-								if (q.useIntroduction) 
-								{
-									EcoGUI.skipHorizontal = true;
-									EcoGUI.Foldout ("Introduction", ref q.introOpened);
-									EcoGUI.skipHorizontal = false;
-								}
-								else 
-								{
-									GUILayout.Label ("Introduction");
-									q.introOpened = false;
-								}
-							}
-							GUILayout.EndHorizontal ();
-							if (q.introOpened) {
-								q.introduction = GUILayout.TextArea (q.introduction);
-							}
-						}
-						GUILayout.EndVertical (); // ~Intro
+						RenderReportBaseIntro (q);
 
 						// Required score
 						GUILayout.BeginVertical (ctrl.skin.box);
@@ -338,29 +288,7 @@ namespace Ecosim.SceneEditor
 						} // ~Questions
 
 						// Conclusion
-						GUILayout.BeginVertical (ctrl.skin.box);
-						{
-							GUILayout.BeginHorizontal ();
-							{
-								q.useConclusion = GUILayout.Toggle (q.useConclusion, "", GUILayout.Width (20));
-								if (q.useConclusion) 
-								{
-									EcoGUI.skipHorizontal = true;
-									EcoGUI.Foldout ("Conclusion", ref q.conclusionOpened);
-									EcoGUI.skipHorizontal = false;
-								}
-								else 
-								{
-									GUILayout.Label ("Conclusion");
-									q.conclusionOpened = false;
-								}
-							}
-							GUILayout.EndHorizontal ();
-							if (q.conclusionOpened) {
-								q.conclusion = GUILayout.TextArea (q.conclusion);
-							}
-						}
-						GUILayout.EndVertical (); // ~Conclusion
+						RenderReportBaseConclusion (q);
 					}
 					GUILayout.Space (3);
 				}
@@ -373,6 +301,7 @@ namespace Ecosim.SceneEditor
 			{
 				Questionnaire q = new Questionnaire ();
 				q.opened = true;
+				q.enabled = true;
 				if (scene.reports.questionnaires.Count > 0)
 					q.id = scene.reports.questionnaires [scene.reports.questionnaires.Count - 1].id + 1;
 				else q.id = 1;
@@ -387,14 +316,14 @@ namespace Ecosim.SceneEditor
 				}
 			}
 			GUILayout.EndHorizontal ();
-			GUILayout.BeginHorizontal ();
+			/*GUILayout.BeginHorizontal ();
 			{
 				scene.reports.useShowQuestionnaireAtEnd = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtEnd, "Show questionnaire at game end", GUILayout.Width (200));
 				if (scene.reports.useShowQuestionnaireAtEnd) {
 					EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtEndId, 20, 50);
 				}
 			}
-			GUILayout.EndHorizontal ();
+			GUILayout.EndHorizontal ();*/
 			GUILayout.Space (5);
 		}
 		private void RenderMPCQuestion (Questionnaire q, MPCQuestion question, int index)
@@ -528,7 +457,6 @@ namespace Ecosim.SceneEditor
 											EcoGUI.skipHorizontal = false;
 										} 
 										else {
-											a.maxChars = 0;
 											GUILayout.Space (2);
 											GUILayout.Label ("Max. characters");
 										}
@@ -598,7 +526,7 @@ namespace Ecosim.SceneEditor
 			{
 				// Foldout header
 				EcoGUI.skipHorizontal = true;
-				EcoGUI.FoldoutEditableName (ref question.body, ref question.opened);
+				EcoGUI.FoldoutEditableName (ref question.body, ref question.opened, GUILayout.MaxWidth (250));
 				EcoGUI.skipHorizontal = false;
 
 				// Type
@@ -611,14 +539,14 @@ namespace Ecosim.SceneEditor
 
 				// Up
 				GUI.enabled = (index > 0);
-				if (GUILayout.Button ("˄", GUILayout.Width (20))) {
+				if (GUILayout.Button ("\u02C4", GUILayout.Width (20))) {
 					q.questions.Remove (question);
 					q.questions.Insert (index - 1, question);
 				}
 
 				// Down
 				GUI.enabled = (index < q.questions.Count - 1);
-				if (GUILayout.Button ("˅", GUILayout.Width (20))) {
+				if (GUILayout.Button ("\u02C5", GUILayout.Width (20))) {
 					q.questions.Remove (question);
 					q.questions.Insert (index + 1, question);
 				}
@@ -644,7 +572,7 @@ namespace Ecosim.SceneEditor
 			GUILayout.BeginHorizontal ();
 			{
 				EcoGUI.skipHorizontal = true;
-				EcoGUI.FoldoutEditableName (ref a.body, ref a.opened);
+				EcoGUI.FoldoutEditableName (ref a.body, ref a.opened, GUILayout.Width (320));
 				EcoGUI.skipHorizontal = false;
 				
 				if (index > 1 && GUILayout.Button ("-", GUILayout.Width (20)))
@@ -659,7 +587,253 @@ namespace Ecosim.SceneEditor
 
 		private void RenderReports (int mx, int my)
 		{
-			GUILayout.Label ("Reports is still under construction...");	
+			foreach (Report r in scene.reports.reports) 
+			{
+				GUILayout.BeginVertical (ctrl.skin.box);
+				{
+					// Header
+					RenderReportBaseHeader (r);
+
+					if (r.opened)
+					{
+						// Name and number
+						r.useName = GUILayout.Toggle (r.useName, "Student name");
+						r.useNumber = GUILayout.Toggle (r.useNumber, "Student number");
+
+						// Intro
+						RenderReportBaseIntro (r);
+
+						EcoGUI.Foldout ("Paragraphs", ref r.paragraphsOpened);
+						if (r.paragraphsOpened)
+						{
+							// Paragraphs
+							for (int i = 0; i < r.paragraphs.Count; i++)
+							{
+								Paragraph p = r.paragraphs [i];
+								RenderParagraph (r, p, i);
+							}
+
+							// Add button
+							if (GUILayout.Button ("+", GUILayout.Width (20)))
+							{
+								Paragraph p = new Paragraph ();
+								p.opened = true;
+								r.paragraphs.Add (p);
+							}
+						}
+						GUILayout.Space (2);
+
+						// Conclusion
+						RenderReportBaseConclusion (r);
+					}
+					GUILayout.Space (3);
+				}
+				GUILayout.EndVertical ();
+				GUILayout.Space (2);
+			}
+			
+			// Add button
+			if (GUILayout.Button ("+", GUILayout.Width (20)))
+			{
+				Report r = new Report ();
+				r.opened = true;
+				r.enabled = true;
+				if (scene.reports.reports.Count > 0)
+					r.id = scene.reports.reports [scene.reports.reports.Count - 1].id + 1;
+				else r.id = 1;
+				scene.reports.reports.Add (r);
+			}
+			
+			GUILayout.BeginHorizontal ();
+			{
+				scene.reports.useShowReportAtEnd = GUILayout.Toggle (scene.reports.useShowReportAtEnd, "Show report at game end", GUILayout.Width (200));
+				if (scene.reports.useShowReportAtEnd) {
+					EcoGUI.IntField ("ID:", ref scene.reports.showReportAtEndId, 20, 50);
+				}
+			}
+			GUILayout.EndHorizontal ();
+			GUILayout.Space (5);
+		}
+		private void RenderParagraph (Report r, Paragraph p, int index)
+		{
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				RenderParagraphHeader (r, p, index);
+
+				if (p.opened)
+				{
+					// Description
+					GUILayout.BeginHorizontal ();
+					{
+						GUI.enabled = true;
+						p.useDescription = GUILayout.Toggle (p.useDescription, "", GUILayout.Width (20));
+						GUI.enabled = true;
+						if (p.useDescription)
+						{
+							EcoGUI.skipHorizontal = true;
+							EcoGUI.Foldout ("Description", ref p.descriptionOpened);
+							EcoGUI.skipHorizontal = false;
+						}
+						else 
+						{
+							GUILayout.Label ("Description");
+							p.descriptionOpened = false;
+						}
+					}
+					GUILayout.EndHorizontal ();
+					if (p.descriptionOpened) {
+						p.description = GUILayout.TextArea (p.description);
+					}
+
+					GUILayout.BeginHorizontal ();
+					{
+						p.useMaxChars = GUILayout.Toggle (p.useMaxChars, "", GUILayout.Width (20));
+						if (p.useMaxChars)
+						{
+							EcoGUI.skipHorizontal = true;
+							EcoGUI.IntField ("Max. characters", ref p.maxChars, 120, 100);
+							EcoGUI.skipHorizontal = false;
+						} 
+						else {
+							p.maxChars = 0;
+							GUILayout.Space (2);
+							GUILayout.Label ("Max. characters");
+						}
+					}
+					GUILayout.EndHorizontal ();
+				}
+			}
+			GUILayout.EndVertical ();
+		}
+		private void RenderParagraphHeader (Report r, Paragraph p, int index)
+		{
+			GUILayout.Space (2);
+			GUILayout.BeginHorizontal ();
+			{
+				// Foldout header
+				EcoGUI.skipHorizontal = true;
+				EcoGUI.FoldoutEditableName (ref p.title, ref p.opened, GUILayout.MaxWidth (280));
+				EcoGUI.skipHorizontal = false;
+				
+				// Up
+				GUI.enabled = (index > 0);
+				if (GUILayout.Button ("\u02C4", GUILayout.Width (20))) {
+					r.paragraphs.Remove (p);
+					r.paragraphs.Insert (index - 1, p);
+				}
+				
+				// Down
+				GUI.enabled = (index < r.paragraphs.Count - 1);
+				if (GUILayout.Button ("\u02C5", GUILayout.Width (20))) {
+					r.paragraphs.Remove (p);
+					r.paragraphs.Insert (index + 1, p);
+				}
+				GUI.enabled = true;
+				
+				// Remove
+				GUILayout.Space (5);
+				if (GUILayout.Button ("-", GUILayout.Width (20)))
+				{
+					Paragraph tmp = p;
+					ctrl.StartDialog (string.Format ("Are you sure you want to delete paragraph '{0}' (#{1})", tmp.title, index + 1), 
+					delegate(bool result) {
+						if (result) {
+							r.paragraphs.Remove (tmp);
+						}
+					}, null);
+				}
+			}
+			GUILayout.EndHorizontal ();
+		}
+
+		private void RenderReportBaseHeader (ReportBase r)
+		{
+			GUILayout.BeginHorizontal ();
+			{
+				r.enabled = GUILayout.Toggle (r.enabled, "", GUILayout.Width (20));
+				if (r.enabled) 
+				{
+					EcoGUI.skipHorizontal = true;
+					EcoGUI.FoldoutEditableName (ref r.name, ref r.opened);
+					EcoGUI.skipHorizontal = false;
+				} else {
+					r.opened = false;
+					GUILayout.Space (5f);
+					r.name = GUILayout.TextField (r.name);
+				}
+				GUILayout.Space (5f);
+				GUILayout.Label ("ID:" + r.id, GUILayout.Width (30));
+				GUILayout.Space (5f);
+
+				// TODO:
+				/*if (GUILayout.Button ("-", GUILayout.Width (20))) 
+						{
+							Questionnaire tmpQ = q;
+							ctrl.StartDialog (string.Format ("Are you sure you want to delete '{0}' (ID:{1})", tmpQ.name, tmpQ.id.ToString()), 
+							delegate(bool result) {
+								if (result) {
+									scene.reports.questionnaires.Remove (tmpQ);
+								}
+							}, null);
+				}*/
+			}
+			GUILayout.EndHorizontal (); // ~Header
+		}
+
+		private void RenderReportBaseIntro (ReportBase r)
+		{
+			// Intro
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.BeginHorizontal ();
+				{
+					r.useIntroduction = GUILayout.Toggle (r.useIntroduction, "", GUILayout.Width (20));
+					if (r.useIntroduction) 
+					{
+						EcoGUI.skipHorizontal = true;
+						EcoGUI.Foldout ("Introduction", ref r.introOpened);
+						EcoGUI.skipHorizontal = false;
+					}
+					else 
+					{
+						GUILayout.Label ("Introduction");
+						r.introOpened = false;
+					}
+				}
+				GUILayout.EndHorizontal ();
+				if (r.introOpened) {
+					r.introduction = GUILayout.TextArea (r.introduction);
+				}
+			}
+			GUILayout.EndVertical (); // ~Intro
+		}
+
+		private void RenderReportBaseConclusion (ReportBase r)
+		{
+			// Conclusion
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.BeginHorizontal ();
+				{
+					r.useConclusion = GUILayout.Toggle (r.useConclusion, "", GUILayout.Width (20));
+					if (r.useConclusion) 
+					{
+						EcoGUI.skipHorizontal = true;
+						EcoGUI.Foldout ("Conclusion", ref r.conclusionOpened);
+						EcoGUI.skipHorizontal = false;
+					}
+					else 
+					{
+						GUILayout.Label ("Conclusion");
+						r.conclusionOpened = false;
+					}
+				}
+				GUILayout.EndHorizontal ();
+				if (r.conclusionOpened) {
+					r.conclusion = GUILayout.TextArea (r.conclusion);
+				}
+			}
+			GUILayout.EndVertical (); // ~Conclusion
 		}
 		
 		/* Called for extra edit sub-panel, will be called after Render */

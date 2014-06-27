@@ -5,13 +5,12 @@ using Ecosim.SceneData;
 using Ecosim.GameCtrl.GameButtons;
 using System;
 using System.IO;
+using Ecosim.SceneEditor;
 
-public class QuestionnaireWindow
+public class QuestionnaireWindow : ReportBaseWindow
 {
 	private Questionnaire questionnaire;
-	private System.Action onFinished;
 
-	private Vector2 scrollPosition;
 	private Vector2 messageScrollPos;
 	private Answer selectedAnswer;
 	private System.Action <Answer, bool> onMessageContinueClick;
@@ -20,49 +19,14 @@ public class QuestionnaireWindow
 	private int messageLines;
 	private int messageTitleLines;
 
-	private float width;
-	private float height;
-	private float left;
-	private float top;
-	private GUILayoutOption defaultOption;
-
-	protected static GUIStyle black;
-	protected static GUIStyle white;
-	protected static GUIStyle headerDark;
-	protected static GUIStyle titleNoText;
-	protected static GUIStyle headerLight;
-	protected static GUIStyle button;
-	protected static GUIStyle formatted;
-
-	public static void Reset ()
-	{
-		if (black != null) return; // already did stuff below
-		black = GameControl.self.skin.FindStyle ("BGBlack");
-		white = GameControl.self.skin.FindStyle ("BGWhite");
-		headerDark = GameControl.self.skin.FindStyle ("ArialB16-75");
-		headerLight = GameControl.self.skin.FindStyle ("ArialB16-50");
-		button = GameControl.self.skin.FindStyle ("Arial16-75");
-		formatted = GameControl.self.skin.FindStyle ("Arial16-50-formatted");
-	}
-
-	public QuestionnaireWindow (Questionnaire questionnaire, System.Action onFinished)
+	public QuestionnaireWindow (Questionnaire questionnaire, System.Action onFinished) : base (onFinished)
 	{
 		this.questionnaire = questionnaire;
-		this.onFinished = onFinished;
-		Reset ();
 	}
 
-	public void Render ()
+	public override void Render ()
 	{
-		float editorWidth = 0f;
-		if (EditorCtrl.self.isOpen) {
-			editorWidth = 400;
-		}
-		width = (Screen.width - editorWidth) * 0.65f;
-		height = Screen.height * 0.75f;
-		left = ((Screen.width - width) * 0.5f) + editorWidth;
-		top = (Screen.height - height) * 0.5f;
-		defaultOption = GUILayout.MinHeight (28f);//GUILayout.ExpandHeight (true);
+		base.Render ();
 
 		// Check for introduction
 		if (this.questionnaire.useIntroduction && !this.questionnaire.introShown)
@@ -134,6 +98,8 @@ public class QuestionnaireWindow
 		} catch { }
 	}
 
+	#region Questionnaire
+
 	private void RenderMPCQuestion (MPCQuestion question)
 	{
 		Questionnaire q = questionnaire;
@@ -146,10 +112,9 @@ public class QuestionnaireWindow
 			GUILayout.Space (1);
 
 			// Answers
-			GUILayout.BeginVertical (headerDark, GUILayout.Width (width));
+			GUILayout.BeginVertical (headerLight, GUILayout.Width (width));
 			{
 				GUILayout.Space (5);
-				int idx = 0;
 				foreach (MPCQuestion.MPCAnswer a in question.answers)
 				{
 					if (GUILayout.Button (a.body, button, GUILayout.Width (width - 10), defaultOption))
@@ -181,8 +146,14 @@ public class QuestionnaireWindow
 			return;
 		}
 
-		if (!a.allowRetry && a.startFromBeginning) {
+		if (!a.allowRetry && a.startFromBeginning) 
+		{
+			// Start over
 			this.questionnaire.currentQuestionIndex = 0;
+		}
+		else if (a.allowRetry)
+		{
+			// Just remove the feedback
 		}
 		else 
 		{
@@ -227,9 +198,9 @@ public class QuestionnaireWindow
 			GUILayout.Label ("Write your answer:", headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (1);
 			if (a.useMaxChars)
-				a.body = GUILayout.TextArea (a.body, a.maxChars, headerDark, GUILayout.Width (width), defaultOption);
+				a.body = GUILayout.TextArea (a.body, a.maxChars, textArea, GUILayout.Width (width), defaultOption);
 			else 
-				a.body = GUILayout.TextArea (a.body, headerDark, GUILayout.Width (width), defaultOption);
+				a.body = GUILayout.TextArea (a.body, textArea, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (1);
 
 			GUILayout.BeginHorizontal ();
@@ -302,7 +273,7 @@ public class QuestionnaireWindow
 	private void RenderQuestionStart (Question question)
 	{
 		Questionnaire q = questionnaire;
-		GUILayout.BeginArea (new Rect (left, top, width + 30, height));
+		GUILayout.BeginArea (new Rect (left, top, width + 20, height));
 		scrollPosition = GUILayout.BeginScrollView (scrollPosition); // TODO: Scrollbar Skin
 
 		// Header
@@ -321,6 +292,14 @@ public class QuestionnaireWindow
 		GUILayout.EndArea ();	
 	}
 
+	#endregion
+
+	#region Reports
+
+	#endregion
+
+	#region Results
+
 	private void RenderResults ()
 	{
 		Questionnaire q = questionnaire;
@@ -338,35 +317,29 @@ public class QuestionnaireWindow
 			GUILayout.Label ("Questionnaire results:\n" + q.name, headerDark, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 			
-			this.scrollPosition = GUILayout.BeginScrollView (this.scrollPosition); // TODO: Scroll style
+			this.scrollPosition = GUILayout.BeginScrollView (this.scrollPosition);
 			{
 				// Questions
-				int qidx = 0;
+				int qidx = 1;
 				foreach (Progression.QuestionnaireState.QuestionState qState in qs.questionStates)
 				{
-					string[] split =  qState.questionName.Split (new string[] { "\n","\r" }, System.StringSplitOptions.None);
-					split[0] = (++qidx) + ". " + split[0];
-					foreach (string s in split) {
-						GUILayout.Label ((s.Length > 0) ? s : " ", headerDark, GUILayout.Width (width));
-					}
-					GUILayout.Space (1);
+					EcoGUI.SplitLabel (qidx + ". " + qState.questionName, headerDark, GUILayout.Width (width));
+					//GUILayout.Space (1);
 					
-					GUILayout.Label ("Your answer:", headerLight, GUILayout.Width (width));
-					split = qState.questionAnswer.Split (new string[] { "\n","\r" }, System.StringSplitOptions.None);
-					foreach (string s in split) {
-						GUILayout.Label ((s.Length > 0) ? s : " ", headerLight, GUILayout.Width (width));
-					}
+					//GUILayout.Label ("Your answer:", headerLight, GUILayout.Width (width));
+					EcoGUI.SplitLabel (qState.questionAnswer, textArea, GUILayout.Width (width));
 					GUILayout.Space (5);
+					qidx++;
 				}
 				
 				// Money gained
 				if (passed && q.useBudget)
 				{
 					GUILayout.Label ("Money earned: " + qs.totalScore, headerDark, GUILayout.Width (width), defaultOption);
-					GUILayout.Space (1);
+					//GUILayout.Space (1);
 					if (q.useBudgetFeedback) 
 					{
-						GUILayout.Label (q.budgetFeedback, headerLight, GUILayout.Width (width), defaultOption);
+						EcoGUI.SplitLabel (q.budgetFeedback, headerLight, GUILayout.Width (width));
 					}
 					GUILayout.Space (5);
 				}
@@ -376,11 +349,11 @@ public class QuestionnaireWindow
 			// Score
 			if (q.useRequiredScore)
 			{
-				GUILayout.Label ("Total score: " + qs.totalScore + "\nScore required to pass:" + q.requiredScore, headerDark, GUILayout.Width (width), defaultOption);
-				GUILayout.Space (1);
+				GUILayout.Label ("Total score: " + qs.totalScore + "\nScore required to pass: " + q.requiredScore, headerDark, GUILayout.Width (width), defaultOption);
+				//GUILayout.Space (1);
 				
 				if (q.useReqScoreFeedback) {
-					GUILayout.Label (q.reqScoreFeedback, headerLight, GUILayout.Width (width), defaultOption);
+					EcoGUI.SplitLabel (q.reqScoreFeedback, headerLight, GUILayout.Width (width), defaultOption);
 					GUILayout.Space (1);
 				}
 				
@@ -393,14 +366,17 @@ public class QuestionnaireWindow
 			{
 				if (q.usePassedFeedback)
 				{
-					GUILayout.Label (q.passedFeedback, headerLight, GUILayout.Width (width), defaultOption);
+					EcoGUI.SplitLabel (q.passedFeedback, headerLight, GUILayout.Width (width), defaultOption);
 					GUILayout.Space (1);
 				}
 				
 				GUILayout.BeginHorizontal ();
 				{
-					GUILayout.Label ("", headerLight, GUILayout.Width (width - 80), defaultOption);
-					if (GUILayout.Button ("Continue", headerDark, GUILayout.Width (80), defaultOption)) 
+					GUILayout.Label ("", headerLight, GUILayout.Width (width - 162), defaultOption);
+					GUILayout.Space (1);
+					RenderSaveButton (qs, passed);
+					GUILayout.Space (1);
+					if (GUILayout.Button ("Continue", button, GUILayout.Width (80), defaultOption)) 
 					{
 						if (onFinished != null)
 							onFinished ();
@@ -412,70 +388,15 @@ public class QuestionnaireWindow
 			{
 				if (q.useFailedFeedback)
 				{
-					GUILayout.Label (q.failedFeedback, headerLight, GUILayout.Width (width), defaultOption);
+					EcoGUI.SplitLabel (q.failedFeedback, headerLight, GUILayout.Width (width), defaultOption);
 					GUILayout.Space (1);
 				}
 				
 				GUILayout.BeginHorizontal ();
 				{
-					GUILayout.Label ("", headerLight, GUILayout.Width (width - 182), defaultOption);
+					GUILayout.Label ("", headerLight, GUILayout.Width (width - 162), defaultOption);
 					GUILayout.Space (1);
-					if (GUILayout.Button ("Save to .txt", button, GUILayout.Width (100), defaultOption)) 
-					{
-						// Save to .txt
-						System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
-						sfd.FileName = "questionnaire_" + this.questionnaire.id;
-						sfd.Filter = "txt files (*.txt)|*.txt";
-						System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
-
-						if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
-						{
-							// Create new file
-							FileStream fs = File.Create (sfd.FileName);
-							System.Text.StringBuilder sb = new System.Text.StringBuilder ();
-							
-							Scene scene = EditorCtrl.self.scene;
-							sb.AppendFormat ("Name: {0} {1}\n", scene.playerInfo.firstName, scene.playerInfo.familyName);
-							sb.AppendFormat ("Date: {0}\n", System.DateTime.Today.ToString ("dd\\/MM\\/yyyy"));
-							sb.AppendLine ();
-							
-							sb.AppendFormat ("Results Questionnaire {0}:\n", this.questionnaire.id);
-							sb.AppendFormat ("{0}\n", this.questionnaire.name);
-							sb.AppendLine ();
-							
-							int qIdx = 1;
-							foreach (Progression.QuestionnaireState.QuestionState qState in qs.questionStates)
-							{
-								sb.AppendFormat ("{0}. {1}:\n", qIdx.ToString (), qState.questionName);
-								sb.AppendFormat ("{0}\n", qState.questionAnswer);
-								sb.AppendLine ();
-								qIdx++;
-							}
-							
-							if (passed && this.questionnaire.useBudget)
-							{
-								sb.AppendFormat ("Money earned: {0}\n", qs.totalMoneyEarned);
-								sb.AppendLine ();
-							}
-							
-							if (this.questionnaire.useRequiredScore)
-							{
-								sb.AppendFormat ("Total score: {0}\n", qs.totalScore);
-								sb.AppendFormat ("Required score: {0}\n", this.questionnaire.requiredScore);
-								sb.AppendFormat ("Result: {0}\n", ((passed) ? "Passed" : "Failed"));
-								sb.AppendLine ();
-							}
-							
-							// Stringify and save
-							string txt = sb.ToString ();
-							fs.Write (enc.GetBytes (txt), 0, enc.GetByteCount (txt));
-							
-							// Close and dipose the stream
-							fs.Close ();
-							fs.Dispose ();
-							fs = null;
-						}
-					}
+					RenderSaveButton (qs, passed);
 					GUILayout.Space (1);
 
 					string btnLabel = (q.startOverOnFailed) ? "Retry" : "Continue";
@@ -497,6 +418,72 @@ public class QuestionnaireWindow
 		}
 		GUILayout.EndArea ();
 	}
+	private void RenderSaveButton (Progression.QuestionnaireState qs, bool passed)
+	{
+		if (GUILayout.Button ("Save", button, GUILayout.Width (80), defaultOption)) 
+		{
+			// Save to .txt
+			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
+			sfd.FileName = "questionnaire_" + this.questionnaire.id;
+			sfd.Filter = "txt files (*.txt)|*.txt";
+			System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
+			
+			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+			{
+				// Create new file
+				FileStream fs = File.Create (sfd.FileName);
+				System.Text.StringBuilder sb = new System.Text.StringBuilder ();
+				
+				Scene scene = EditorCtrl.self.scene;
+				sb.AppendFormat ("Name: {0} {1}\n", scene.playerInfo.firstName, scene.playerInfo.familyName);
+				sb.AppendFormat ("Date: {0}\n", System.DateTime.Today.ToString ("dd\\/MM\\/yyyy"));
+				sb.AppendLine ();
+				
+				sb.AppendFormat ("Results Questionnaire {0}:\n", this.questionnaire.id);
+				sb.AppendFormat ("{0}\n", this.questionnaire.name);
+				sb.AppendLine ();
+				
+				int qIdx = 1;
+				foreach (Progression.QuestionnaireState.QuestionState qState in qs.questionStates)
+				{
+					sb.AppendFormat ("{0}. {1}:\n", qIdx.ToString (), qState.questionName);
+					sb.AppendFormat ("{0}\n", qState.questionAnswer);
+					sb.AppendLine ();
+					qIdx++;
+				}
+				
+				if (passed && this.questionnaire.useBudget)
+				{
+					sb.AppendFormat ("Money earned: {0}\n", qs.totalMoneyEarned);
+					sb.AppendLine ();
+				}
+				
+				if (this.questionnaire.useRequiredScore)
+				{
+					sb.AppendFormat ("Total score: {0}\n", qs.totalScore);
+					sb.AppendFormat ("Required score: {0}\n", this.questionnaire.requiredScore);
+					sb.AppendFormat ("Result: {0}\n", ((passed) ? "Passed" : "Failed"));
+					sb.AppendLine ();
+				}
+				
+				// Stringify and save
+				string txt = sb.ToString ();
+				fs.Write (enc.GetBytes (txt), 0, enc.GetByteCount (txt));
+				
+				// Close and dipose the stream
+				fs.Close ();
+				fs.Dispose ();
+				fs = null;
+			}
+		}
+	}
+
+	[System.Runtime.InteropServices.DllImport ("user32.dll")]
+	private static extern void SaveFileDialog ();
+
+	#endregion
+
+	#region Message
 
 	private void RenderMessage ()
 	{
@@ -507,7 +494,7 @@ public class QuestionnaireWindow
 			editorWidth = 400;
 		}
 		width = Screen.width * 0.5f;
-		height = (messageLines + messageTitleLines + 1) * 40f;
+		height = (messageLines + messageTitleLines + 1) * 50f;
 		height = Mathf.Clamp (height, 0f, Screen.height * 0.75f);
 		left = left = ((Screen.width - width) * 0.5f) + editorWidth;
 		top = (Screen.height * 0.5f) - (height * 0.5f);
@@ -545,13 +532,15 @@ public class QuestionnaireWindow
 		GUILayout.EndArea ();
 	}
 
-	public void Dispose ()
+	#endregion
+
+	public override void Dispose ()
 	{
+		base.Dispose ();
+
 		this.questionnaire = null;
-		this.onFinished = null;
 		this.selectedAnswer = null;
 		this.onMessageContinueClick = null;
-		this.defaultOption = null;
 	}
 }
 

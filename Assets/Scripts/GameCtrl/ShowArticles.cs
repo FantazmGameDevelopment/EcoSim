@@ -67,12 +67,10 @@ public class ShowArticles : MonoBehaviour {
 			SimpleGUI.Label (new Rect ((sWidth - articleTex.width ) / 2, yPos, articleTex.width, articleTex.height), articleTex, GUIStyle.none);
 			if (Event.current.type == EventType.MouseDown) {
 				Event.current.Use ();
+				ctrl.hideToolBar = false;
+				ctrl.hideSuccessionButton = false;
+				isShowing = false;
 				hasUnreadMessages = ctrl.scene.progression.ToNextMessage ();
-				if (!hasUnreadMessages) {
-					ctrl.hideToolBar = false;
-					ctrl.hideSuccessionButton = false;
-					isShowing = false;
-				}
 			}
 		}
 	}

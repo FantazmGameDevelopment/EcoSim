@@ -13,24 +13,30 @@ namespace Ecosim.SceneData
 		public bool useShowQuestionnaireAtStart;
 		public bool useShowQuestionnaireAtEnd;
 		public int showQuestionnaireAtStartId;
-		public int showQuestionnaireAtEndId;
+		public int showQuestionnaireAtEndId; // TODO: Is this necessary?
+
+		public bool useShowReportAtEnd;
+		public int showReportAtEndId;
 
 		public List<Questionnaire> questionnaires;
+		public List<Report> reports;
 
 		private int queueIndex;
-		public List<object> queue;
+		public List<ReportBase> queue;
 
 		public ReportsMgr (Scene scene)
 		{
 			this.scene = scene;
 			this.questionnaires = new List<Questionnaire>();
+			this.reports = new List<Report> ();
 			showQuestionnaireAtStartId = 1;
 			showQuestionnaireAtEndId = 1;
+			showReportAtEndId = 1;
 		}
 
 		public void Init ()
 		{
-			this.queue = new List<object> ();
+			this.queue = new List<ReportBase> ();
 			this.queueIndex = 0;
 
 			// Check if we have start questionnaires
@@ -54,7 +60,7 @@ namespace Ecosim.SceneData
 			// TODO: EndGame
 		}
 
-		public object CurrentInQueue ()
+		public ReportBase CurrentInQueue ()
 		{
 			if (queueIndex < queue.Count) {
 				return queue[queueIndex];
@@ -77,6 +83,9 @@ namespace Ecosim.SceneData
 			showQuestionnaireAtStartId = int.Parse (reader.GetAttribute ("qstartid"));
 			showQuestionnaireAtEndId = int.Parse (reader.GetAttribute ("qendid"));
 
+			useShowReportAtEnd = bool.Parse (reader.GetAttribute ("showrstart"));
+			showReportAtEndId = int.Parse (reader.GetAttribute ("rendid"));
+
 			while (reader.Read()) 
 			{
 				XmlNodeType nType = reader.NodeType;
@@ -86,6 +95,10 @@ namespace Ecosim.SceneData
 					{
 					case Questionnaire.XML_ELEMENT : 
 						this.questionnaires.Add (Questionnaire.Load (reader, scene));
+						break;
+
+					case Report.XML_ELEMENT :
+						this.reports.Add (Report.Load (reader, scene));
 						break;
 					}
 				} 
@@ -123,8 +136,13 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("showqend", useShowQuestionnaireAtEnd.ToString().ToLower());
 			writer.WriteAttributeString ("qstartid", showQuestionnaireAtStartId.ToString());
 			writer.WriteAttributeString ("qendid", showQuestionnaireAtEndId.ToString());
+			writer.WriteAttributeString ("showrstart", useShowReportAtEnd.ToString().ToLower());
+			writer.WriteAttributeString ("rendid", showReportAtEndId.ToString());
 			foreach (Questionnaire q in questionnaires) {
 				q.Save (writer, scene);
+			}
+			foreach (Report r in reports) {
+				r.Save (writer, scene);
 			}
 			writer.WriteEndElement ();
 			writer.WriteEndDocument ();
@@ -135,6 +153,9 @@ namespace Ecosim.SceneData
 		{
 			foreach (Questionnaire q in questionnaires) {
 				q.UpdateReferences (scene);
+			}
+			foreach (Report r in reports) {
+				r.UpdateReferences (scene);
 			}
 		}
 	}

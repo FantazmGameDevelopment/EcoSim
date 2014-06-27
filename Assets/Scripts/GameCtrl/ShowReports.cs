@@ -15,6 +15,9 @@ public class ShowReports : MonoBehaviour
 	private QuestionnaireWindow questionnaireWindow;
 	private Questionnaire currentQuestionnaire;
 
+	private ReportWindow reportWindow;
+	private Report currentReport;
+
 	public static void NotifyQueueChange () {
 		hasQueue = true;
 	}
@@ -42,9 +45,15 @@ public class ShowReports : MonoBehaviour
 			object inQueue = scene.reports.CurrentInQueue ();
 			if (inQueue is Questionnaire) 
 			{
+				this.currentReport = null;
 				this.currentQuestionnaire = (Questionnaire)inQueue;
 			}
-			// TODO: Report
+			else if (inQueue is Report) 
+			{
+				// TODO: Report
+				this.currentQuestionnaire = null;
+				this.currentReport = (Report)inQueue;
+			}
 		}
 		else if (isShowing)
 		{
@@ -55,6 +64,10 @@ public class ShowReports : MonoBehaviour
 			{
 				RenderQuestionnaire ();
 			} 
+			else if (this.currentReport != null)
+			{
+				RenderReport ();
+			}
 			else 
 			{
 				isShowing = false;
@@ -82,6 +95,14 @@ public class ShowReports : MonoBehaviour
 			});
 		}
 		this.questionnaireWindow.Render ();
+	}
+
+	void RenderReport ()
+	{
+		if (this.reportWindow == null)
+		{
+			// TODO:
+		}
 	}
 
 	/*

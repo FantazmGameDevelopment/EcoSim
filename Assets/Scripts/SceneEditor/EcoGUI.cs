@@ -12,6 +12,15 @@ namespace Ecosim.SceneEditor
 	{
 		public static bool skipHorizontal = false;
 
+		public static void SplitLabel (string label, GUIStyle style, params GUILayoutOption[] options)
+		{
+			GUILayout.Label (label, style, options);
+			/*string[] split = label.Split (new string[] { "\n","\r" }, System.StringSplitOptions.None);
+			foreach (string s in split) {
+				GUILayout.Label ((s.Length > 0) ? s : " ", style, options);
+			}*/
+		}
+
 		public static void IntField (string name, ref int val)
 		{
 			IntField (name, ref val, null, null);
