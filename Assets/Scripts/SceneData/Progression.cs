@@ -30,6 +30,8 @@ namespace Ecosim.SceneData
 			get { return new List<string>(System.Enum.GetNames (typeof (PredefinedVariables))); }
 		}
 
+		public event System.Action<bool> onGameEndChanged;
+
 		public const string HEIGHTMAP_ID = "heightmap";
 		public const string WATERHEIGHTMAP_ID = "waterheightmap";
 		public const string CALCULATED_WATERHEIGHTMAP_ID = "calculatedwaterheightmap";
@@ -44,7 +46,16 @@ namespace Ecosim.SceneData
 		public long budget = 0; // budget left
 		public int year = 0; // year of this progression
 		public int startYear = 2013; // not really progression, but for determining first progression data
-		public bool gameEnded = false;
+
+		private bool _gameEnded = false;
+		public bool gameEnded {
+			get { return _gameEnded; }
+			set {
+				_gameEnded = value;
+				if (onGameEndChanged != null)
+					onGameEndChanged (_gameEnded);
+			}
+		}
 		public bool allowResearch = true;
 		public bool allowMeasures = true;
 		public int targetAreas = 0;
@@ -162,16 +173,62 @@ namespace Ecosim.SceneData
 			{
 				public static string XML_ELEMENT = "qs";
 
+				public readonly int index;
 				public string questionName;
 				public string questionAnswer;
 				public int moneyGained;
 				public int score;
+
+				public QuestionState (int index)
+				{
+					this.index = index;
+				}
 			}
 
 			public QuestionnaireState (int id)
 			{
 				this.id = id;
 				this.questionStates = new List<QuestionState>();
+			}
+
+			public QuestionState GetQuestionState (int index)
+			{
+				foreach (QuestionState qs in this.questionStates) {
+					if (qs.index == index) 
+						return qs;
+				}
+				QuestionState newQs = new QuestionState (index);
+				this.questionStates.Add (newQs);
+				return newQs;
+			}
+		}
+
+		public class ReportState
+		{
+			public static string XML_ELEMENT = "report";
+			
+			public int id;
+			public string name;
+			public string number;
+			public List<ParagraphState> paragraphStates;
+			
+			public class ParagraphState
+			{
+				public static string XML_ELEMENT = "ps";
+				public string body;
+
+				public ParagraphState ()
+				{
+					this.body = "Write your answer here...";
+				}
+			}
+			
+			public ReportState (int id)
+			{
+				this.id = id;
+				this.name = "Write your name here...";
+				this.number = "Write your number here...";
+				this.paragraphStates = new List<ParagraphState>();
 			}
 		}
 
@@ -200,29 +257,63 @@ namespace Ecosim.SceneData
 		private int messageIndex = 0; // message currently looking at...
 		public List<Message> messages;
 		public List<Message> reports;
-		public List<QuestionnaireState> questionnaireStates; // TODO: Save this!
+		public List<QuestionnaireState> questionnaireStates;
+		public List<ReportState> reportStates; // TODO: Save this!
 		public List<InventarisationResult> inventarisations;
 		public List<ResearchPoint> researchPoints;
 		public Dictionary<string, object> variables;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
 
+		/// <summary>
+		/// Gets questionnaire state by id. Creates a new instance if there's none.
+		/// </summary>
 		public QuestionnaireState GetQuestionnaireState (int id)
+		{
+			return GetQuestionnaireState (id, true);
+		}
+
+		public QuestionnaireState GetQuestionnaireState (int id, bool createNewIfNull)
 		{
 			foreach (QuestionnaireState qs in this.questionnaireStates) {
 				if (qs.id == id) 
 					return qs;
 			}
-			QuestionnaireState newQs = new QuestionnaireState (id);
-			this.questionnaireStates.Add (newQs);
-			return newQs;
+			if (createNewIfNull) {
+				QuestionnaireState newQs = new QuestionnaireState (id);
+				this.questionnaireStates.Add (newQs);
+				return newQs;
+			}
+			return null;
 		}
 
-		public void AddQuestionState (QuestionnaireState.QuestionState qState, int questionnaireId)
+		/// <summary>
+		/// Gets report state by id. Creates a new instance if there's none.
+		/// </summary>
+		public ReportState GetReportState (int id)
+		{
+			return GetReportState (id, true);
+		}
+
+		public ReportState GetReportState (int id,  bool createNewIfNull)
+		{
+			foreach (ReportState rs in this.reportStates) {
+				if (rs.id == id)
+					return rs;
+			}
+			if (createNewIfNull) {
+				ReportState newRs = new ReportState (id);
+				this.reportStates.Add (newRs);
+				return newRs;	
+			}
+			return null;
+		}
+
+		/*public void AddQuestionState (QuestionnaireState.QuestionState qState, int questionnaireId)
 		{
 			QuestionnaireState qs = GetQuestionnaireState (questionnaireId);
 			qs.questionStates.Add (qState);
-		}
+		}*/
 
 		public void AddMessage (int id)
 		{
@@ -284,6 +375,7 @@ namespace Ecosim.SceneData
 			variables = new Dictionary<string, object> ();
 			actionStates = new List<ActionState> ();
 			questionnaireStates = new List<QuestionnaireState>();
+			reportStates = new List<ReportState>();
 			messages = new List<Message> ();
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
@@ -567,7 +659,8 @@ namespace Ecosim.SceneData
 					XmlNodeType nType = reader.NodeType;
 					if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == QuestionnaireState.QuestionState.XML_ELEMENT)) 
 					{
-						QuestionnaireState.QuestionState questionState = new QuestionnaireState.QuestionState();
+						int index = int.Parse (reader.GetAttribute ("index"));
+						QuestionnaireState.QuestionState questionState = new QuestionnaireState.QuestionState (index);
 						questionState.moneyGained = int.Parse (reader.GetAttribute ("money"));
 						questionState.score = int.Parse (reader.GetAttribute ("score"));
 						questionState.questionAnswer = reader.GetAttribute ("qanswer");
@@ -582,6 +675,32 @@ namespace Ecosim.SceneData
 			}
 
 			this.questionnaireStates.Add (qs);
+		}
+
+		void LoadReportState (XmlTextReader reader)
+		{
+			int id = int.Parse (reader.GetAttribute ("id"));
+			ReportState rs = new ReportState (id);
+			rs.name = reader.GetAttribute ("name");
+			rs.number = reader.GetAttribute ("number");
+			
+			if (!reader.IsEmptyElement) {
+				while (reader.Read()) {
+					XmlNodeType nType = reader.NodeType;
+					if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == ReportState.ParagraphState.XML_ELEMENT)) 
+					{
+						ReportState.ParagraphState ps = new ReportState.ParagraphState();
+						ps.body = reader.GetAttribute ("body");
+						rs.paragraphStates.Add (ps);
+						IOUtil.ReadUntilEndElement (reader, ReportState.ParagraphState.XML_ELEMENT);
+					} 
+					else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == ReportState.XML_ELEMENT)) {
+						break;
+					}
+				}
+			}
+			
+			this.reportStates.Add (rs);
 		}
 
 		void LoadActionState (XmlTextReader reader)
@@ -1013,15 +1132,31 @@ namespace Ecosim.SceneData
 				writer.WriteEndElement ();
 			}
 
+			// Questionnaire states
 			foreach (QuestionnaireState qs in this.questionnaireStates) {
 				writer.WriteStartElement (QuestionnaireState.XML_ELEMENT);
 				writer.WriteAttributeString ("id", qs.id.ToString());
 				foreach (QuestionnaireState.QuestionState q in qs.questionStates) {
 					writer.WriteStartElement (QuestionnaireState.QuestionState.XML_ELEMENT);
+					writer.WriteAttributeString ("index", q.index.ToString());
 					writer.WriteAttributeString ("money", q.moneyGained.ToString());
 					writer.WriteAttributeString ("score", q.score.ToString());
 					writer.WriteAttributeString ("qanswer", q.questionAnswer);
 					writer.WriteAttributeString ("qname", q.questionName);
+					writer.WriteEndElement ();
+				}
+				writer.WriteEndElement ();
+			}
+
+			// Report states
+			foreach (ReportState rs in this.reportStates) {
+				writer.WriteStartElement (ReportState.XML_ELEMENT);
+				writer.WriteAttributeString ("id", rs.id.ToString());
+				writer.WriteAttributeString ("name", rs.name);
+				writer.WriteAttributeString ("number", rs.number);
+				foreach (ReportState.ParagraphState ps in rs.paragraphStates) {
+					writer.WriteStartElement (ReportState.ParagraphState.XML_ELEMENT);
+					writer.WriteAttributeString ("body", ps.body);
 					writer.WriteEndElement ();
 				}
 				writer.WriteEndElement ();

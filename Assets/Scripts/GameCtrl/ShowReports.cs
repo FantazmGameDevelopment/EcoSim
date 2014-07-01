@@ -50,7 +50,6 @@ public class ShowReports : MonoBehaviour
 			}
 			else if (inQueue is Report) 
 			{
-				// TODO: Report
 				this.currentQuestionnaire = null;
 				this.currentReport = (Report)inQueue;
 			}
@@ -101,8 +100,14 @@ public class ShowReports : MonoBehaviour
 	{
 		if (this.reportWindow == null)
 		{
-			// TODO:
+			this.reportWindow = new ReportWindow (currentReport, delegate ()
+			{
+				this.currentReport = null;
+				this.reportWindow.Dispose ();
+				this.reportWindow = null;
+			});
 		}
+		this.reportWindow.Render ();
 	}
 
 	/*

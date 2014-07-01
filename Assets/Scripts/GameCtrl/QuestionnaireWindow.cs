@@ -161,7 +161,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 			Question q = this.questionnaire.questions [this.questionnaire.currentQuestionIndex];
 			Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (this.questionnaire.id);
 
-			Progression.QuestionnaireState.QuestionState questionState = new Progression.QuestionnaireState.QuestionState ();
+			Progression.QuestionnaireState.QuestionState questionState = qs.GetQuestionState (this.questionnaire.currentQuestionIndex);
 			questionState.questionName = q.body;
 			questionState.questionAnswer = a.body;
 
@@ -173,8 +173,6 @@ public class QuestionnaireWindow : ReportBaseWindow
 			if (this.questionnaire.useRequiredScore) {
 				questionState.score = a.score;
 			}
-
-			qs.questionStates.Add (questionState);
 
 			// Nest question
 			this.questionnaire.currentQuestionIndex++;
@@ -205,7 +203,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 			GUILayout.BeginHorizontal ();
 			{
-				GUILayout.Label (string.Format("Characters {0}/{1}", a.body.Length, a.maxChars), headerLight, GUILayout.Width (width - 52), defaultOption);
+				string label = (a.useMaxChars) ? string.Format("Characters {0}/{1}", a.body.Length, a.maxChars) : "";
+				GUILayout.Label (label, headerLight, GUILayout.Width (width - 52), defaultOption);
 				GUILayout.Space (1);
 				if (GUILayout.Button ("Done", button, GUILayout.Width (51), defaultOption))
 				{
@@ -256,10 +255,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 		Question q = this.questionnaire.questions [this.questionnaire.currentQuestionIndex];
 		Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (this.questionnaire.id);
 		
-		Progression.QuestionnaireState.QuestionState questionState = new Progression.QuestionnaireState.QuestionState ();
+		Progression.QuestionnaireState.QuestionState questionState = qs.GetQuestionState (this.questionnaire.currentQuestionIndex);
 		questionState.questionName = q.body;
 		questionState.questionAnswer = a.body;
-		qs.questionStates.Add (questionState);
 
 		// Next question
 		this.questionnaire.currentQuestionIndex++;
@@ -423,9 +421,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 		if (GUILayout.Button ("Save", button, GUILayout.Width (80), defaultOption)) 
 		{
 			// Save to .txt
-			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
+			System.Windows.Forms.SaveFileDialog sfd = this.GetSaveFileDialog ();
 			sfd.FileName = "questionnaire_" + this.questionnaire.id;
-			sfd.Filter = "txt files (*.txt)|*.txt";
 			System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
 			
 			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
@@ -470,16 +467,13 @@ public class QuestionnaireWindow : ReportBaseWindow
 				string txt = sb.ToString ();
 				fs.Write (enc.GetBytes (txt), 0, enc.GetByteCount (txt));
 				
-				// Close and dipose the stream
+				// Close and dispose the stream
 				fs.Close ();
 				fs.Dispose ();
 				fs = null;
 			}
 		}
 	}
-
-	[System.Runtime.InteropServices.DllImport ("user32.dll")]
-	private static extern void SaveFileDialog ();
 
 	#endregion
 

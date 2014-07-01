@@ -6,7 +6,7 @@ using System.Xml;
 
 namespace Ecosim.SceneData
 {
-	public class Paragraph
+	public class ReportParagraph
 	{
 		public const string XML_ELEMENT = "paragraph";
 
@@ -21,7 +21,7 @@ namespace Ecosim.SceneData
 		public bool titleOpened;
 		public bool descriptionOpened;
 
-		public Paragraph ()
+		public ReportParagraph ()
 		{
 			this.title = "New paragraph title";
 			this.useTitle = true; // This is default for now
@@ -59,10 +59,7 @@ namespace Ecosim.SceneData
 					{
 						/*switch (reader.Name.ToLower ())
 						{
-						case OpenAnswer.XML_ELEMENT : 
-							OpenAnswer a = new OpenAnswer ();
-							a.Load (reader, scene);
-							this.answers.Add (a);
+						case X : 
 							break;
 						}*/
 					}
@@ -87,13 +84,13 @@ namespace Ecosim.SceneData
 		public bool useName;
 		public bool useNumber;
 
-		public List<Paragraph> paragraphs;
+		public List<ReportParagraph> paragraphs;
 
 		public bool paragraphsOpened;
 
 		public Report () : base()
 		{
-			this.paragraphs = new List<Paragraph>();
+			this.paragraphs = new List<ReportParagraph>();
 			this.name = "New report";
 		}
 
@@ -113,8 +110,8 @@ namespace Ecosim.SceneData
 					{
 						switch (reader.Name.ToLower ())
 						{
-						case Paragraph.XML_ELEMENT :
-							Paragraph p = new Paragraph ();
+						case ReportParagraph.XML_ELEMENT :
+							ReportParagraph p = new ReportParagraph ();
 							p.Load (reader, scene);
 							r.paragraphs.Add (p);
 							break;
@@ -135,7 +132,7 @@ namespace Ecosim.SceneData
 			this.SaveBase (writer, scene);
 			writer.WriteAttributeString ("usename", useName.ToString().ToLower());
 			writer.WriteAttributeString ("usenumber", useNumber.ToString().ToLower());
-			foreach (Paragraph p in this.paragraphs) {
+			foreach (ReportParagraph p in this.paragraphs) {
 				p.Save (writer, scene);
 			}
 			writer.WriteEndElement ();
@@ -143,7 +140,7 @@ namespace Ecosim.SceneData
 		
 		public void UpdateReferences (Scene scene)
 		{
-			foreach (Paragraph p in this.paragraphs) {
+			foreach (ReportParagraph p in this.paragraphs) {
 				p.UpdateReferences (scene);
 			}
 		}

@@ -8,6 +8,7 @@ namespace Ecosim.SceneData
 	public class ReportsMgr
 	{
 		public const string XML_ELEMENT = "reports";
+		public static ReportsMgr self;
 		private readonly Scene scene;
 
 		public bool useShowQuestionnaireAtStart;
@@ -26,9 +27,15 @@ namespace Ecosim.SceneData
 
 		public ReportsMgr (Scene scene)
 		{
+			self = this;
+
 			this.scene = scene;
+			this.scene.onGameEnd += OnGameEnd;
 			this.questionnaires = new List<Questionnaire>();
 			this.reports = new List<Report> ();
+			this.queue = new List<ReportBase> ();
+			this.queueIndex = 0;
+
 			showQuestionnaireAtStartId = 1;
 			showQuestionnaireAtEndId = 1;
 			showReportAtEndId = 1;
@@ -36,16 +43,16 @@ namespace Ecosim.SceneData
 
 		public void Init ()
 		{
-			this.queue = new List<ReportBase> ();
-			this.queueIndex = 0;
-
 			// Check if we have start questionnaires
 			if (this.useShowQuestionnaireAtStart)
 			{
 				foreach (Questionnaire q in this.questionnaires) {
-					if (q.id == this.showQuestionnaireAtStartId) {
-						queue.Add (q);
-						break;
+					if (q.id == this.showQuestionnaireAtStartId && q.enabled) {
+						// Check if this questionnaire was already finished
+						if (scene.progression.GetQuestionnaireState (q.id, false) == null) {
+							queue.Add (q);
+							break;
+						}
 					}
 				}
 			}
@@ -55,9 +62,24 @@ namespace Ecosim.SceneData
 			}
 		}
 
-		public void EndGame ()
+		public void OnGameEnd ()
 		{
-			// TODO: EndGame
+			if (this.useShowReportAtEnd)
+			{
+				foreach (Report r in this.reports) {
+					if (r.id == this.showReportAtEndId && r.enabled) {
+						// Check if this report is already finished
+						if (scene.progression.GetReportState (r.id, false) == null) {
+							this.queue.Add (r);
+							break;
+						}
+					}
+				}
+			}
+
+			if (this.queue.Count > 0) {
+				ShowReports.NotifyQueueChange ();
+			}
 		}
 
 		public ReportBase CurrentInQueue ()

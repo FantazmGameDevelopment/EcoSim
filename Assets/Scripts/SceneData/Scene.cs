@@ -22,6 +22,7 @@ namespace Ecosim.SceneData
 
 		public ActionMgr actions;
 		public ReportsMgr reports;
+
 		public Progression progression;
 		public PlayerInfo playerInfo;
 		public Buildings buildings;
@@ -32,6 +33,8 @@ namespace Ecosim.SceneData
 		public readonly int width;
 		public readonly int height;
 		public UnityEngine.Texture2D[,] overview;
+
+		public event System.Action onGameEnd;
 		
 		public Progression GetHistoricProgression (int year)
 		{
@@ -98,6 +101,7 @@ namespace Ecosim.SceneData
 				scene.playerInfo = playerInfo;
 				
 				scene.progression.year = scene.progression.startYear; // start with first year
+				scene.SetupListeners ();
 
 				// we make an initial save in the slot
 				SaveGame saveGame = new SaveGame (scene);
@@ -135,6 +139,12 @@ namespace Ecosim.SceneData
 			if (scene.progression == null) {
 				Log.LogError ("Progression not found.");
 			}
+			scene.SetupListeners ();
+			// Check if the game was already ended
+			if (scene.progression.gameEnded == true) {
+				if (scene.onGameEnd != null)
+					scene.onGameEnd ();
+			}
 			scene.UpdateReferences ();
 			bool success = EcoScript.Compiler.LoadAssemblyFromDisk (scene);
 			if (!success) {
@@ -152,6 +162,7 @@ namespace Ecosim.SceneData
 		{
 			Scene scene = Load (name);
 			scene.progression = Progression.Load (scene, 0); // loads initial progression data
+			scene.SetupListeners ();
 			scene.UpdateReferences ();
 			bool success = EcoScript.Compiler.LoadAssemblyFromDisk (scene);
 			if (!success) {
@@ -182,6 +193,7 @@ namespace Ecosim.SceneData
 			scene.progression.CreateBasicData ();
 			scene.UpdateReferences ();
 			scene.progression.InitActions (true);
+			scene.SetupListeners ();
 			scene.Save (scene.sceneName);
 			return scene;
 		}
@@ -494,6 +506,7 @@ namespace Ecosim.SceneData
 			Scene newScene = new Scene (newSceneName, newWidth, newHeight, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
 			Progression newProgression = new Progression (newScene);
 			newScene.progression = newProgression;
+			newScene.SetupListeners ();
 			foreach (string name in progression.GetAllDataNames()) {
 				Data data = progression.GetData (name);
 				Data newData = data.CloneAndResize (newProgression, offsetX, offsetY);
@@ -520,6 +533,20 @@ namespace Ecosim.SceneData
 			
 			newScene.Save (newSceneName);
 			return newScene;
+		}
+
+		private void SetupListeners ()
+		{
+			if (progression != null) {
+				progression.onGameEndChanged -= OnGameEndChanged;
+				progression.onGameEndChanged += OnGameEndChanged;
+			}
+		}
+
+		private void OnGameEndChanged (bool value)
+		{
+			if (value && this.onGameEnd != null)
+				this.onGameEnd ();
 		}
 	}
 

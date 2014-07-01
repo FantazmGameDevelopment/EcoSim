@@ -485,9 +485,9 @@ namespace Ecosim.SceneEditor
 											GUILayout.BeginHorizontal ();
 											{
 												GUILayout.Space (10);
-												GUILayout.Label ((n + 1).ToString(), GUILayout.Width (15));
+												GUILayout.Label ("#" + (n + 1).ToString(), GUILayout.Width (15));
 												int reportIndex = a.reportIndices [n];
-												EcoGUI.IntField (null, ref reportIndex, 0, 50);
+												EcoGUI.IntField ("Report ID:", ref reportIndex, 50, 50);
 												a.reportIndices [n] = reportIndex;
 
 												// Delete
@@ -502,7 +502,7 @@ namespace Ecosim.SceneEditor
 
 										if (GUILayout.Button ("+", GUILayout.Width (20))) 
 										{
-											int id = 0;
+											int id = 1;
 											if (a.reportIndices.Count > 0) {
 												id = a.reportIndices [a.reportIndices.Count - 1] + 1;
 											}
@@ -609,14 +609,14 @@ namespace Ecosim.SceneEditor
 							// Paragraphs
 							for (int i = 0; i < r.paragraphs.Count; i++)
 							{
-								Paragraph p = r.paragraphs [i];
+								ReportParagraph p = r.paragraphs [i];
 								RenderParagraph (r, p, i);
 							}
 
 							// Add button
 							if (GUILayout.Button ("+", GUILayout.Width (20)))
 							{
-								Paragraph p = new Paragraph ();
+								ReportParagraph p = new ReportParagraph ();
 								p.opened = true;
 								r.paragraphs.Add (p);
 							}
@@ -654,7 +654,7 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndHorizontal ();
 			GUILayout.Space (5);
 		}
-		private void RenderParagraph (Report r, Paragraph p, int index)
+		private void RenderParagraph (Report r, ReportParagraph p, int index)
 		{
 			GUILayout.BeginVertical (ctrl.skin.box);
 			{
@@ -705,7 +705,7 @@ namespace Ecosim.SceneEditor
 			}
 			GUILayout.EndVertical ();
 		}
-		private void RenderParagraphHeader (Report r, Paragraph p, int index)
+		private void RenderParagraphHeader (Report r, ReportParagraph p, int index)
 		{
 			GUILayout.Space (2);
 			GUILayout.BeginHorizontal ();
@@ -734,7 +734,7 @@ namespace Ecosim.SceneEditor
 				GUILayout.Space (5);
 				if (GUILayout.Button ("-", GUILayout.Width (20)))
 				{
-					Paragraph tmp = p;
+					ReportParagraph tmp = p;
 					ctrl.StartDialog (string.Format ("Are you sure you want to delete paragraph '{0}' (#{1})", tmp.title, index + 1), 
 					delegate(bool result) {
 						if (result) {
@@ -767,14 +767,14 @@ namespace Ecosim.SceneEditor
 
 				// TODO:
 				/*if (GUILayout.Button ("-", GUILayout.Width (20))) 
-						{
-							Questionnaire tmpQ = q;
-							ctrl.StartDialog (string.Format ("Are you sure you want to delete '{0}' (ID:{1})", tmpQ.name, tmpQ.id.ToString()), 
-							delegate(bool result) {
-								if (result) {
-									scene.reports.questionnaires.Remove (tmpQ);
-								}
-							}, null);
+				{
+					Questionnaire tmpQ = q;
+					ctrl.StartDialog (string.Format ("Are you sure you want to delete '{0}' (ID:{1})", tmpQ.name, tmpQ.id.ToString()), 
+					delegate(bool result) {
+						if (result) {
+							scene.reports.questionnaires.Remove (tmpQ);
+						}
+					}, null);
 				}*/
 			}
 			GUILayout.EndHorizontal (); // ~Header
