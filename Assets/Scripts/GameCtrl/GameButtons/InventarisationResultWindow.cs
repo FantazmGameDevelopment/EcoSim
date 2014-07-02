@@ -8,6 +8,8 @@ namespace Ecosim.GameCtrl.GameButtons
 {
 	public class InventarisationResultWindow : GameWindow
 	{
+		private static int prevXOffset = -1;
+		private static int prevYOffset = -1;
 		private int winWidth = 296;
 		
 		private readonly InventarisationAction action;
@@ -45,6 +47,11 @@ namespace Ecosim.GameCtrl.GameButtons
 		
 		public override void Render ()
 		{
+			if (prevXOffset != -1)
+				xOffset = prevXOffset;
+			if (prevYOffset != -1)
+				yOffset = prevYOffset;
+
 			SimpleGUI.Label (new Rect (xOffset + 65, yOffset, winWidth - 65, 32), result.name + " " + result.year, title);
 			int index = 0;
 			for (int i = 0; i < InventarisationAction.MAX_VALUE_INDEX; i++) {
@@ -57,6 +64,9 @@ namespace Ecosim.GameCtrl.GameButtons
 				}
 			}
 			base.Render ();
+
+			prevXOffset = xOffset;
+			prevYOffset = yOffset;
 		}
 			
 		protected override void OnClose ()

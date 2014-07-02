@@ -22,6 +22,7 @@ namespace Ecosim.SceneData
 
 		public ActionMgr actions;
 		public ReportsMgr reports;
+		public ExportMgr exporter;
 
 		public Progression progression;
 		public PlayerInfo playerInfo;
@@ -177,6 +178,7 @@ namespace Ecosim.SceneData
 			Scene scene = new Scene (name, width, height, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
 			scene.assets = new ExtraAssets (scene);
 			scene.actions = new ActionMgr (scene);
+			scene.exporter = new ExportMgr (scene);
 			scene.reports = new ReportsMgr (scene);
 			scene.buildings = new Buildings (scene);
 			scene.roads = new Roads (scene);
@@ -325,6 +327,7 @@ namespace Ecosim.SceneData
 			progression.Save ();
 			articles.Save (path);
 			actions.Save (path);
+			exporter.Save (path);
 		}
 
 		static Scene Load (string name, XmlTextReader reader)
@@ -396,6 +399,7 @@ namespace Ecosim.SceneData
 				scene.roads = Roads.Load (path, scene);
 				scene.articles = Articles.Load (path, scene);
 				scene.actions = ActionMgr.Load (path, scene);
+				scene.exporter = ExportMgr.Load (path, scene);
 				scene.reports = ReportsMgr.Load (path, scene);
 			}
 			return scene;
@@ -444,6 +448,7 @@ namespace Ecosim.SceneData
 		public void UpdateReferences ()
 		{
 			actions.UpdateReferences ();
+			exporter.UpdateReferences ();
 			reports.UpdateReferences ();
 			int i = 0;
 			foreach (SuccessionType s in successionTypes) {
@@ -519,6 +524,8 @@ namespace Ecosim.SceneData
 			string newScenePath = GameSettings.GetPathForScene (newSceneName);
 			actions.Save (newScenePath);
 			newScene.actions = ActionMgr.Load (newScenePath, newScene);
+			exporter.Save (newScenePath);
+			newScene.exporter = ExportMgr.Load (newScenePath, newScene);
 			reports.Save (newScenePath);
 			newScene.reports = ReportsMgr.Load (newScenePath, newScene);
 			assets.Save (newScenePath);

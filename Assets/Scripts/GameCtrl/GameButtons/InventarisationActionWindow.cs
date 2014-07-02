@@ -47,7 +47,7 @@ namespace Ecosim.GameCtrl.GameButtons
 				totalCostStr = totalCost.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 				totalTilesStr = nrTiles.ToString ("#,##0", CultureInfo.GetCultureInfo ("en-GB"));
 			}
-			SimpleGUI.Label (new Rect (xOffset + 65, yOffset, winWidth - 65, 32), ui.name, title);
+
 			SimpleGUI.Label (new Rect (xOffset, yOffset + 33, winWidth, textHeight), ui.description, formatted);
 			SimpleGUI.Label (new Rect (xOffset, yOffset + textHeight + 34, 263, 32), "Selected tiles", entry);
 			SimpleGUI.Label (new Rect (xOffset + 264, yOffset + textHeight + 34, 88, 32), totalTilesStr, entry);

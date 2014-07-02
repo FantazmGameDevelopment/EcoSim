@@ -93,7 +93,44 @@ namespace Ecosim.SceneData
 			public bool isEnabled;
 			public Dictionary<string, string> properties;
 		}
-		
+
+		/**
+		 * Inventarisation class. It stores the InventarisationAction,
+		 * the given name and amount of years it should last.
+		 */
+		public class Inventarisation
+		{
+			/**
+			 * Constructor, used to reconstruct the inventarisation results from file
+			 */
+			public Inventarisation (int startYear, int lastYear, string name, int actionId)
+			{
+				this.startYear = startYear;
+				this.lastYear = lastYear;
+				this.name = name;
+				this.actionId = actionId;
+			}
+
+			/**
+			 * Constructor can only be used when game is running. It creates a new
+			 * inventarisation result using a given year, name, area data set, actionid.
+			 */
+			public Inventarisation (int startYear, int durationInYears, int lastYear, string name, int actionId)
+			{
+				this.startYear = startYear;
+				this.durationInYears = durationInYears;
+				this.lastYear = lastYear;
+				this.name = name;
+				this.actionId = actionId;
+			}
+
+			public readonly int startYear;
+			public readonly int durationInYears;
+			public readonly int lastYear;
+			public readonly string name;
+			public readonly int actionId;
+		}
+
 		/**
 		 * Inventarisation result class, it stores the area map (Data) with result values,
 		 * the actionId is used to determine the meaning of the area map values and the
@@ -125,7 +162,6 @@ namespace Ecosim.SceneData
 				this.year = year;
 				this.name = name;
 				this.actionId = actionId;
-				
 			}
 			
 			public readonly int year;
@@ -258,7 +294,8 @@ namespace Ecosim.SceneData
 		public List<Message> messages;
 		public List<Message> reports;
 		public List<QuestionnaireState> questionnaireStates;
-		public List<ReportState> reportStates; // TODO: Save this!
+		public List<ReportState> reportStates;
+		public List<Inventarisation> currentInventarisations;
 		public List<InventarisationResult> inventarisations;
 		public List<ResearchPoint> researchPoints;
 		public Dictionary<string, object> variables;
@@ -379,6 +416,7 @@ namespace Ecosim.SceneData
 			messages = new List<Message> ();
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
+			currentInventarisations = new List<Inventarisation> ();
 			researchPoints = new List<ResearchPoint>();
 		}
 		
@@ -775,13 +813,20 @@ namespace Ecosim.SceneData
 						Message msg = new Message (id, text);
 						reports.Add (msg);
 						skipReadHack = true;
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "inventarisation")) {
+					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "invresults")) {
 						int year = int.Parse (reader.GetAttribute ("year"));
 						string name = reader.GetAttribute ("name");
 						int actionId = int.Parse (reader.GetAttribute ("actionid"));
 						string areaName = reader.GetAttribute ("areaname");
 						InventarisationResult ir = new InventarisationResult (year, name, areaName, actionId);
 						inventarisations.Add (ir);
+						IOUtil.ReadUntilEndElement (reader, "invresults");
+					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "inventarisation")) {
+						int start = int.Parse (reader.GetAttribute ("start"));
+						int end = int.Parse (reader.GetAttribute ("end"));
+						string name = reader.GetAttribute ("name");
+						int actionId = int.Parse (reader.GetAttribute ("actionid"));
+						Inventarisation inv = new Inventarisation (start, end, name, actionId);
 						IOUtil.ReadUntilEndElement (reader, "inventarisation");
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "data")) {
 						DataInfo info = new DataInfo ();
@@ -1124,11 +1169,20 @@ namespace Ecosim.SceneData
 			}
 			
 			foreach (InventarisationResult ir in inventarisations) {
-				writer.WriteStartElement ("inventarisation");
+				writer.WriteStartElement ("invresults");
 				writer.WriteAttributeString ("year", ir.year.ToString ());
 				writer.WriteAttributeString ("name", ir.name);
 				writer.WriteAttributeString ("areaname", ir.areaName);
 				writer.WriteAttributeString ("actionid", ir.actionId.ToString ());
+				writer.WriteEndElement ();
+			}
+
+			foreach (Inventarisation inv in currentInventarisations) {
+				writer.WriteStartElement ("inventarisation");
+				writer.WriteAttributeString ("start", inv.startYear.ToString());
+				writer.WriteAttributeString ("end", inv.lastYear.ToString());
+				writer.WriteAttributeString ("name", inv.name);
+				writer.WriteAttributeString ("actionid", inv.actionId.ToString ());
 				writer.WriteEndElement ();
 			}
 

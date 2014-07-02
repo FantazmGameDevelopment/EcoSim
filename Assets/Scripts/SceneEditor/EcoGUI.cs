@@ -179,6 +179,11 @@ namespace Ecosim.SceneEditor
 			return value;
 		}
 
+		public static void EnumButton<T> (string name, T value, System.Action<T> onChanged, float nameWidth, float valueWidth) where T : struct, System.IConvertible
+		{
+			EnumButton <T> (name, value, onChanged, GUILayout.Width (nameWidth), GUILayout.Width (valueWidth));
+		}
+
 		public static void EnumButton<T> (string name, T value, System.Action<T> onChanged, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null) where T : struct, System.IConvertible
 		{
 			if (!typeof (T).IsEnum) 
