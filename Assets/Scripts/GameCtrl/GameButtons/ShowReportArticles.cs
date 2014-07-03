@@ -17,8 +17,6 @@ namespace Ecosim.GameCtrl.GameButtons
 		private RenderEntry articleWindow;
 		private int index;
 		
-		
-		
 		public ShowReportArticles () {
 			iconTex =  Resources.Load ("Icons/reports_w") as Texture2D;
 			backTex =  Resources.Load ("Icons/back_w") as Texture2D;
@@ -71,7 +69,6 @@ namespace Ecosim.GameCtrl.GameButtons
 		private void ClosedWindow () {
 			articleWindow = null;
 		}
-
 		
 		public override void OnClick ()
 		{

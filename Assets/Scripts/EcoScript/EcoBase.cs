@@ -109,8 +109,8 @@ namespace Ecosim.EcoScript
 			scene.progression.AddReport (text);
 		}
 		
-		public Progression.InventarisationResult AddInventarisation(string name, Data data) {
-			Progression.InventarisationResult ir = new Progression.InventarisationResult (year, name, data, basicAction.id);
+		public Progression.InventarisationResult AddInventarisation(string name, Data area, Data data) {
+			Progression.InventarisationResult ir = new Progression.InventarisationResult (year, name, area, data, basicAction.id);
 			scene.progression.inventarisations.Add (ir);
 			return ir;
 		}

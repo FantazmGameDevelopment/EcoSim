@@ -1,3 +1,4 @@
+using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -5,6 +6,159 @@ using System.Reflection;
 
 namespace Ecosim.SceneData
 {
+	public class InventarisationsData
+	{
+		public class YearData
+		{
+			public readonly int year;
+			public float lowestValue = Mathf.Infinity;
+			public float highestValue = -Mathf.Infinity;
+
+			private Dictionary<string, float> values;
+
+			public YearData (int year)
+			{
+				this.year = year;
+				this.values = new Dictionary<string, float> ();
+			}
+
+			public void AddValue (string name, float value)
+			{
+				// Check the lowest and highest values
+				if (value < lowestValue) {
+					lowestValue = value;
+				}
+				if (value > highestValue) {
+					highestValue = value;
+				}
+
+				// Choose the highest value if it already exists
+				if (values.ContainsKey (name)) {
+					float newValue = Mathf.Max (value, values[name]);
+					values [name] = newValue;
+					return;
+				}
+				values.Add (name, value);
+			}
+
+			/// <summary>
+			/// Gets the value. Returns true/false whether the name exists, and if so it sets the out value.
+			/// </summary>
+			public bool GetValue (string name, out float value)
+			{
+				if (values.ContainsKey (name)) {
+					value = values[name];
+					return true;
+				}
+				value = 0f;
+				return false;
+			}
+
+			public override string ToString ()
+			{
+				System.Text.StringBuilder sb = new System.Text.StringBuilder ();
+				sb.AppendFormat ("Year {0}\n", year);
+				foreach (KeyValuePair<string, float> pair in values) {
+					sb.AppendFormat ("{0}:{1}\n", pair.Key, pair.Value);
+				}
+				sb.AppendFormat ("Min:{0}, Max:{1}\n", lowestValue, highestValue);
+				return string.Format ("[YearData] {0}", sb.ToString());
+			}
+		}
+
+		private List<string> values;
+		private List<YearData> years;
+
+		public InventarisationsData ()
+		{
+			this.values = new List<string> ();
+			this.years = new List<YearData> ();
+		}
+
+		public IEnumerable<string> EnumerateValues ()
+		{
+			foreach (string s in this.values) {
+				yield return s;
+			}
+		}
+
+		public void AddValue (string name)
+		{
+			if (!this.values.Contains (name))
+			{
+				this.values.Add (name);
+				this.values.Sort ();
+			}
+		}
+
+		public IEnumerable<YearData> EnumerateYears ()
+		{
+			foreach (YearData y in this.years) {
+				yield return y;
+			}
+		}
+
+		public int GetValuesCount ()
+		{
+			return this.values.Count;
+		}
+
+		public YearData GetYear (int year)
+		{
+			return GetYear (year, false);
+		}
+
+		public YearData GetYear (int year, bool createNewIfNull)
+		{
+			foreach (YearData y in years) {
+				if (y.year == year) 
+					return y;
+			}
+			if (createNewIfNull) {
+				YearData y = new YearData (year);
+				this.years.Add (y);
+				return y;
+			}
+			return null;
+		}
+
+		public int GetYearsCount ()
+		{
+			return this.years.Count;
+		}
+
+		public float GetLowestValue ()
+		{
+			float value = Mathf.Infinity;
+			foreach (YearData y in this.years) {
+				if (y.lowestValue < value) {
+					value = y.lowestValue;
+				}
+			}
+			return value;
+		}
+
+		public float GetHighestValue ()
+		{
+			float value = -Mathf.Infinity;
+			foreach (YearData y in this.years) {
+				if (y.highestValue > value) {
+					value = y.highestValue;
+				}
+			}
+			return value;
+		}
+
+		public override string ToString ()
+		{
+			string years = "";
+			foreach (YearData y in this.years) {
+				years += y.ToString () + "\n";
+			}
+			return string.Format ("[InventarisationsData]\n{0}", years);
+		}
+	}
+
 	public class ExportMgr
 	{
 		public enum SelectionTypes
@@ -19,6 +173,7 @@ namespace Ecosim.SceneData
 			OnlyWhenSurveyed
 		}
 
+		public static ExportMgr self { get; private set; }
 		private readonly Scene scene;
 
 		public bool exportEnabled;
@@ -31,10 +186,28 @@ namespace Ecosim.SceneData
 
 		public ExportMgr (Scene scene)
 		{
+			self = this;
 			this.scene = scene;
 			this.parameters = new string[] { };
 			this.animals = new string[] { };
 			this.plants = new string[] { };
+		}
+
+		public InventarisationsData GetInventarisationsData ()
+		{
+			InventarisationsData id = new InventarisationsData ();
+
+			foreach (Progression.InventarisationResult ir in scene.progression.inventarisations)
+			{
+				if (ir.selected) 
+				{
+					id.AddValue (ir.name);
+					id.GetYear (ir.year, true).AddValue (ir.name, (float)ir.DataMap.GetSum ());
+				}
+			}
+
+			UnityEngine.Debug.Log (id.ToString());
+			return id;
 		}
 
 		public void AddParameter (string param)

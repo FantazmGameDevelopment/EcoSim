@@ -38,6 +38,8 @@ namespace Ecosim.SceneEditor
 				mgr.exportEnabled = GUILayout.Toggle (mgr.exportEnabled, "Data Export enabled");
 				if (mgr.exportEnabled)
 				{
+					GUILayout.Label ("TODO: These values are ONLY for sheet export");
+
 					EcoGUI.EnumButton<ExportMgr.SelectionTypes>("Selection type:", mgr.selectionType, OnSelectionTypeChanged, 80f, 150f);
 					EcoGUI.EnumButton<ExportMgr.DataTypes>("Data type:", mgr.dataType, OnDataTypeChanged, 80f, 150f);
 

@@ -11,7 +11,9 @@ void DoSuccession() {
 		// the resulting dataset
 		// value 0 is used for all cells not selected in
 		// the AREA map (not selected by user).
-		SparseBitMap8 result = new SparseBitMap8 (scene);
+		// The area map is used for visualisation.
+		SparseBitMap8 area = new SparseBitMap8 (scene);
+		SparseBitMap8 data = new SparseBitMap8 (scene);
 		
 		int tileCount = 0; // we'll count the number of tiles selected
 		foreach (Coordinate vc in selection.EnumerateNotZero ()) {
@@ -20,17 +22,20 @@ void DoSuccession() {
 			// somehow map the values of the data we analyse
 			// to the result set...
 			switch (value) {
-				case 0 : result.Set (vc, 1); break;
+				case 0 : area.Set (vc, 1); break;
 				case 1 :
-				case 2 : result.Set (vc, 2); break;
-				default : result.Set (vc, 3); break;
+				case 2 : area.Set (vc, 2); break;
+				default : area.Set (vc, 3); break;
 			}
+			
+			// save the actual data
+			data.Set (vc, value);
 		}
 		
 		// make the report available. We use the name of the
 		// first UI element (the button in game interface
 		// for this inventarisation).
-		AddInventarisation (action.uiList[0].name, result);
+		AddInventarisation (action.uiList[0].name, area, data);
 		
 		// user has to pay for the number of tiles selected.
 		budget -= tileCount * action.uiList[0].cost;

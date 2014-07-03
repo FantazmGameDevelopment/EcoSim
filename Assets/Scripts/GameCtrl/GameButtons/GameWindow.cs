@@ -42,8 +42,8 @@ namespace Ecosim.GameCtrl.GameButtons
 		}
 		
 		private static List<GameWindow> windows;
-		private static Texture2D closeIcon;
-		private static Texture2D closeIconH;
+		protected static Texture2D closeIcon;
+		protected static Texture2D closeIconH;
 		
 		protected static GUIStyle black;
 		protected static GUIStyle white;

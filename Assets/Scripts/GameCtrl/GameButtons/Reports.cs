@@ -12,6 +12,8 @@ namespace Ecosim.GameCtrl.GameButtons
 	{
 		private Texture2D closeTex;
 		private Texture2D closeHTex;
+		private Texture2D toggleVisual;
+		private Texture2D toggleVisualH;
 		private GUIStyle header;
 		private GUIStyle entry;
 		private GUIStyle entrySelected;
@@ -20,13 +22,31 @@ namespace Ecosim.GameCtrl.GameButtons
 		private string name;
 		private Dictionary<Progression.InventarisationResult, InventarisationResultWindow> windows;
 
-		private Dictionary<string, List<Progression.InventarisationResult>> inventarisations = null;
+		// Inventarisations
+		private class Inventarisation
+		{
+			public string name;
+			public List<Progression.InventarisationResult> results;
+
+			public Inventarisation (string name)
+			{
+				this.name = name;
+				this.results = new List<Progression.InventarisationResult> ();
+			}
+		}
+		private List<Inventarisation> inventarisations = null;
+
+		// Graph editor
+		private bool graphEditorOpened = false;
+
 		
 		public Reports ()
 		{
 			header = GameControl.self.skin.FindStyle ("ArialB16-50");
 			entry = GameControl.self.skin.FindStyle ("Arial16-75");
 			entrySelected = GameControl.self.skin.FindStyle ("Arial16-W");
+			toggleVisual = (Texture2D)Resources.Load ("Icons/cross_w", typeof (Texture2D));
+			toggleVisualH = (Texture2D)Resources.Load ("Icons/cross_zw", typeof (Texture2D));
 		}
 		
 		public override bool SelectRender (GameButton button)
@@ -35,11 +55,15 @@ namespace Ecosim.GameCtrl.GameButtons
 
 			int colWidth = 164;
 			int yearWidth = 65;
+			int yearToggleBtnWidth = 32;
+			int graphEditorWidth = 150;
+			int invGraphEditorBtnWidth = 100;
+			int graphBtnWidth = 120;
 			int entryHeight = 32;
 
-			foreach (KeyValuePair <string, List<Progression.InventarisationResult>> inv in inventarisations) 
+			foreach (Inventarisation inv in inventarisations) 
 			{
-				int calcWidth = (int)entry.CalcSize (new GUIContent (inv.Key)).x;
+				int calcWidth = (int)entry.CalcSize (new GUIContent (inv.name)).x;
 				calcWidth = ((calcWidth / (entryHeight + 1)) + 1) * (entryHeight + 1) - 1;
 				if (calcWidth > colWidth) {
 					colWidth = calcWidth;
@@ -50,37 +74,130 @@ namespace Ecosim.GameCtrl.GameButtons
 			int x = (int)(button.position.x + (entryHeight + 1));
 			int y = (int)(button.position.y);
 			int width = 6;
+
+			// Graph editor
+			ExportMgr.self.exportEnabled = true;
+			if (ExportMgr.self.exportEnabled) 
+			{
+				Rect graphRect = new Rect (x, y, graphEditorWidth, entryHeight);
+
+				// Label
+				graphRect.width = colWidth;
+				isOver |= SimpleGUI.Label (graphRect, "Graph Editor", header);  
+				graphRect.x += graphRect.width + 1;
+
+				graphRect.width = yearWidth;
+				isOver |= SimpleGUI.CheckMouseOver (graphRect); 
+				if (SimpleGUI.Button (graphRect, "Toggle", entry, entrySelected)) {
+					graphEditorOpened = !graphEditorOpened;
+				}
+				
+				// Show graph editor controls
+				if (graphEditorOpened) 
+				{
+					y += entryHeight + 1;
+					Rect r = new Rect (x, y, graphBtnWidth, entryHeight);
+					
+					// Select all
+					isOver |= SimpleGUI.CheckMouseOver (r);
+					if (SimpleGUI.Button (r, "Select all", entry, entrySelected)) { 
+						foreach (Inventarisation i in inventarisations) {
+							foreach (Progression.InventarisationResult ir in i.results) {
+								ir.selected = true;
+							}
+						}
+					}
+					// Clear selection
+					r.x += r.width + 1;
+					isOver |= SimpleGUI.CheckMouseOver (r);
+					if (SimpleGUI.Button (r, "Clear selection", entry, entrySelected)) { 
+						foreach (Inventarisation i in inventarisations) {
+							foreach (Progression.InventarisationResult ir in i.results) {
+								ir.selected = false;
+							}
+						}
+					}
+					// Generate graph
+					r.x += r.width + 1;
+					isOver |= SimpleGUI.CheckMouseOver (r);
+					if (SimpleGUI.Button (r, "Generate", entry, entrySelected)) {
+						// TODO:
+						new Ecosim.GameCtrl.ExportGraphWindow ();
+					}
+				}
+
+				y += entryHeight + 1;
+			}
+
+			// Inventarisations
 			isOver |= SimpleGUI.Label (new Rect (x, y, colWidth, entryHeight), name, header);
+			// Years
 			isOver |= SimpleGUI.Label (new Rect (x + colWidth + 1, y, yearWidth, entryHeight), "Years", header);
 
-
+			if (isOver) {
+				selectedIR = null;
+				selectedInvName = null;
+			}
 
 			// Show sorted inventarisations
 			Progression.InventarisationResult newSelectedIR = null;
 			if (inventarisations.Count == 0) 
 			{
-				SimpleGUI.Label (new Rect (x, y + 33, 197, 32), "No reports available", entry);
+				//y = y + ((graphEditorOpened) ? (entryHeight + 1) : 0);
+				SimpleGUI.Label (new Rect (x, y + (entryHeight + 1), 197, entryHeight), "No reports available", entry);
 			} 
 			else 
 			{
 				int r = 0;
-				foreach (KeyValuePair <string, List<Progression.InventarisationResult>> inv in inventarisations) 
+				foreach (Inventarisation inv in inventarisations) 
 				{
 					// TODO: Make sure the Groups don't go over the screen height
-					bool hl = (inv.Key == selectedInvName);
-					bool isOverGroup = SimpleGUI.Label (new Rect (x, y + (entryHeight + 1) * (r + 1), colWidth, entryHeight), inv.Key, hl ? entrySelected : entry);
+					bool hl = (inv.name == selectedInvName);
+					Rect invR = new Rect (x, y + (entryHeight + 1) * (r + 1), colWidth, entryHeight);
+					bool isOverGroup = SimpleGUI.Label (invR, inv.name, hl ? entrySelected : entry);
+					invR.x += invR.width + 1;
+
+					// Graph controls
+					if (graphEditorOpened)
+					{
+						Rect invBtnR = invR;
+						invBtnR.width = invGraphEditorBtnWidth;
+
+						// De/select all
+						isOverGroup |= SimpleGUI.CheckMouseOver (invBtnR);
+						if (SimpleGUI.Button (invBtnR, "De/select all", entry, entrySelected)) { 
+							// Check if we should deselect or select all
+							bool foundSelected = false;
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								if (ir.selected) {
+									foundSelected = true;
+									break;
+								}
+							}
+							// Deselect all
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								// If we found a selected, deselect, if we didn't find a selected, select it
+								ir.selected = !foundSelected;
+							}
+						}
+
+						invR.x += invBtnR.width + 1;
+					}
+
 					isOver |= isOverGroup;
 					r++;
 
-					if (isOverGroup) selectedInvName = inv.Key;
+					if (isOverGroup) selectedInvName = inv.name;
 					if (!isOverGroup && !hl) continue;
 
 					// Show years seperately
 					int i = 0;
-					foreach (Progression.InventarisationResult ir in inv.Value)
+					foreach (Progression.InventarisationResult ir in inv.results)
 					{
 						hl = (ir == selectedIR);
-						bool isOverYear = SimpleGUI.Label (new Rect (x + colWidth + 1, y + (entryHeight + 1) * (i + 1), yearWidth, entryHeight), ir.year.ToString (), hl ? entrySelected : entry);
+						Rect yearR = new Rect (invR.x, y + ((entryHeight + 1) * (i + 1)), yearWidth, entryHeight);
+						bool isOverYear = SimpleGUI.Label (yearR, ir.year.ToString (), hl ? entrySelected : entry);
+						isOver |= isOverYear;
 
 						if (isOverYear && (Event.current.type == EventType.mouseDown))
 						{
@@ -100,16 +217,34 @@ namespace Ecosim.GameCtrl.GameButtons
 
 						if (isOverYear) {
 							newSelectedIR = ir;
-							selectedInvName = inv.Key;
+							selectedInvName = inv.name;
 						}
 
-						isOver |= isOverYear;
-						i++;
+						// Graph toggle button
+						if (graphEditorOpened) 
+						{
+							Rect toggleR = yearR;
+							toggleR.width = yearToggleBtnWidth;
+							toggleR.x += yearWidth + 1;
+							isOver |= SimpleGUI.CheckMouseOver (toggleR);
 
-						if ((y + 33 * (i + 4)) > Screen.height) {
+							// Toggle button
+							if (ir.selected) {
+								if (SimpleGUI.Button (toggleR, "<b> X</b>", entry, entrySelected)) { 
+									ir.selected = false;
+								} 
+							} else {
+								if (SimpleGUI.Button (toggleR, null, null, entry, entrySelected)) {
+									ir.selected = true;
+								}
+							}
+						}
+
+						i++;
+						if ((y + (entryHeight + 1) * (i + 4)) > Screen.height) {
 							// prevent entries going past bottom of screen...
 							i = 0;
-							x += colWidth + 67;
+							x += yearWidth + 1 + ((graphEditorOpened) ? yearToggleBtnWidth : 0);
 						}
 					}
 
@@ -120,9 +255,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			selectedIR = newSelectedIR;
 			return isOver;
 
-			///////////////////
 			/////// OLD ///////
-			///////////////////
 			/*Progression.InventarisationResult newSelectedIR = null;
 			List<Progression.InventarisationResult> inventarisations = GameControl.self.scene.progression.inventarisationResults;
 			if (inventarisations.Count == 0) {
@@ -175,16 +308,24 @@ namespace Ecosim.GameCtrl.GameButtons
 		private void RetrieveInventarisations ()
 		{
 			// Get and sort all inventarisations
-			inventarisations = new Dictionary<string, List<Progression.InventarisationResult>> ();
+			inventarisations = new List<Inventarisation> ();
 			
 			// Sort them by name
 			foreach (Progression.InventarisationResult ir in GameControl.self.scene.progression.inventarisations)
 			{
 				// Add to the list
-				if (!inventarisations.ContainsKey (ir.name)) {
-					inventarisations.Add (ir.name, new List<Progression.InventarisationResult> ());
+				Inventarisation inv = null;
+				foreach (Inventarisation i in inventarisations) {
+					if (i.name == ir.name) {
+						inv = i;
+						break;
+					}
 				}
-				inventarisations [ir.name].Add (ir);
+				if (inv == null) {
+					inv = new Inventarisation (ir.name);
+					inventarisations.Add (inv);
+				}
+				inv.results.Add (ir);
 			}
 		}
 		
@@ -206,6 +347,8 @@ namespace Ecosim.GameCtrl.GameButtons
 			}
 			name = button.name;
 			selectedIR = null;
+			selectedInvName = null;
+			inventarisations = null;
 			windows = new Dictionary<Progression.InventarisationResult, InventarisationResultWindow> ();
 		}
 

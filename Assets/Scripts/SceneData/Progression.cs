@@ -141,24 +141,28 @@ namespace Ecosim.SceneData
 			/**
 			 * Constructor, used to reconstruct the inventarisation results from file
 			 */
-			public InventarisationResult (int year, string name, string areaName, int actionId)
+			public InventarisationResult (int year, string name, string areaName, string dataName, int actionId)
 			{
 				this.year = year;
 				this.name = name;
 				this.areaName = areaName;
+				this.dataName = dataName;
 				this.actionId = actionId;
 			}
 			
 			/**
 			 * Constructor can only be used when game is running. It creates a new
-			 * inventarisation result using a given year, name, area data set, actionid.
+			 * inventarisation result using a given year, name, area and data set, actionid.
 			 */
-			public InventarisationResult (int year, string name, Data area, int actionId)
+			public InventarisationResult (int year, string name, Data area, Data data, int actionId)
 			{
 				Progression progression = GameControl.self.scene.progression;
-				areaName = "inventarisation" + progression.inventarisations.Count;
+				areaName = "inv" + progression.inventarisations.Count + "area";
+				dataName = "inv" + progression.inventarisations.Count + "data";
 				progression.AddData (areaName, area);
-				areaMap = area;
+				progression.AddData (dataName, data);
+				this.areaName = areaName;
+				this.dataName = dataName;
 				this.year = year;
 				this.name = name;
 				this.actionId = actionId;
@@ -167,9 +171,28 @@ namespace Ecosim.SceneData
 			public readonly int year;
 			public readonly string name;
 			public readonly string areaName;
+			public readonly string dataName;
 			public readonly int actionId;
+
+			private Data dataMap;
+			/// <summary>
+			/// Gets the data map. This data contains the actual values at the given year.
+			/// Used for actual data calculations etc.
+			/// </summary>
+			/// <value>The data map.</value>
+			public Data DataMap {
+				get {
+					if (dataMap == null) {
+						dataMap = GameControl.self.scene.progression.GetData (dataName);
+					}
+					return dataMap;
+				}
+			}
+
 			private Data areaMap;
-			
+			/// <summary>
+			/// Gets the area map. This data contains values used for visualisation.
+			/// </summary>
 			public Data AreaMap {
 				get {
 					if (areaMap == null) {
@@ -178,6 +201,9 @@ namespace Ecosim.SceneData
 					return areaMap;
 				}
 			}
+
+			// Temp vars
+			public bool selected;
 		}
 
 		public class QuestionnaireState
@@ -818,7 +844,8 @@ namespace Ecosim.SceneData
 						string name = reader.GetAttribute ("name");
 						int actionId = int.Parse (reader.GetAttribute ("actionid"));
 						string areaName = reader.GetAttribute ("areaname");
-						InventarisationResult ir = new InventarisationResult (year, name, areaName, actionId);
+						string dataName = reader.GetAttribute ("dataname");
+						InventarisationResult ir = new InventarisationResult (year, name, areaName, dataName, actionId);
 						inventarisations.Add (ir);
 						IOUtil.ReadUntilEndElement (reader, "invresults");
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "inventarisation")) {
@@ -1173,6 +1200,7 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("year", ir.year.ToString ());
 				writer.WriteAttributeString ("name", ir.name);
 				writer.WriteAttributeString ("areaname", ir.areaName);
+				writer.WriteAttributeString ("dataname", ir.dataName);
 				writer.WriteAttributeString ("actionid", ir.actionId.ToString ());
 				writer.WriteEndElement ();
 			}
