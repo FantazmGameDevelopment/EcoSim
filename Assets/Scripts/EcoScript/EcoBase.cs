@@ -112,6 +112,19 @@ namespace Ecosim.EcoScript
 		public Progression.InventarisationResult AddInventarisation(string name, Data area, Data data) {
 			Progression.InventarisationResult ir = new Progression.InventarisationResult (year, name, area, data, basicAction.id);
 			scene.progression.inventarisations.Add (ir);
+
+			System.Random r = new System.Random ();
+			for (int i = 0; i < 10; i++)
+			{
+				Data d = new SparseBitMap8 (scene);
+				data.CopyTo (d);
+				foreach (ValueCoordinate vc in d.EnumerateNotZero()) {
+					d.Set (vc, (int)RndUtil.RndRange (ref r, 1f, vc.v * 1.5f));
+				}
+
+				ir = new Progression.InventarisationResult (year, name + i, area, d, basicAction.id);
+				scene.progression.inventarisations.Add (ir);
+			}
 			return ir;
 		}
 		

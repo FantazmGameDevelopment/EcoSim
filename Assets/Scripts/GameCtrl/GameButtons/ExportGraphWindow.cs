@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Globalization;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using Ecosim;
@@ -10,8 +10,10 @@ namespace Ecosim.GameCtrl
 {
 	public class ExportGraphWindow : GameWindow
 	{
-		public static int windowWidth = 800;
-		public static int windowHeight = 400;
+		// Make sure the width and height don't exceed the screen widht/height
+		// because otherwise we won't be able to render the png properly (using ReadPixels)
+		public static int windowWidth { get { return Mathf.Min (800, Screen.width); } }
+		public static int windowHeight { get { return Mathf.Min (400, Screen.height); }	}
 		public const int windowWidthMargin = 32;
 		public const int windowHeightMargin = 32;
 		public const int titleHeight = 32;
@@ -29,8 +31,8 @@ namespace Ecosim.GameCtrl
 		public const float gridLineIndent = 5f;
 		public Color gridLinesColor = new Color (0.85f, 0.85f, 0.85f, 1f);
 
-		private Vector2 pointOffset = new Vector2 (-1, 0);
-		private Vector2 pointIconOffset = new Vector2 (3, 0);
+		private Vector2 pointOffset = new Vector2 (-1f, 0f);
+		private Vector2 pointIconOffset = new Vector2 (3f, 0f);
 		private Texture2D[] pointIcons;
 		private Color[] pointColors;
 		private GUIStyle rightAlign;
@@ -40,10 +42,19 @@ namespace Ecosim.GameCtrl
 		private float minValue;
 		private float maxValue;
 		private Dictionary<string, Vector2> prevPoints;
+		private Dictionary<string, bool> iconActiveStates;
+		private string hoverLabel = "";
+		private string numberFormat = "0";
+
+		private int preSaveQuality = 0;
+		private bool saveGraph = false;
+		private string savePath = "";
 
 		public ExportGraphWindow () : base (-1, -1, windowWidth, null)
 		{
+			// Get the inventarisation data
 			invData = ExportMgr.self.GetInventarisationsData ();
+			// Calculate the minimum and maximum values
 			minValue = invData.GetLowestValue ();
 			if (minValue > 0f) {
 				minValue = Mathf.Clamp (minValue * 0.8f, 0f, Mathf.Infinity);
@@ -52,12 +63,32 @@ namespace Ecosim.GameCtrl
 			}
 			maxValue = invData.GetHighestValue () * 1.2f;
 
-			// Get all values
+			// Check if we have decimals
+			bool hasDecimals = false;
+			foreach (InventarisationsData.YearData year in invData.EnumerateYears()) {
+				foreach (string s in invData.EnumerateValues ()){
+					float v = 0f;
+					if (year.GetValue (s, out v)) {
+						if (v % 1f != 0f) 
+							hasDecimals = true;
+					}
+					if (hasDecimals)
+						break;
+				}
+				if (hasDecimals)
+					break;
+			}
+			numberFormat = (hasDecimals) ? "0.00" : "0";
+
+			// Setup data (reference) dictionaries
 			prevPoints = new Dictionary<string, Vector2>();
+			iconActiveStates = new Dictionary<string, bool> ();
 			foreach (string s in invData.EnumerateValues()) {
 				prevPoints.Add (s, Vector2.zero);
+				iconActiveStates.Add (s, true);
 			}
 
+			// Setup GUI styles
 			rightAlign = GameControl.self.skin.GetStyle ("ExportGraph Right");
 			leftAlign = GameControl.self.skin.GetStyle ("ExportGraph Left");
 			centeredAlign = GameControl.self.skin.GetStyle ("ExportGraph Centered");
@@ -68,6 +99,7 @@ namespace Ecosim.GameCtrl
 			for (int i = 0; i < loadedIcons.Length; i++) {
 				pointIcons[i] = (Texture2D)loadedIcons[i];
 			}
+			// Check if we have point icons
 			if (pointIcons.Length == 0)
 				pointIcons = new Texture2D[] { new Texture2D (0, 0) };
 
@@ -78,7 +110,8 @@ namespace Ecosim.GameCtrl
 				new Color (0f, 1f, 0f, 1f),
 				new Color (0f, 0f, 1f, 1f),
 				new Color (0f, 1f, 1f, 1f),
-				new Color (1f, 1f, 0f, 1f)
+				new Color (1f, 1f, 0f, 1f),
+				new Color (1f, 0f, 1f, 1f)
 			};
 		}
 
@@ -88,15 +121,67 @@ namespace Ecosim.GameCtrl
 			float graphWidth = windowWidth - (windowWidthMargin * 2f);
 			float legendWidth = (legendWidthOffset + legendLineWidth + legendLabelWidth + legendLineSpace);
 			Vector2 start, end;
+			hoverLabel = "";
 
-			// Graph title
-			Rect graphRect = new Rect (xOffset + 33, yOffset, windowWidth - 33, titleHeight);
-			GUI.Label (graphRect, "Graph", title);
+			// Graph Rect
+			Rect graphRect = new Rect (xOffset + (titleHeight + 1), yOffset, windowWidth - (titleHeight + 1), titleHeight);
+
+			// Title
+			Rect titleRect = graphRect;
+			titleRect.width -= 80f + 1f;
+			GUI.Label (titleRect, "Graph", title);
+
+			// Save Button
+			bool doSave = false;
+			Rect saveRect = titleRect;
+			saveRect.x += saveRect.width + 1f;
+			saveRect.width = 80f;
+			if (SimpleGUI.Button (saveRect, "Save...", entry, entrySelected)) 
+			{
+				if (saveGraph == false)
+				{
+					// Set window on top
+					SetWindowOnTop ();
+
+					// Check if the graph exceeds the screen
+					if (xOffset < 0) {
+						xOffset = 0;
+					}
+					if (yOffset < 0) {
+						yOffset = 0;
+					}
+					
+					int edgeX = (xOffset + windowWidth);
+					if (edgeX > Screen.width) {
+						xOffset -= edgeX % Screen.width;
+					}
+					int edgeY = (yOffset + windowHeight + (titleHeight + 1));
+					if (edgeY > Screen.height) {
+						yOffset -= edgeY % Screen.height;
+					}
+
+					// Set the quality level
+					preSaveQuality = QualitySettings.GetQualityLevel ();
+					QualitySettings.SetQualityLevel (5, true);
+
+					System.Windows.Forms.SaveFileDialog sfd = this.GetSaveFileDialog ();
+					sfd.FileName = "ecosim graph";
+					System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
+					
+					if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+					{
+						// We mark "save" as true so the OnPostRender can handle the save
+						saveGraph = true;
+						savePath = sfd.FileName;
+						instance.StartCoroutine ( RenderAndSaveGraph () );
+					}
+				}
+			}
 
 			// Background
 			graphRect.width = windowWidth;
-			graphRect.x -= 33;
-			graphRect.y += graphRect.height;
+			graphRect.x -= 33f; // X button
+			graphRect.y += graphRect.height + 1f;
 			graphRect.height = windowHeight;
 			GUI.Label (graphRect, "", white);
 
@@ -145,7 +230,7 @@ namespace Ecosim.GameCtrl
 
 				// Draw label
 				yr.x -= gridLineIndent;
-				GUI.Label (yr, (maxValue - (yStep * i)).ToString ("0"), rightAlign);
+				GUI.Label (yr, (maxValue - (yStep * i)).ToString (numberFormat), rightAlign);
 			}
 
 			// X Axis
@@ -191,12 +276,18 @@ namespace Ecosim.GameCtrl
 						int colorIndex = valueIndex % pointColors.Length;
 						int iconIndex = valueIndex % pointIcons.Length;
 
-						// Draw the point (icon)
+						// Set the color
+						GUI.color = pointColors [colorIndex];
+
+						// Get the rect
 						Rect pr = xr;
 						pr.width = pointIcons [iconIndex].width;
 						pr.height = pointIcons [iconIndex].height;
 						pr.x += valueLabelWidth * 0.5f;
 						pr.x -= pr.width * 0.5f;
+
+						// Draw the point (icon)
+						bool iconActive = iconActiveStates [value];
 
 						// Calculate the height of the point
 						float minY = graphRect.y;
@@ -207,21 +298,27 @@ namespace Ecosim.GameCtrl
 						pr.x += pointOffset.x;
 						pr.y += pointOffset.y;
 
-						// Set the color and draw the icon
-						GUI.color = pointColors [colorIndex];
-						Rect ir = pr;
-						ir.x += pointIconOffset.x;
-						ir.y += pointIconOffset.y;
-						GUI.Label (ir, pointIcons [iconIndex]);
-
 						// Draw line
-						end = new Vector2 (pr.x + (pr.width * 0.5f), pr.y + (pr.height * 0.5f));
+						end = new Vector2 (pr.x + (pr.width * 0.5f), 
+						                   pr.y + (pr.height * 0.5f));
 						if (yearIndex > 0) {
 							start = prevPoints [value];
-							Drawing.DrawLine (start, end, GUI.color, pointLinesWidth);
+							start = new Vector2 ((int)start.x, (int)start.y);
+							Drawing.DrawLine (start, new Vector2 ((int)end.x, (int)end.y), GUI.color, pointLinesWidth);
 						}
 						// Remember the value so the next point will draw the line
 						prevPoints [value] = end;
+
+						// Draw the icon
+						Rect ir = pr;
+						ir.x += pointIconOffset.x;
+						ir.y += pointIconOffset.y;
+						if (iconActive) {
+							GUI.Label (ir, pointIcons [iconIndex]);
+						}
+						if (SimpleGUI.CheckMouseOver (ir)) {
+							hoverLabel = v.ToString (numberFormat);
+						}
 
 						// Reset the color
 						GUI.color = Color.white;
@@ -240,9 +337,9 @@ namespace Ecosim.GameCtrl
 			legendRect.height -= valueLabelHeight;
 
 			// DEBUG: Visualise legend rect
-			GUI.color = new Color (0f, 0f, 0f, 0.1f);
+			/*GUI.color = new Color (0f, 0f, 0f, 0.1f);
 			GUI.Label (legendRect, "", black);
-			GUI.color = Color.white;
+			GUI.color = Color.white;*/
 
 			// Draw all values
 			int valuesCount  = invData.GetValuesCount ();
@@ -269,7 +366,7 @@ namespace Ecosim.GameCtrl
 				end = new Vector2 (start.x + legendLineWidth, start.y);
 				Drawing.DrawLine (start, end, GUI.color, pointLinesWidth);
 
-				// Show legend icon (TODO: make it a button?)
+				// Show legend icon
 				lr.width = pointIcons [iconIndex].width;
 				lr.height = pointIcons [iconIndex].height;
 				lr.x += legendLineWidth * 0.5f;
@@ -279,7 +376,17 @@ namespace Ecosim.GameCtrl
 				ir.y -= (ir.height * 0.5f);
 				ir.x += pointIconOffset.x;
 				ir.y += pointIconOffset.y;
+
+				// Show (invisible/visible) icon button
+				bool active = iconActiveStates [l];
+				if (!active) {
+					GUI.color = new Color (0f, 0f, 0f, 0f);
+				}
 				GUI.Label (ir, pointIcons [iconIndex]);
+				if (SimpleGUI.CheckMouseOver (ir) && (Event.current.type == EventType.MouseDown)) {
+					Event.current.Use ();
+					iconActiveStates[l] = !active;
+				}
 
 				// Reset the color
 				GUI.color = Color.white;
@@ -294,7 +401,56 @@ namespace Ecosim.GameCtrl
 				legendIndex++;
 			}
 
+			// Draw hover label
+			if (hoverLabel.Length > 0) {
+				Rect hoverRect = new Rect (Event.current.mousePosition.x, 
+				                           Event.current.mousePosition.y,
+				                           valueLabelWidth,
+				                           valueLabelHeight);
+				hoverRect.y -= hoverRect.height;
+				GUI.Label (hoverRect, hoverLabel, leftAlign);
+			}
+
 			base.Render ();
+		}
+
+		[System.Runtime.InteropServices.DllImport ("user32.dll")]
+		private static extern void SaveFileDialog ();
+		
+		public System.Windows.Forms.SaveFileDialog GetSaveFileDialog ()
+		{
+			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
+			sfd.Filter = "png (*.png)|*.png";
+			return sfd;
+		}
+
+		private IEnumerator RenderAndSaveGraph ()
+		{
+			if (!saveGraph) yield break;
+			saveGraph = false;
+
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
+
+			// Create new texture
+			Texture2D tex = new Texture2D (windowWidth, windowHeight, TextureFormat.RGB24, false);
+			int x = xOffset;
+			int y = Screen.height - (yOffset + (titleHeight + 1)) - windowHeight;
+			tex.ReadPixels (new Rect (x, y, windowWidth, windowHeight), 0, 0, false);
+			tex.Apply ();
+
+			// Save the texture
+			byte[] texBytes = tex.EncodeToPNG ();
+			File.WriteAllBytes (savePath, texBytes);
+
+			// Destroy the texture
+			Texture.Destroy (tex);
+			tex = null;
+
+			// Reset the quality settings
+			QualitySettings.SetQualityLevel (preSaveQuality);
 		}
 	}
 }

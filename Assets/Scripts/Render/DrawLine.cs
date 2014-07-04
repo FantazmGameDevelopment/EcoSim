@@ -43,7 +43,7 @@ public class Drawing
 		// and set the GUI color to the color parameter
 		Color savedColor = GUI.color;
 		GUI.color = color;
-		
+
 		// Determine the angle of the line.
 		float angle = Vector3.Angle(pointB - pointA, Vector2.right);
 		
@@ -71,7 +71,7 @@ public class Drawing
 		// We're really only drawing a 1x1 texture from pointA.
 		// The matrix operations done with ScaleAroundPivot and RotateAroundPivot will make this
 		//  render with the proper width, length, and angle.
-		GUI.DrawTexture(new Rect(pointA.x, pointA.y, 1, 1), lineTex);
+		GUI.DrawTexture(new Rect((float)pointA.x, (float)pointA.y, 1f, 1f), lineTex);
 		
 		// We're done.  Restore the GUI matrix and GUI color to whatever they were before.
 		GUI.matrix = savedMatrix;

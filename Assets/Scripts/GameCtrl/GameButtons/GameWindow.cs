@@ -62,7 +62,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		private bool isDragging;
 		private Vector2 mouseDrag;
 		public int depth;
-		private GameWindowInstance instance;
+		protected GameWindowInstance instance;
 		protected bool canCloseManually = true;
 		
 		public GameWindow (int x, int y, int width, Texture2D icon) {
@@ -114,9 +114,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			} else if (Event.current.type == EventType.MouseDown) {
 				if (new Rect (xOffset + 32, yOffset, width - 32, 32).Contains (guiMousePos)) {
 					// move window to front...
-					windows.Remove (this);
-					windows.Insert (0, this);
-					UpdateDepth ();
+					SetWindowOnTop ();
 					mouseDrag = guiMousePos;
 					isDragging = true;
 					Event.current.Use (); // prevent mouse down event from cascading down
@@ -126,6 +124,13 @@ namespace Ecosim.GameCtrl.GameButtons
 				// mouse click on window area, prevent event from cascading down
 				Event.current.Use ();
 			}
+		}
+
+		protected void SetWindowOnTop ()
+		{
+			windows.Remove (this);
+			windows.Insert (0, this);
+			UpdateDepth ();
 		}
 				
 		/**

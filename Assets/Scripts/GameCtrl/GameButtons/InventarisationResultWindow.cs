@@ -47,6 +47,8 @@ namespace Ecosim.GameCtrl.GameButtons
 		
 		public override void Render ()
 		{
+			// Check if we have a previous offset, this is needed
+			// to render the window on the same position as a previous window
 			if (prevXOffset != -1)
 				xOffset = prevXOffset;
 			if (prevYOffset != -1)
