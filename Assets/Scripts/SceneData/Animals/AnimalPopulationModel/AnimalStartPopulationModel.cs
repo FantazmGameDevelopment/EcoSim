@@ -15,6 +15,8 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 		{
 			public string XML_ELEMENT = "nests";
 
+			// TODO: Save these data in Data maps so that the progress can be saved correctly/easily
+
 			public class Nest
 			{
 				public const string XML_ELEMENT = "nest";

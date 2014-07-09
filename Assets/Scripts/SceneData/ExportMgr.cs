@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using Ecosim.SceneData;
 using Ecosim.SceneData.Action;
+using Ecosim.SceneData.AnimalPopulationModel;
 
 namespace Ecosim.SceneData
 {
@@ -573,7 +574,9 @@ namespace Ecosim.SceneData
 
 			// Loop through all coordinates
 			foreach (ExportData.YearData y in ed.EnumerateYears ()) {
+				year = y;
 				foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) {
+					coordData = cd;
 					/** Target areas **/
 					foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
 						// Setup target areas
@@ -604,7 +607,10 @@ namespace Ecosim.SceneData
 					foreach (string p in scene.progression.GetAllDataNames (false)) {
 						// Check if we should set parameter
 						if (string.IsNullOrEmpty (cd [p]) && ShouldExportParameter (p)) {
-							Data data = scene.progression.GetData (p, y.year);
+
+							// Get the data, if it's null try the default (init) value
+							Data data = scene.progression.GetData (p, y.year) ?? scene.progression.GetData (p);
+
 							// Exception: calculated data
 							// we need to manually set the year
 							bool isCalcData = (data is CalculatedData);
@@ -612,10 +618,7 @@ namespace Ecosim.SceneData
 								((CalculatedData)data).year = y.year;
 							}
 
-							// Get the data, if it's null try the default (init) value
-							if (data == null) {
-								data = scene.progression.GetData (p);
-							}
+							// Set the value
 							if (data != null) {
 								cd [p] = data.Get (cd.coord).ToString ();
 							}
@@ -626,59 +629,42 @@ namespace Ecosim.SceneData
 							}
 						}
 					}
+
+					/** Plants **/
+					foreach (PlantType p in scene.plantTypes) {
+						// Check if we should export the plant
+						if (ShouldExportPlant (p.name)) {
+							// Add the column
+							ed.AddColumn (p.name);
+							
+							// Get the data
+							Data data = scene.progression.GetData (p.dataName, y.year);
+							if (data != null) {
+								cd [p.name] = data.Get (cd.coord).ToString ();
+							}
+						}
+					}
+
+					/** Animals **/
+					foreach (AnimalType a in scene.animalTypes) {
+						// Large animal
+						if (a is LargeAnimalType) 
+						{
+							// TODO: Make the animal save the nest state etc
+							LargeAnimalType la = (LargeAnimalType)a;
+							foreach (AnimalStartPopulationModel.Nests.Nest nest in la.startPopModel.nests.nests) {
+
+							}
+						}
+						// TODO: Add more animal types as they come
+					}
 				}
 			}
 
 			// TODO: Columns - Add all plants
 
+
 			// TODO: Columns - Add all animals
-
-			// TODO: Columns - Add all measures
-
-			/** VALUES **/
-
-			// TODO: DATA TYPE
-			this.dataType = DataTypes.OnlyWhenSurveyed;
-
-			// Add all/part of the tiles
-			switch (this.dataType)
-			{
-			case DataTypes.Always :
-				// Setup all years and their tiles. i = 1 is to skip the first year, because this does not have any data
-				/*for (int i = 1; i < (scene.progression.year - scene.progression.startYear); i++) {
-					// Setup all tiles
-					ExportData.YearData year = ed.NewYear (scene.progression.startYear + i);
-					foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) 
-					{
-						// Setup new coordinate
-						ExportData.YearData.CoordinateData cd = year.NewCoord ((Coordinate)vc);
-
-						// Set default parameters 
-						foreach (string p in scene.progression.GetAllDataNames (false)) {
-							Data data = scene.progression.GetData (p, year.year);
-							if (data != null) {
-								cd[p] = data.Get (cd.coord).ToString ("0");
-							}
-						}
-					}
-				}*/
-
-				// TODO: Values - Research points
-				
-				// TODO: Values - Add animals
-				
-				// TODO: Values - Add plants
-				break;
-
-			// TODO: DataTypes.OnlyWhenSurveyed
-			case DataTypes.OnlyWhenSurveyed :
-			{
-
-
-
-			}
-			break;
-			}
 
 			// Cost
 			ed.AddColumn ("costs");
@@ -950,7 +936,7 @@ namespace Ecosim.SceneData
 			this.animals = list;
 
 			list = new List<string> ();
-			foreach (string s in this.animals) {
+			foreach (string s in this.plants) {
 				foreach (PlantType p in scene.plantTypes) {
 					if (p.name.ToLower () == s.ToLower ()) {
 						list.Add (p.name);
