@@ -629,8 +629,14 @@ namespace Ecosim.SceneData
 
 		public Data GetData (string name, int year)
 		{
-			if (year == scene.progression.year) return GetData (name);
+			if (year == scene.progression.year) {
+				return GetData (name);
+			}
 			else {
+				// Exception time! If year equals the start year we subtract one so 
+				// we have the non _year.dat version (see GetDataPath (name, year))
+				if (year <= startYear) year--;
+
 				// Check if we already have loaded it
 				Dictionary<int, Data> dict;
 				if (tempDataDict.TryGetValue (name, out dict)) {

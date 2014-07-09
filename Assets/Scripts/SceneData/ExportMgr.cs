@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Ecosim.SceneData;
 using Ecosim.SceneData.Action;
 
@@ -307,6 +308,10 @@ namespace Ecosim.SceneData
 			}
 		}
 
+		public bool HasColumn (string column) {
+			return this.columns.Contains (column);
+		}
+
 		public string ToCSV ()
 		{
 			string delimiter = ";";
@@ -373,22 +378,26 @@ namespace Ecosim.SceneData
 		public bool exportEnabled;
 		public SelectionTypes selectionType;
 		public DataTypes dataType;
+		public bool exportVegetationTypes;
+		public bool exportSuccessionTypes;
 
-		public int[] targetAreas;
-		public string[] parameters;
-		public string[] animals;
-		public string[] plants;
+		public List<int> targetAreas;
+		public List<string> parameters;
+		public List<string> animals;
+		public List<string> plants;
 
 		public ExportData currentExportData;
+
+		private volatile bool isWorking = false;
 
 		public ExportMgr (Scene scene)
 		{
 			self = this;
 			this.scene = scene;
-			this.targetAreas = new int[] { };
-			this.parameters = new string[] { };
-			this.animals = new string[] { };
-			this.plants = new string[] { };
+			this.targetAreas = new List<int> ();
+			this.parameters = new List<string> ();
+			this.animals = new List<string> ();
+			this.plants = new List<string> ();
 		}
 
 		public InventarisationsData GetInventarisationsData ()
@@ -408,7 +417,7 @@ namespace Ecosim.SceneData
 			return id;
 		}
 
-		public IEnumerator<object> GetExportData ()
+		private void RetrieveExportData (System.Object args)
 		{
 			// We'll use an abbreviation for less code
 			ExportData ed = new ExportData ();
@@ -418,7 +427,7 @@ namespace Ecosim.SceneData
 			ExportData.YearData year;
 			ExportData.YearData.CoordinateData coordData;
 
-			/** COLUMNS **/
+			/** Default Columns **/
 
 			// Add default columns
 			ed.AddColumn ("year");
@@ -427,25 +436,63 @@ namespace Ecosim.SceneData
 
 			// Add target areas
 			for (int i = 1; i < scene.progression.targetAreas + 1; i++) {
-				ed.AddColumn ("targetarea" + i);
+				if (ShouldExportTargetArea (i)) {
+					ed.AddColumn ("targetarea " + i);
+				}
 			}
-			yield return null;
 
-			// DEBUG
-			this.selectionType = SelectionTypes.All;
+			// Add Vegetation type
+			if (exportVegetationTypes) {
+				ed.AddColumn ("vegetation");
+			}
+			// Add Succession type
+			if (exportSuccessionTypes) {
+				ed.AddColumn ("succession");
+			}
 
-			// TODO: SELECTION TYPE
-
-			// Add all (or part of it) parameters
-			switch (this.selectionType)
+			/** Selection type **/
+			switch (this.selectionType) 
 			{
-			case SelectionTypes.All :
-				/*foreach (string p in scene.progression.GetAllDataNames (false)) {
-					ed.AddColumn (p);
-				}*/
+				case SelectionTypes.All : 
+				{
+					// If we select all, then we should add columns for all data names
+					foreach (string p in scene.progression.GetAllDataNames (false)) {
+						ed.AddColumn (p);
+					}
+				}
 				break;
+
+				case SelectionTypes.Selection : 
+				{
+					// Check if we must add the parameter
+					foreach (string p in scene.progression.GetAllDataNames (false)) {
+						if (ShouldExportParameter (p)) {	
+							ed.AddColumn (p);
+						}
+					}
+					break;
+				}
 			}
-			yield return null;
+
+			/** Data type **/
+			switch (this.dataType)
+			{
+				case DataTypes.Always :
+				{
+					// Loop through all tiles of the managed area and add them to all tiles of every (past) year
+					for (int i = 0; i < (scene.progression.year - scene.progression.startYear); i++) {
+						// New/get year
+						year = ed.NewYear (scene.progression.startYear + i);
+						foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
+							// New/get coord
+							coordData = year.NewCoord (vc);
+						}
+					}
+				}
+				break;
+
+				case DataTypes.OnlyWhenSurveyed : break;
+			}
 
 			/** Inventarisations **/
 			foreach (Progression.InventarisationResult ir in scene.progression.inventarisations) {
@@ -461,11 +508,13 @@ namespace Ecosim.SceneData
 					// Costs
 					BasicAction action = scene.actions.GetAction (ir.actionId);
 					if (action != null) {
-						coordData["costs"] += action.uiList [0].cost;
+						// Update costs
+						int prevCosts = 0;
+						int.TryParse (coordData["costs"], out prevCosts);
+						coordData["costs"] = (prevCosts + (int)action.uiList [0].cost).ToString();
 					}
 				}
 			}
-			yield return null;
 			
 			/** Research points **/
 			foreach (ResearchPoint r in scene.progression.researchPoints) {
@@ -476,18 +525,22 @@ namespace Ecosim.SceneData
 					
 					// Setup columns and values
 					foreach (KeyValuePair<string, string> p in rm.data.values) {
-						ed.AddColumn (p.Key);
-						coordData[p.Key] = p.Value;
+						if (ShouldExportParameter (p.Key)) {
+							ed.AddColumn (p.Key);
+							coordData[p.Key] = p.Value;
+						}
 					}
 
 					// Costs
 					BasicAction action = scene.actions.GetAction (rm.actionId);
 					if (action != null) {
-						coordData["costs"] += action.uiList [0].cost;
+						// Update costs
+						int prevCosts = 0;
+						int.TryParse (coordData["costs"], out prevCosts);
+						coordData["costs"] = (prevCosts + (int)action.uiList [0].cost).ToString();
 					}
 				}
 			}
-			yield return null;
 
 			/** Measures (actions) **/
 			foreach (Progression.ActionTaken ta in scene.progression.actionsTaken) {
@@ -508,30 +561,73 @@ namespace Ecosim.SceneData
 								coordData = year.NewCoord (vc);
 								coordData[key] = "1";
 
-								// Costs
-								coordData["costs"] += a.uiList [0].cost;
+								// Update costs
+								int prevCosts = 0;
+								int.TryParse (coordData["costs"], out prevCosts);
+								coordData["costs"] = (prevCosts + (int)a.uiList [0].cost).ToString();
 							}
 						}
 					}
 				}
 			}
-			yield return null;
 
-			/** Target areas **/
+			// Loop through all coordinates
 			foreach (ExportData.YearData y in ed.EnumerateYears ()) {
 				foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) {
+					/** Target areas **/
 					foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
 						// Setup target areas
 						for (int a = 1; a < scene.progression.targetAreas + 1; a++) {
 							Data targetArea = scene.progression.GetData (Progression.TARGET_ID + a);
-							if (targetArea != null) {
-								cd ["targetarea" + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
+							if (ed.HasColumn ("targetarea " + a)) {
+								cd ["targetarea " + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
+							}
+						}
+					}
+
+					/** Vegetation types **/
+					if (exportVegetationTypes || exportSuccessionTypes) {
+						// Get the tile type
+						TileType tile = scene.progression.vegetation.GetTileType (cd.coord.x, cd.coord.y);
+
+						// Set the data
+						if (exportVegetationTypes) {
+							// Set vegetation and succession type
+							cd["vegetation"] = tile.vegetationType.name;
+						}
+						if (exportSuccessionTypes) {
+							cd["succession"] = tile.vegetationType.successionType.name;
+						}
+					}
+
+					/** Parameters **/
+					foreach (string p in scene.progression.GetAllDataNames (false)) {
+						// Check if we should set parameter
+						if (string.IsNullOrEmpty (cd [p]) && ShouldExportParameter (p)) {
+							Data data = scene.progression.GetData (p, y.year);
+							// Exception: calculated data
+							// we need to manually set the year
+							bool isCalcData = (data is CalculatedData);
+							if (isCalcData) {
+								((CalculatedData)data).year = y.year;
+							}
+
+							// Get the data, if it's null try the default (init) value
+							if (data == null) {
+								data = scene.progression.GetData (p);
+							}
+							if (data != null) {
+								cd [p] = data.Get (cd.coord).ToString ();
+							}
+
+							// Reset the calc data to the current year to avoid messing up the game logic
+							if (isCalcData) {
+								((CalculatedData)data).year = -1;
 							}
 						}
 					}
 				}
 			}
-			yield return null;
 
 			// TODO: Columns - Add all plants
 
@@ -579,13 +675,48 @@ namespace Ecosim.SceneData
 			{
 
 
-				// TODO: Veg types
+
 			}
 			break;
 			}
 
 			// Cost
-			ed.AddColumn ("cost");
+			ed.AddColumn ("costs");
+
+			// Thread finished
+			isWorking = false;
+		}
+
+		private bool ShouldExportParameter (string param)
+		{
+			if (this.selectionType == SelectionTypes.Selection) {
+				return this.parameters.Contains (param);
+			}
+			return true;
+		}
+
+		private bool ShouldExportAnimal (string animal)
+		{
+			if (this.selectionType == SelectionTypes.Selection) {
+				return this.animals.Contains (animal);
+			}
+			return true;
+		}
+
+		private bool ShouldExportTargetArea (int area)
+		{
+			if (this.selectionType == SelectionTypes.Selection) {
+				return this.targetAreas.Contains (area);
+			}
+			return true;
+		}
+
+		private bool ShouldExportPlant (string plant)
+		{
+			if (this.selectionType == SelectionTypes.Selection) {
+				return this.plants.Contains (plant);
+			}
+			return true;
 		}
 
 		public void ExportData ()
@@ -602,9 +733,30 @@ namespace Ecosim.SceneData
 
 		private IEnumerator<object> COExportData (string filePath)
 		{
+			// Enable spinner and hide interface
+			SimpleSpinner.ActivateSpinner ();
+			GameControl.self.isProcessing = true;
+			GameMenu.show = false;
+
+			yield return 0;
+			
+			#pragma warning disable 162
+			isWorking = true;
 			// Get the export data
-			yield return GameControl.self.StartCoroutine (GetExportData ());
+			ThreadPool.QueueUserWorkItem (RetrieveExportData);
+
+			while (isWorking) {
+				yield return 0;
+			}
+			#pragma warning restore 162
+
+			// Sort the years
 			currentExportData.SortYears ();
+
+			// Disable spinner and show interface
+			SimpleSpinner.DeactivateSpinner ();
+			GameControl.self.isProcessing = false;
+			GameMenu.show = true;
 
 			// Create new file
 			FileStream fs = File.Create (filePath);
@@ -622,74 +774,58 @@ namespace Ecosim.SceneData
 
 		public void AddTargetArea (int area)
 		{
-			List<int> list = new List<int> (this.targetAreas);
-			if (list.Contains (area)) return;
-			list.Add (area);
-			list.Sort ();
-			this.targetAreas = list.ToArray ();
+			if (this.targetAreas.Contains (area)) return;
+			this.targetAreas.Add (area);
+			this.targetAreas.Sort ();
 		}
 
 		public void RemoveTargetArea (int area)
 		{
-			List<int> list = new List<int> (this.targetAreas);
-			if (!list.Contains (area)) return;
-			list.Remove (area);
-			list.Sort ();
-			this.targetAreas = list.ToArray ();
+			if (!this.targetAreas.Contains (area)) return;
+			this.targetAreas.Remove (area);
+			this.targetAreas.Sort ();
 		}
 
 		public void AddParameter (string param)
 		{
-			List<string> list = new List<string> (parameters);
-			if (list.Contains (param)) return;
-			list.Add (param);
-			list.Sort ();
-			this.parameters = list.ToArray ();
+			if (this.parameters.Contains (param)) return;
+			this.parameters.Add (param);
+			this.parameters.Sort ();
 		}
 
 		public void RemoveParameter (string param)
 		{
-			List<string> list = new List<string> (this.parameters);
-			if (!list.Contains (param)) return;
-			list.Remove (param);
-			list.Sort ();
-			this.parameters = list.ToArray ();
+			if (!this.parameters.Contains (param)) return;
+			this.parameters.Remove (param);
+			this.parameters.Sort ();
 		}
 
 		public void AddAnimal (string name)
 		{
-			List<string> list = new List<string> (this.animals);
-			if (list.Contains (name)) return;
-			list.Add (name);
-			list.Sort ();
-			this.animals = list.ToArray ();
+			if (this.animals.Contains (name)) return;
+			this.animals.Add (name);
+			this.animals.Sort ();
 		}
 
 		public void RemoveAnimal (string name)
 		{
-			List<string> list = new List<string> (this.animals);
-			if (!list.Contains (name)) return;
-			list.Remove (name);
-			list.Sort ();
-			this.animals = list.ToArray ();
+			if (!this.animals.Contains (name)) return;
+			this.animals.Remove (name);
+			this.animals.Sort ();
 		}
 
 		public void AddPlant (string name)
 		{
-			List<string> list = new List<string> (this.plants);
-			if (list.Contains (name)) return;
-			list.Add (name);
-			list.Sort ();
-			this.plants = list.ToArray ();
+			if (this.plants.Contains (name)) return;
+			this.plants.Add (name);
+			this.plants.Sort ();
 		}
 		
 		public void RemovePlant (string name)
 		{
-			List<string> list = new List<string> (this.plants);
-			if (!list.Contains (name)) return;
-			list.Remove (name);
-			list.Sort ();
-			this.plants = list.ToArray ();
+			if (!this.plants.Contains (name)) return;
+			this.plants.Remove (name);
+			this.plants.Sort ();
 		}
 
 		public static ExportMgr Load (string path, Scene scene)
@@ -716,10 +852,12 @@ namespace Ecosim.SceneData
 			this.exportEnabled = bool.Parse (reader.GetAttribute ("enabled"));
 			this.selectionType = (SelectionTypes)System.Enum.Parse (typeof(SelectionTypes), reader.GetAttribute ("selectiontype"));
 			this.dataType = (DataTypes)System.Enum.Parse (typeof(DataTypes), reader.GetAttribute ("datatype"));
+			this.exportSuccessionTypes = bool.Parse (reader.GetAttribute ("exportsucctypes"));
+			this.exportVegetationTypes = bool.Parse (reader.GetAttribute ("exportvegtypes"));
 
-			List<int> targetAreaList = new List<int> ();
+			List<int> targetAreaList = new List<int>();
 			List<string> paramList = new List<string>();
-			List<string> animalList = new List<string> ();
+			List<string> animalList = new List<string>();
 			List<string> plantList = new List<string>();
 
 			while (reader.Read()) 
@@ -750,10 +888,10 @@ namespace Ecosim.SceneData
 				}
 			}
 
-			this.targetAreas = targetAreaList.ToArray ();
-			this.parameters = paramList.ToArray ();
-			this.animals = animalList.ToArray ();
-			this.plants = plantList.ToArray ();
+			this.targetAreas = targetAreaList;
+			this.parameters = paramList;
+			this.animals = animalList;
+			this.plants = plantList;
 		}
 
 		public void Save (string path)
@@ -762,6 +900,8 @@ namespace Ecosim.SceneData
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement ("export");
 			writer.WriteAttributeString ("enabled", this.exportEnabled.ToString().ToLower());
+			writer.WriteAttributeString ("exportvegtypes", this.exportVegetationTypes.ToString().ToLower());
+			writer.WriteAttributeString ("exportsucctypes", this.exportSuccessionTypes.ToString().ToLower());
 			writer.WriteAttributeString ("selectiontype", this.selectionType.ToString());
 			writer.WriteAttributeString ("datatype", this.dataType.ToString());
 			foreach (string s in this.parameters) {
@@ -796,7 +936,7 @@ namespace Ecosim.SceneData
 				if (scene.progression.HasData (s))
 					list.Add (s);
 			}
-			this.parameters = list.ToArray ();
+			this.parameters = list;
 
 			list = new List<string> ();
 			foreach (string s in this.animals) {
@@ -807,7 +947,7 @@ namespace Ecosim.SceneData
 					}
 				}
 			}
-			this.animals = list.ToArray ();
+			this.animals = list;
 
 			list = new List<string> ();
 			foreach (string s in this.animals) {
@@ -818,7 +958,7 @@ namespace Ecosim.SceneData
 					}
 				}
 			}
-			this.plants = list.ToArray ();
+			this.plants = list;
 		}
 	}
 }

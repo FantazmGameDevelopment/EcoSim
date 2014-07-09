@@ -178,11 +178,11 @@ namespace Ecosim.SceneData
 			Scene scene = new Scene (name, width, height, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
 			scene.assets = new ExtraAssets (scene);
 			scene.actions = new ActionMgr (scene);
-			scene.exporter = new ExportMgr (scene);
 			scene.reports = new ReportsMgr (scene);
 			scene.buildings = new Buildings (scene);
 			scene.roads = new Roads (scene);
 			scene.progression = new Progression (scene);
+			scene.exporter = new ExportMgr (scene);
 			scene.articles = new Articles (scene);
 			
 			// add the basic data to progression

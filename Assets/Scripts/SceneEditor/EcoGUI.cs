@@ -167,13 +167,19 @@ namespace Ecosim.SceneEditor
 			return opened;
 		}
 
-		public static bool Toggle (string name, ref bool value, GUILayoutOption nameLayout = null)
+		public static bool Toggle (string name, ref bool value, float nameWidth = 0f)
+		{
+			return Toggle (name, ref value, ((nameWidth > 0f) ? GUILayout.Width (nameWidth) : null));
+		}
+
+		public static bool Toggle (string name, ref bool value, GUILayoutOption nameLayout)
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				//RenderName (name, nameLayout);
 				GUILayout.Space (2);
-				value = GUILayout.Toggle (value, name, nameLayout);
+				if (nameLayout != null)  value = GUILayout.Toggle (value, name, nameLayout);
+				else 					 value = GUILayout.Toggle (value, name);
 			}
 			if (!skipHorizontal) GUILayout.EndHorizontal ();
 			return value;

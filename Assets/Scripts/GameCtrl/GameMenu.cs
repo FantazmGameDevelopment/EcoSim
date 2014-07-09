@@ -7,6 +7,7 @@ using System.Threading;
 public class GameMenu : MonoBehaviour
 {
 	private static GameMenu self;
+	public static bool show = true;
 	public GUISkin skin;
 	public Texture2D banner;
 	public GameObject background;
@@ -417,7 +418,7 @@ public class GameMenu : MonoBehaviour
 	
 	void OnGUI ()
 	{
-		if (state == State.Idle)
+		if (state == State.Idle || !show)
 			return;
 
 		sWidth = Screen.width;

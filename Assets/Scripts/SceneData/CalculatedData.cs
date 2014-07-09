@@ -23,6 +23,30 @@ namespace Ecosim.SceneData
 				public float multiplier;
 				public Data data;
 
+				private int _year = -1;
+				public int year {
+					set {
+						if (value != _year) {
+							_year = value;
+							// Update the data value
+							if (scene == null) {
+								scene = EditorCtrl.self.scene;
+							}
+							// Get the data by the year
+							if (year > -1) {
+								data = scene.progression.GetData (paramName, year);
+							} else {
+								data = scene.progression.GetData (paramName);
+							}
+						}
+					}
+					get {
+						return _year;
+					}
+				}
+
+				private Scene scene;
+
 				public ParameterCalculation ()
 				{
 				}
@@ -51,7 +75,12 @@ namespace Ecosim.SceneData
 
 				public void UpdateReferences (Scene scene)
 				{
-					data = scene.progression.GetData (paramName);
+					this.scene = scene;
+					if (year != -1) {
+						data = scene.progression.GetData (paramName, year);
+					} else {
+						data = scene.progression.GetData (paramName);
+					}
 				}
 			}
 
@@ -114,8 +143,7 @@ namespace Ecosim.SceneData
 				data = scene.progression.GetData <CalculatedData> (paramName);
 				data.calculation = this;
 
-				foreach (ParameterCalculation p in calculations)
-				{
+				foreach (ParameterCalculation p in calculations) {
 					p.UpdateReferences (scene);
 				}
 			}
@@ -164,7 +192,39 @@ namespace Ecosim.SceneData
 			this.name = name;
 		}
 	
-		public Calculation calculation;
+		private int _year = -1;
+		public int year {
+			set {
+				if (value != _year) {
+					_year = value;
+					foreach (Calculation.ParameterCalculation pc in calculation.calculations) {
+						pc.year = year;
+					}
+				}
+			}
+			get {
+				return _year;
+			}
+		}
+		
+		private Calculation _calculation;
+		public Calculation calculation {
+			get {
+				if (_calculation == null) {
+					foreach (Calculation c in EditorCtrl.self.scene.calculations) {
+						if (c.paramName == this.name) {
+							c.data = this;
+							calculation = c;
+							break;
+						}
+					}
+				}
+				return _calculation;
+			}
+			set {
+				_calculation = value;
+			}
+		}
 
 		private readonly string name;
 		private MethodInfo getValueMI;
@@ -244,9 +304,13 @@ namespace Ecosim.SceneData
 			else 
 			{
 				// We'll handle the combined data via the created rules
+				if (calculation == null) {
+					UnityEngine.Debug.LogError ("No calculation found in " + this.name + "(" + this.GetHashCode () + ")");
+					return 0;
+				}
+
 				float calculatedValue = (float)calculation.offset;
-				foreach (Calculation.ParameterCalculation p in calculation.calculations) 
-				{
+				foreach (Calculation.ParameterCalculation p in calculation.calculations) {
 					int dataVal = p.data.Get (x, y);
 					if (dataVal > 0) {
 						calculatedValue += (float)dataVal * p.multiplier;

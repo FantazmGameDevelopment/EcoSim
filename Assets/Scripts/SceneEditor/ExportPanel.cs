@@ -44,11 +44,14 @@ namespace Ecosim.SceneEditor
 					EcoGUI.Foldout ("Sheet export", ref sheetOpened);
 					if (sheetOpened)
 					{
-						mgr.exportEnabled = GUILayout.Toggle (mgr.exportEnabled, "Data Export enabled");
+						EcoGUI.Toggle ("Data Export enabled", ref mgr.exportEnabled);
 						if (mgr.exportEnabled)
 						{
 							EcoGUI.EnumButton<ExportMgr.SelectionTypes>("Selection type:", mgr.selectionType, OnSelectionTypeChanged, 80f, 150f);
 							EcoGUI.EnumButton<ExportMgr.DataTypes>("Data type:", mgr.dataType, OnDataTypeChanged, 80f, 150f);
+
+							EcoGUI.Toggle ("Export succession type", ref mgr.exportSuccessionTypes);
+							EcoGUI.Toggle ("Export vegetation type", ref mgr.exportVegetationTypes);
 
 							switch (mgr.selectionType)
 							{
