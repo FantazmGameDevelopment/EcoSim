@@ -24,7 +24,34 @@ namespace Ecosim.SceneData.Action
 		public bool isActive = true;
 		protected readonly Scene scene;
 		protected EcoBase ecoBase; // the compiled ecoscript holder
-		
+
+		private string _affectedAreaName;
+		public string affectedAreaName { // Use to store the affected area for internal purposes
+			get {
+				// Save the affected area (if it's not yet there)
+				if (_affectedAreaName == null) {
+					_affectedAreaName = "_area" + id.ToString();
+				}
+				return _affectedAreaName;
+			}
+		}
+
+		public Data AffectedArea {
+			get {
+				if (scene == null || scene.progression == null)
+					return null;
+
+				Data data = null;
+				if (scene.progression.HasData (affectedAreaName)) {
+					data = scene.progression.GetData (affectedAreaName);
+				} else {
+					data = new BitMap1 (scene);
+					scene.progression.AddData (affectedAreaName, AffectedArea);
+				}
+				return data;
+			}
+		}
+
 		private string ecoScript = null;
 		private System.DateTime fileLastModified = System.DateTime.MinValue;
 		public CompilerErrorCollection errors = null;

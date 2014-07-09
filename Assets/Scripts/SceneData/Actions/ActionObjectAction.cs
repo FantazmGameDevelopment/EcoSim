@@ -145,6 +145,9 @@ namespace Ecosim.SceneData.Action
 		{
 			if (group.enabled) 
 			{
+				// Store the affected area
+				Data area = AffectedArea;
+
 				// Loop through all tiles who have the groups data on them
 				foreach (ValueCoordinate vc in group.combinedData.EnumerateNotZero())
 				{
@@ -162,7 +165,15 @@ namespace Ecosim.SceneData.Action
 							ProcessInfluenceRules (ir, vc, group.combinedData);
 						}
 					}
+
+					// Update affected area
+					if (area != null) {
+						area.Set (vc, 1);
+					}
 				}
+
+				// Save and update affected area
+				scene.progression.AddActionTaken (this.id);
 			}
 		}
 
@@ -173,6 +184,9 @@ namespace Ecosim.SceneData.Action
 			{
 				if (obj.enabled)
 				{
+					// Store the affected area
+					Data area = AffectedArea;
+
 					// Get the data from the object and apply all the rules on the coordinate
 					Data objData = obj.data;
 					foreach (ValueCoordinate vc in objData.EnumerateNotZero())
@@ -190,7 +204,15 @@ namespace Ecosim.SceneData.Action
 								ProcessInfluenceRules (ir, vc, objData);
 							}
 						}
+
+						// Update affected area
+						if (area != null) {
+							area.Set (vc, 1);
+						}
 					}
+
+					// Save and update affected area
+					scene.progression.AddActionTaken (this.id);
 				}
 			}
 		}

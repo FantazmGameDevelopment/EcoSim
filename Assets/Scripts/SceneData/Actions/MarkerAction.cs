@@ -79,6 +79,15 @@ namespace Ecosim.SceneData.Action
 				scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()] = this.description;
 				scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()] = "Marker";
 				scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()] = newMarkersCount;
+
+				// Save and update affected area
+				scene.progression.AddActionTaken (this.id);
+				Data area = AffectedArea;
+				if (area != null) {
+					foreach (ValueCoordinate vc in markers.EnumerateNotZero()) {
+						area.Set (vc, 1);
+					}
+				}
 			}
 
 			if (actionDeselectedMI != null) {

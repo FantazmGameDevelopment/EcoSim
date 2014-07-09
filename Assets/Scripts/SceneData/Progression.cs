@@ -95,40 +95,81 @@ namespace Ecosim.SceneData
 		}
 
 		/**
+		 * Container class. This class stores the years
+		 * in which an action has been taken
+		 */
+		public class ActionTaken
+		{
+			public int id;
+			public List<int> years;
+		}
+
+		/**
 		 * Inventarisation class. It stores the InventarisationAction,
 		 * the given name and amount of years it should last.
 		 */
 		public class Inventarisation
 		{
-			/**
-			 * Constructor, used to reconstruct the inventarisation results from file
-			 */
-			public Inventarisation (int startYear, int lastYear, string name, int actionId)
-			{
-				this.startYear = startYear;
-				this.lastYear = lastYear;
-				this.name = name;
-				this.actionId = actionId;
-			}
+			public const string XML_ELEMENT = "inventarisation";
 
 			/**
-			 * Constructor can only be used when game is running. It creates a new
+ 			 * Constructor can only be used when game is running. It creates a new
 			 * inventarisation result using a given year, name, area data set, actionid.
 			 */
-			public Inventarisation (int startYear, int durationInYears, int lastYear, string name, int actionId)
+			public Inventarisation (Scene scene, int startYear, int lastYear, string name, string areaName, int actionId, int cost)
 			{
+				this.scene = scene;
 				this.startYear = startYear;
-				this.durationInYears = durationInYears;
 				this.lastYear = lastYear;
 				this.name = name;
+				this.areaName = areaName;
 				this.actionId = actionId;
+				this.cost = cost;
 			}
 
+			public readonly Scene scene;
 			public readonly int startYear;
-			public readonly int durationInYears;
 			public readonly int lastYear;
 			public readonly string name;
+			public readonly string areaName;
 			public readonly int actionId;
+			public readonly int cost;
+
+			private string actionAreaName = null;
+			public string ActionAreaName {
+				get {
+					if (actionAreaName == null)
+						actionAreaName = ((InventarisationAction)scene.actions.GetAction (this.actionId)).areaName;
+					return actionAreaName;
+				}
+			}
+
+			public void Save (XmlTextWriter w, Scene scene)
+			{
+				w.WriteStartElement (XML_ELEMENT);
+				w.WriteAttributeString ("start", startYear.ToString());
+				w.WriteAttributeString ("end", lastYear.ToString());
+				w.WriteAttributeString ("name", name);
+				w.WriteAttributeString ("areaname", areaName);
+				w.WriteAttributeString ("actionid", actionId.ToString ());
+				w.WriteAttributeString ("cost", cost.ToString());
+				w.WriteEndElement ();
+			}
+
+			public static Inventarisation Load (XmlTextReader reader, Scene scene)
+			{
+				Inventarisation i = new Inventarisation (
+					scene,
+					int.Parse (reader.GetAttribute ("start")),
+					int.Parse (reader.GetAttribute ("end")),
+					reader.GetAttribute ("name"),
+					reader.GetAttribute ("areaname"),
+					int.Parse (reader.GetAttribute ("actionid")),
+					int.Parse (reader.GetAttribute ("cost"))
+				);
+				IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
+				return i;
+			}
 		}
 
 		/**
@@ -157,12 +198,12 @@ namespace Ecosim.SceneData
 			public InventarisationResult (int year, string name, Data area, Data data, int actionId)
 			{
 				Progression progression = GameControl.self.scene.progression;
-				areaName = "inv" + progression.inventarisations.Count + "area";
-				dataName = "inv" + progression.inventarisations.Count + "data";
+				areaName = "_inv" + progression.inventarisations.Count + "area";
+				dataName = "_inv" + progression.inventarisations.Count + "data";
 				progression.AddData (areaName, area);
 				progression.AddData (dataName, data);
-				this.areaName = areaName;
-				this.dataName = dataName;
+				//this.areaName = areaName;
+				//this.dataName = dataName;
 				this.year = year;
 				this.name = name;
 				this.actionId = actionId;
@@ -183,7 +224,7 @@ namespace Ecosim.SceneData
 			public Data DataMap {
 				get {
 					if (dataMap == null) {
-						dataMap = GameControl.self.scene.progression.GetData (dataName);
+						dataMap = EditorCtrl.self.scene.progression.GetData (dataName);
 					}
 					return dataMap;
 				}
@@ -196,7 +237,7 @@ namespace Ecosim.SceneData
 			public Data AreaMap {
 				get {
 					if (areaMap == null) {
-						areaMap = GameControl.self.scene.progression.GetData (areaName);
+						areaMap = EditorCtrl.self.scene.progression.GetData (areaName);
 					}
 					return areaMap;
 				}
@@ -321,10 +362,11 @@ namespace Ecosim.SceneData
 		public List<Message> reports;
 		public List<QuestionnaireState> questionnaireStates;
 		public List<ReportState> reportStates;
-		public List<Inventarisation> currentInventarisations;
+		public List<Inventarisation> activeInventarisations;
 		public List<InventarisationResult> inventarisations;
 		public List<ResearchPoint> researchPoints;
 		public Dictionary<string, object> variables;
+		public List<ActionTaken> actionsTaken;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
 
@@ -370,6 +412,21 @@ namespace Ecosim.SceneData
 				return newRs;	
 			}
 			return null;
+		}
+
+		public void AddActionTaken (int id) {
+			// Find the container
+			ActionTaken at = actionsTaken.Find (a => a.id == id);
+			if (at == null) {
+				at = new ActionTaken ();
+				at.id = id;
+				at.years = new List<int>();
+				this.actionsTaken.Add (at);
+			}
+			// Add the year
+			if (!at.years.Contains (year)) {
+				at.years.Add (year);
+			}
 		}
 
 		/*public void AddQuestionState (QuestionnaireState.QuestionState qState, int questionnaireId)
@@ -439,10 +496,11 @@ namespace Ecosim.SceneData
 			actionStates = new List<ActionState> ();
 			questionnaireStates = new List<QuestionnaireState>();
 			reportStates = new List<ReportState>();
+			actionsTaken = new List<ActionTaken>();
 			messages = new List<Message> ();
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
-			currentInventarisations = new List<Inventarisation> ();
+			activeInventarisations = new List<Inventarisation> ();
 			researchPoints = new List<ResearchPoint>();
 		}
 		
@@ -563,6 +621,40 @@ namespace Ecosim.SceneData
 				}
 				Log.LogError ("Can't find Data with name '" + name + "'");
 				return new DummyData (scene);
+			}
+		}
+
+		// (Temp) save the data's from other years
+		Dictionary<string, Dictionary<int, Data>> tempDataDict = new Dictionary<string, Dictionary<int, Data>>();
+
+		public Data GetData (string name, int year)
+		{
+			if (year == scene.progression.year) return GetData (name);
+			else {
+				// Check if we already have loaded it
+				Dictionary<int, Data> dict;
+				if (tempDataDict.TryGetValue (name, out dict)) {
+					Data data;
+					if (dict.TryGetValue (year, out data)) {
+						return data;
+					}
+				}
+
+				// Data does not exist, so load the data from scene/save
+				if (File.Exists (GetDataPath (name, year))) {
+					Data data = Data.Load (GetDataPath (name, year), this);
+					Dictionary<int, Data> yearDict;
+					if (tempDataDict.TryGetValue (name, out yearDict)) {
+						yearDict.Add (year, data);
+						return data;
+					} else {
+						yearDict = new Dictionary<int, Data> ();
+						yearDict.Add (year, data);
+						tempDataDict.Add (name, yearDict);
+						return data;
+					}
+				}
+				return null;
 			}
 		}
 		
@@ -848,14 +940,29 @@ namespace Ecosim.SceneData
 						InventarisationResult ir = new InventarisationResult (year, name, areaName, dataName, actionId);
 						inventarisations.Add (ir);
 						IOUtil.ReadUntilEndElement (reader, "invresults");
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "inventarisation")) {
-						int start = int.Parse (reader.GetAttribute ("start"));
-						int end = int.Parse (reader.GetAttribute ("end"));
-						string name = reader.GetAttribute ("name");
-						int actionId = int.Parse (reader.GetAttribute ("actionid"));
-						Inventarisation inv = new Inventarisation (start, end, name, actionId);
-						IOUtil.ReadUntilEndElement (reader, "inventarisation");
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "data")) {
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == Inventarisation.XML_ELEMENT)) 
+					{
+						this.activeInventarisations.Add (Inventarisation.Load (reader, scene));
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "takenaction"))
+					{
+						ActionTaken at = new ActionTaken ();
+						at.id = int.Parse (reader.GetAttribute ("id"));
+						at.years = new List<int> ();
+						string years = reader.GetAttribute ("years");
+						if (years.Length > 0) {
+							string [] ys = years.Split (new string[] {","}, System.StringSplitOptions.RemoveEmptyEntries);
+							if (ys != null) {
+								foreach (string y in ys) {
+									at.years.Add (int.Parse (y));
+								}
+							}
+						}
+						this.actionsTaken.Add (at);
+						IOUtil.ReadUntilEndElement (reader, "invresults");
+					}
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "data")) {
 						DataInfo info = new DataInfo ();
 						info.name = reader.GetAttribute ("name");
 						int year = int.Parse (reader.GetAttribute ("year"));
@@ -1205,13 +1312,9 @@ namespace Ecosim.SceneData
 				writer.WriteEndElement ();
 			}
 
-			foreach (Inventarisation inv in currentInventarisations) {
-				writer.WriteStartElement ("inventarisation");
-				writer.WriteAttributeString ("start", inv.startYear.ToString());
-				writer.WriteAttributeString ("end", inv.lastYear.ToString());
-				writer.WriteAttributeString ("name", inv.name);
-				writer.WriteAttributeString ("actionid", inv.actionId.ToString ());
-				writer.WriteEndElement ();
+			// Save the current current inventarisations
+			foreach (Inventarisation inv in activeInventarisations) {
+				inv.Save (writer, scene);
 			}
 
 			// Questionnaire states
@@ -1265,6 +1368,20 @@ namespace Ecosim.SceneData
 					}
 					break;
 				}
+				writer.WriteEndElement ();
+			}
+
+			// Taken actions
+			foreach (ActionTaken at in this.actionsTaken) {
+				writer.WriteStartElement ("takenaction");
+				writer.WriteAttributeString ("id", at.id.ToString());
+				// Save the years in a string (less xml)
+				string years = "";
+				foreach (int y in at.years) {
+					years += y + ",";
+				}
+				years = years.Trim (',');
+				writer.WriteAttributeString ("years", years);
 				writer.WriteEndElement ();
 			}
 

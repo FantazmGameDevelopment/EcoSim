@@ -78,6 +78,11 @@ public class SimpleGUI : MonoBehaviour {
 		CheckMouseOver(position);
 		return GUI.TextField(position, (text == null)?"(null)":text, style);
 	}
+
+	public static string TextField(Rect position, string text, int maxLength, GUIStyle style) {
+		CheckMouseOver(position);
+		return GUI.TextField(position, (text == null)?"(null)":text, maxLength, style);
+	}
 	
 	public static float Slider (Rect position, float val, float min, float max) {
 		CheckMouseOver(position);

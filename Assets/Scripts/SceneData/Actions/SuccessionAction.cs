@@ -68,6 +68,7 @@ namespace Ecosim.SceneData.Action
 									if ((action == null) || (action.IsSelected (ui, x, y))) 
 									{
 										Data gradData = gradChange.data;
+										// We don't need to check if it's a calculated data
 										int val = gradData.Get (x, y);
 										int delta = gradChange.deltaChange;
 										int newVal = val + delta;

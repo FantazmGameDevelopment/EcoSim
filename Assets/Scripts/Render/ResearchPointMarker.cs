@@ -44,11 +44,11 @@ public class ResearchPointMarker : MonoBehaviour
 		foreach (ResearchPoint.Measurement m in researchPoint.measurements) 
 		{
 			string line = string.Format ("<b>{0} Year {1}</b>\n", m.name, m.year);
-			if (m.message == null) {
+			if (m.data == null) {
 				line += "Data not yet available\n";
 			}
 			else {
-				line += m.message;
+				line += m.data.formattedString;
 				if (!line.EndsWith ("\n"))
 					line += "\n";
 			}
@@ -59,7 +59,7 @@ public class ResearchPointMarker : MonoBehaviour
 			message += line;
 		}
 
-		message = message.TrimEnd ('\n');
+		message = message.Trim ('\n');
 
 		RenderResearchPointsMgr.SetMessage (researchPoint, message, transform.position);
 	}

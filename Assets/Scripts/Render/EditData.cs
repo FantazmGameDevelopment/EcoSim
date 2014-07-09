@@ -270,6 +270,8 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 	 */
 	public void CopyData (Data toData)
 	{
+		if (toData == null) return;
+
 		int w = cells.GetLength (1);
 		int h = cells.GetLength (0);
 		for (int y = 0; y < h; y++) {

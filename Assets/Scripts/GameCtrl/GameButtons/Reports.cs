@@ -63,7 +63,8 @@ namespace Ecosim.GameCtrl.GameButtons
 
 			foreach (Inventarisation inv in inventarisations) 
 			{
-				int calcWidth = (int)entry.CalcSize (new GUIContent (inv.name)).x;
+				// Calculate the width of the entry name, with or without the graph editor count
+				int calcWidth = (int)entry.CalcSize (new GUIContent (inv.name + ((graphEditorOpened)?" (99/99)":""))).x;
 				calcWidth = ((calcWidth / (entryHeight + 1)) + 1) * (entryHeight + 1) - 1;
 				if (calcWidth > colWidth) {
 					colWidth = calcWidth;
@@ -121,7 +122,6 @@ namespace Ecosim.GameCtrl.GameButtons
 					r.x += r.width + 1;
 					isOver |= SimpleGUI.CheckMouseOver (r);
 					if (SimpleGUI.Button (r, "Generate", entry, entrySelected)) {
-						// TODO:
 						new Ecosim.GameCtrl.ExportGraphWindow ();
 					}
 				}
@@ -151,16 +151,32 @@ namespace Ecosim.GameCtrl.GameButtons
 				int r = 0;
 				foreach (Inventarisation inv in inventarisations) 
 				{
+					// Get the graph suffix
+					string graphSuffix = "";
+					if (graphEditorOpened) 
+					{
+						graphSuffix = " ";
+						int total = inv.results.Count;
+						int selected = 0;
+						foreach (Progression.InventarisationResult ir in inv.results) {
+							if (ir.selected)
+								selected++;
+						}
+						graphSuffix = string.Format (" ({0}/{1})", selected, total);
+					}
+
 					// TODO: Make sure the Groups don't go over the screen height
+
+					// Entry
 					bool hl = (inv.name == selectedInvName);
 					Rect invR = new Rect (x, y + (entryHeight + 1) * (r + 1), colWidth, entryHeight);
-					bool isOverGroup = SimpleGUI.Label (invR, inv.name, hl ? entrySelected : entry);
+					bool isOverGroup = SimpleGUI.Label (invR, inv.name + graphSuffix, hl ? entrySelected : entry);
 					invR.x += invR.width + 1;
 
 					// Graph controls
 					if (graphEditorOpened)
 					{
-						Rect invBtnR = invR;
+						/*Rect invBtnR = invR;
 						invBtnR.width = invGraphEditorBtnWidth;
 
 						// De/select all
@@ -181,7 +197,27 @@ namespace Ecosim.GameCtrl.GameButtons
 							}
 						}
 
-						invR.x += invBtnR.width + 1;
+						invR.x += invBtnR.width + 1;*/
+
+						// Toggle when clicking on the entry
+						if (isOverGroup && Event.current.type == EventType.MouseDown) {
+							// Use the event
+							Event.current.Use ();
+
+							// Check if we should deselect or select all
+							bool foundSelected = false;
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								if (ir.selected) {
+									foundSelected = true;
+									break;
+								}
+							}
+							// Deselect all
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								// If we found a selected, deselect, if we didn't find a selected, select it
+								ir.selected = !foundSelected;
+							}
+						}
 					}
 
 					isOver |= isOverGroup;

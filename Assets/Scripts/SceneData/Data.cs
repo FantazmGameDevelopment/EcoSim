@@ -280,6 +280,13 @@ namespace Ecosim.SceneData
 				}
 			}
 		}
+
+		public virtual Data Clone ()
+		{
+			Data clone = (Data)System.Activator.CreateInstance (this.GetType(), scene);
+			this.CopyTo (clone);
+			return clone;
+		}
 		
 		/**
 		 * Creates a copy of instance with new sizes, copying content from offsetX, offsetY

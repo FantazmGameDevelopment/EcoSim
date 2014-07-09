@@ -1,18 +1,28 @@
-string CreateResearchPointString (Coordinate c)
+ResearchPointData CreateResearchPointData (Coordinate c)
 {
-	// We first want to retrieve all Data objects that we need.
-	Data firstData = progression.GetData ("myFirstParameterName");
-	Data secondData = progression.GetData ("mySecondParameterName");
-
-	// We then retrieve the value of the Data objects using the Coordinate 'c'.
-	// If we want the % of a value for example, we could divide the value by 
+	// Create a new data container
+	ResearchPointData container = new ResearchPointData ();
+	
+	// We then want to retrieve all Data objects that we need.
+	Data firstData = progression.GetData ("firstParam");
+	Data secondData = progression.GetData ("secondParam");
+	
+	// We then retrieve the value of the Data objects 
+	// using the Coordinate 'c'. If we want the % 
+	// of a value for example, we could divide the value by 
 	// the maximum of the Data like in the third line.
 	float firstValue = (float)firstData.Get (c);
 	float secondValue = (float)secondData.Get (c);
 	secondValue = secondValue / (float)secondData.GetMax ();
 	
-	// Finally we use these retrieved values to make a nice formatted string 
-	// and return it. Don't forget the '\n', these will make a new line in the string.
-	return "First name " + firstValue.ToString ("0.0") + "\n"
-			+"Second name " + secondValue.ToString ("0.00") + "%\n";
+	// We want to store the retrieved/calcultaed values
+	container.AddValue ("firstParam", firstValue);
+	container.AddValue ("secondParam", secondValue);
+	
+	// Format the string and return it
+	container.formattedString += "First name " + firstValue.ToString ("0.0") + "\n";
+ 	container.formattedString += "Second name " + secondValue.ToString ("0.00") + "%\n";
+			
+	// We return the data container
+	return container;
 }

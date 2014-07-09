@@ -121,11 +121,20 @@ namespace SoftCircuits
 		}
 
 		/// <summary>
+		/// Moves to the next occurrence of the specified string (case sensitive)
+		/// </summary>
+		/// /// <param name="s">String to find</param>
+		public void MoveTo(string s)
+		{
+			MoveTo (s, false);
+		}
+
+		/// <summary>
 		/// Moves to the next occurrence of the specified string
 		/// </summary>
 		/// <param name="s">String to find</param>
 		/// <param name="ignoreCase">Indicates if case-insensitive comparisons are used</param>
-		public void MoveTo(string s, bool ignoreCase = false)
+		public void MoveTo(string s, bool ignoreCase)
 		{
 			_pos = _text.IndexOf(s, _pos, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 			if (_pos < 0)

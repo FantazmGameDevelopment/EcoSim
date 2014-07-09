@@ -204,6 +204,10 @@ namespace Ecosim.SceneData.Action
 				scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()] = this.description;
 				scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()] = "Area";
 				scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()] = selectedTilesCount;
+
+				// Save and update the affected area
+				edit.CopyData (AffectedArea);
+				scene.progression.AddActionTaken (this.id);
 			}
 
 			edit.Delete ();

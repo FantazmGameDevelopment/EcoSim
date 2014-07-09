@@ -108,24 +108,54 @@ namespace Ecosim.EcoScript
 		public void MakeReport (string text) {
 			scene.progression.AddReport (text);
 		}
-		
-		public Progression.InventarisationResult AddInventarisation(string name, Data area, Data data) {
+
+		public Progression.InventarisationResult AddInventarisation(string name, Data area) 
+		{
+			return AddInventarisation (name, area, area);
+		}
+
+		public Progression.InventarisationResult AddInventarisation(string name, Data area, Data data) 
+		{
 			Progression.InventarisationResult ir = new Progression.InventarisationResult (year, name, area, data, basicAction.id);
 			scene.progression.inventarisations.Add (ir);
-
-			System.Random r = new System.Random ();
-			for (int i = 0; i < 10; i++)
-			{
-				Data d = new SparseBitMap8 (scene);
-				data.CopyTo (d);
-				foreach (ValueCoordinate vc in d.EnumerateNotZero()) {
-					d.Set (vc, (int)RndUtil.RndRange (ref r, 1f, vc.v * 1.5f));
-				}
-
-				ir = new Progression.InventarisationResult (year, name + i, area, d, basicAction.id);
-				scene.progression.inventarisations.Add (ir);
-			}
 			return ir;
+		}
+
+		/**
+		 * Container class that contains data needed for the custom scripts.
+		 */
+		public class Inventaristation 
+		{
+			public readonly string Name;
+			public readonly Data SelectionMap;
+			public readonly int Cost;
+
+			public Inventaristation (string name, Data selection, int cost)
+			{
+				this.Name = name;
+				this.SelectionMap = selection;
+				this.Cost = cost;
+			}
+		}
+
+		public IEnumerable<Inventaristation> EnumerateActiveInventarisations (string areaName)
+		{
+			foreach (Progression.Inventarisation inv in scene.progression.activeInventarisations) {
+				// Check if year is still valid, if the lastYear is the same year as the current year + 1
+				// then the inventarisation has finished. This is because the startYear is always the currentYear and there's
+				// always 1 or more added to the last year. Then we check if the areaName matches.
+				if ((inv.lastYear >= scene.progression.year + 1) && inv.ActionAreaName == areaName) 
+				{
+					bool firstTime = (inv.startYear == scene.progression.year);
+					Inventaristation i = new Inventaristation (
+						inv.name,
+						scene.progression.GetData (inv.areaName),
+						// We only calculate the costs the first time
+						(firstTime) ? inv.cost : 0
+					);
+					yield return i;
+				}
+			}
 		}
 		
 		public void AddGameMarkers (string dataName, string[] models, RenderGameMarkersMgr.ClickHandler fn) {

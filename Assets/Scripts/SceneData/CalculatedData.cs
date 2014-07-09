@@ -197,7 +197,10 @@ namespace Ecosim.SceneData
 		 */
 		public override void Clear ()
 		{
-			throw new System.NotSupportedException("operation not supported on calculated data");
+			// We use a warning instead of an exception because we don't always know we're trying to adjust
+			// a calculated data
+			//throw new System.NotSupportedException("operation not supported on calculated data");
+			Log.LogWarning ("Operation not supported on calculated data");
 		}
 		
 		/**
@@ -205,7 +208,10 @@ namespace Ecosim.SceneData
 		 */
 		public override void Set (int x, int y, int val)
 		{
-			throw new System.NotSupportedException ("Can't set values on calculated data"); 
+			// We use a warning instead of an exception because we don't always know we're trying to adjust
+			// a calculated data.
+			//throw new System.NotSupportedException ("Can't set values on calculated data"); 
+			Log.LogWarning ("Can't set values on calculated data"); 
 		}
 
 		public override int Get (int x, int y)

@@ -2,8 +2,11 @@ void DoSuccession() {
 	// AREA will be defined to the name of the selection area
 	// for this inventarisation. If data is set we are doing
 	// an inventarisation...
-	if (scene.progression.HasData (AREA)) {
-		Data selection = progression.GetData (AREA);
+	foreach (Inventaristation inv in 
+		EnumerateActiveInventarisations (AREA))
+	{
+		// The selection of the inventarisation
+		Data selection = inv.SelectionMap;
 		
 		// the data we are analysing...
 		Data analyse = progression.GetData ("mydata");
@@ -12,13 +15,16 @@ void DoSuccession() {
 		// value 0 is used for all cells not selected in
 		// the AREA map (not selected by user).
 		// The area map is used for visualisation.
+		// The data map is used for recording the actual values.
 		SparseBitMap8 area = new SparseBitMap8 (scene);
 		SparseBitMap8 data = new SparseBitMap8 (scene);
 		
 		int tileCount = 0; // we'll count the number of tiles selected
-		foreach (Coordinate vc in selection.EnumerateNotZero ()) {
+		foreach (Coordinate vc in selection.EnumerateNotZero ()) 
+		{
 			tileCount ++;
 			int value = analyse.Get (vc);
+			
 			// somehow map the values of the data we analyse
 			// to the result set...
 			switch (value) {
@@ -32,13 +38,11 @@ void DoSuccession() {
 			data.Set (vc, value);
 		}
 		
-		// make the report available. We use the name of the
-		// first UI element (the button in game interface
-		// for this inventarisation).
-		AddInventarisation (action.uiList[0].name, area, data);
+		// Make the report available.
+		AddInventarisation (inv.Name, area, data);
 		
-		// user has to pay for the number of tiles selected.
-		budget -= tileCount * action.uiList[0].cost;
+		// The user has to pay for the number of tiles selected.
+		budget -= inv.Cost;
 	}
 }
 

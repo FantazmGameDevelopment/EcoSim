@@ -12,7 +12,11 @@ namespace Ecosim.SceneEditor
 		public EditorCtrl ctrl;
 		public ExportMgr mgr;
 
+		private bool graphOpened;
+
+		private bool sheetOpened;
 		private bool selectionOpened;
+		private bool targetAreasOpened;
 		private bool paramsOpened;
 		private bool animalsOpened;
 		private bool plantsOpened;
@@ -35,21 +39,43 @@ namespace Ecosim.SceneEditor
 
 			GUILayout.BeginVertical ();
 			{
-				mgr.exportEnabled = GUILayout.Toggle (mgr.exportEnabled, "Data Export enabled");
-				if (mgr.exportEnabled)
+				GUILayout.BeginVertical (ctrl.skin.box);
 				{
-					GUILayout.Label ("TODO: These values are ONLY for sheet export");
-
-					EcoGUI.EnumButton<ExportMgr.SelectionTypes>("Selection type:", mgr.selectionType, OnSelectionTypeChanged, 80f, 150f);
-					EcoGUI.EnumButton<ExportMgr.DataTypes>("Data type:", mgr.dataType, OnDataTypeChanged, 80f, 150f);
-
-					switch (mgr.selectionType)
+					EcoGUI.Foldout ("Sheet export", ref sheetOpened);
+					if (sheetOpened)
 					{
-					case ExportMgr.SelectionTypes.Selection :
-						RenderSelectionType (mgr, mx, my);
-						break;
+						mgr.exportEnabled = GUILayout.Toggle (mgr.exportEnabled, "Data Export enabled");
+						if (mgr.exportEnabled)
+						{
+							EcoGUI.EnumButton<ExportMgr.SelectionTypes>("Selection type:", mgr.selectionType, OnSelectionTypeChanged, 80f, 150f);
+							EcoGUI.EnumButton<ExportMgr.DataTypes>("Data type:", mgr.dataType, OnDataTypeChanged, 80f, 150f);
+
+							switch (mgr.selectionType)
+							{
+							case ExportMgr.SelectionTypes.Selection :
+								RenderSelectionType (mgr, mx, my);
+								break;
+							}
+						}
 					}
 				}
+				GUILayout.EndVertical ();
+				GUILayout.Space (2f);
+
+				/*GUILayout.BeginVertical (ctrl.skin.box);
+				{
+					EcoGUI.Foldout ("Graph export", ref graphOpened);
+					if (graphOpened)
+					{
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+
+						}
+						GUILayout.EndVertical ();
+					}
+				}
+				GUILayout.EndVertical ();*/
+
 				GUILayout.FlexibleSpace ();
 			}
 			GUILayout.EndVertical ();
@@ -66,6 +92,58 @@ namespace Ecosim.SceneEditor
 
 				if (selectionOpened)
 				{
+					GUILayout.BeginVertical (ctrl.skin.box);
+					{
+						GUILayout.BeginHorizontal ();
+						{
+							EcoGUI.Foldout ("Target areas", ref targetAreasOpened);
+							GUILayout.FlexibleSpace ();
+							if (GUILayout.Button ("+", GUILayout.Width (20f))) 
+							{
+								GUILayout.Space (3f);
+
+								List<string> targetAreas = new List<string> ();
+								for (int i = 0; i < scene.progression.targetAreas; i++) {
+									targetAreas.Add ((i + 1).ToString());
+								}
+
+								foreach (int area in mgr.targetAreas) {
+									targetAreas.Remove (area.ToString());
+								}
+								
+								if (targetAreas.Count > 0) {
+									ctrl.StartSelection (targetAreas.ToArray(), 0, delegate(int index, string result) {
+										mgr.AddTargetArea (int.Parse(result));
+									});
+								} else {
+									ctrl.StartOkDialog ("No target areas to add.", null);
+								}
+							}
+						}
+						GUILayout.EndHorizontal ();
+						GUILayout.Space (2f);
+						
+						if (targetAreasOpened)
+						{
+							int idx = 0;
+							foreach (int area in mgr.targetAreas)
+							{
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Space (5f);
+									if (GUILayout.Button ("-", GUILayout.Width (20f))) {
+										mgr.RemoveTargetArea (area);
+										break;
+									}
+									GUILayout.Space (5f);
+									GUILayout.Label ("Target area " + area);
+								}
+								GUILayout.EndHorizontal ();
+							}
+						}
+					}
+					GUILayout.EndVertical ();
+
 					GUILayout.BeginVertical (ctrl.skin.box);
 					{
 						GUILayout.BeginHorizontal ();
@@ -177,7 +255,7 @@ namespace Ecosim.SceneEditor
 						{
 							EcoGUI.Foldout ("Plants", ref plantsOpened);
 							GUILayout.FlexibleSpace ();
-							if (scene.animalTypes.Length > 0 && GUILayout.Button ("+", GUILayout.Width (20f))) 
+							if (scene.plantTypes.Length > 0 && GUILayout.Button ("+", GUILayout.Width (20f))) 
 							{
 								GUILayout.Space (3f);
 								

@@ -182,6 +182,14 @@ namespace Ecosim.SceneEditor.Helpers
 									currentTargetAreaIndex = i;
 									UpdateCurrentArea ();
 								}
+
+								if (i == scene.progression.targetAreas)
+								{
+									if (GUILayout.Button ("-", GUILayout.Width (20))) {
+										scene.progression.DeleteData (Progression.TARGET_ID + i);
+										scene.progression.targetAreas--;
+									}
+								}
 							}
 							GUILayout.EndHorizontal ();
 						}

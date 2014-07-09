@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Reflection;
+using System.Text;
+using Ecosim.SceneData;
+using Ecosim.SceneData.Action;
 
 namespace Ecosim.SceneData
 {
@@ -13,15 +16,15 @@ namespace Ecosim.SceneData
 			public readonly int year;
 			public float lowestValue = Mathf.Infinity;
 			public float highestValue = -Mathf.Infinity;
-
+			
 			private Dictionary<string, float> values;
-
+			
 			public YearData (int year)
 			{
 				this.year = year;
 				this.values = new Dictionary<string, float> ();
 			}
-
+			
 			public void AddValue (string name, float value)
 			{
 				// Check the lowest and highest values
@@ -31,7 +34,7 @@ namespace Ecosim.SceneData
 				if (value > highestValue) {
 					highestValue = value;
 				}
-
+				
 				// Choose the highest value if it already exists
 				if (values.ContainsKey (name)) {
 					float newValue = Mathf.Max (value, values[name]);
@@ -40,7 +43,7 @@ namespace Ecosim.SceneData
 				}
 				values.Add (name, value);
 			}
-
+			
 			/// <summary>
 			/// Gets the value. Returns true/false whether the name exists, and if so it sets the out value.
 			/// </summary>
@@ -53,7 +56,7 @@ namespace Ecosim.SceneData
 				value = 0f;
 				return false;
 			}
-
+			
 			public override string ToString ()
 			{
 				System.Text.StringBuilder sb = new System.Text.StringBuilder ();
@@ -66,48 +69,34 @@ namespace Ecosim.SceneData
 			}
 		}
 
-		private List<string> values;
-		private List<YearData> years;
-
+		protected List<string> values;
+		protected List<YearData> years;
+		
 		public InventarisationsData ()
 		{
 			this.values = new List<string> ();
 			this.years = new List<YearData> ();
 		}
-
+		
 		public IEnumerable<string> EnumerateValues ()
 		{
 			foreach (string s in this.values) {
 				yield return s;
 			}
 		}
-
-		public void AddValue (string name)
-		{
-			if (!this.values.Contains (name))
-			{
-				this.values.Add (name);
-				this.values.Sort ();
-			}
-		}
-
+		
 		public IEnumerable<YearData> EnumerateYears ()
 		{
 			foreach (YearData y in this.years) {
 				yield return y;
 			}
 		}
-
-		public int GetValuesCount ()
-		{
-			return this.values.Count;
-		}
-
+		
 		public YearData GetYear (int year)
 		{
 			return GetYear (year, false);
 		}
-
+		
 		public YearData GetYear (int year, bool createNewIfNull)
 		{
 			foreach (YearData y in years) {
@@ -121,12 +110,12 @@ namespace Ecosim.SceneData
 			}
 			return null;
 		}
-
+		
 		public int GetYearsCount ()
 		{
 			return this.years.Count;
 		}
-
+		
 		public float GetLowestValue ()
 		{
 			float value = Mathf.Infinity;
@@ -137,7 +126,7 @@ namespace Ecosim.SceneData
 			}
 			return value;
 		}
-
+		
 		public float GetHighestValue ()
 		{
 			float value = -Mathf.Infinity;
@@ -148,14 +137,219 @@ namespace Ecosim.SceneData
 			}
 			return value;
 		}
-
+		
+		public void AddValue (string name)
+		{
+			if (!this.values.Contains (name))
+			{
+				this.values.Add (name);
+				this.values.Sort ();
+			}
+		}
+		
+		public int GetValuesCount ()
+		{
+			return this.values.Count;
+		}
+		
 		public override string ToString ()
 		{
 			string years = "";
 			foreach (YearData y in this.years) {
 				years += y.ToString () + "\n";
 			}
-			return string.Format ("[InventarisationsData]\n{0}", years);
+			return string.Format ("[BaseData]\n{0}", years);
+		}
+	}
+
+	public class ExportData
+	{
+		public class YearData
+		{
+			public class CoordinateData
+			{
+				public readonly Coordinate coord;
+				private Dictionary<string, string> values;
+
+				public CoordinateData (Coordinate coord)
+				{
+					this.coord = coord;
+					this.values = new Dictionary<string, string> ();
+				}
+
+				public string this[string key]
+				{
+					get {
+						if (values.ContainsKey (key)) {
+							return values [key];
+						}
+						return "";
+					}
+					set {
+						if (!values.ContainsKey (key)) {
+							values.Add (key, "");
+						}
+						values [key] = value;
+					}
+				}
+
+				public IEnumerable<string> EnumerateKeys ()
+				{
+					foreach (KeyValuePair<string, string> pair in this.values) {
+						yield return pair.Key;
+					}
+				}
+			}
+
+			public readonly int year;
+			private List<CoordinateData> coords;
+
+			public YearData (int year)
+			{
+				this.year = year;
+				this.coords = new List<CoordinateData> ();
+			}
+
+			public CoordinateData NewCoord (Coordinate coord)
+			{
+				if (this[coord] == null)
+				{
+					CoordinateData cd = new CoordinateData (coord);
+					this.coords.Add (cd);
+					return cd;
+				}
+				else return this [coord];
+			}
+
+			public CoordinateData this[Coordinate coord]
+			{
+				get 
+				{
+					foreach (CoordinateData cd in this.coords) {
+						if (cd.coord.x == coord.x &&
+						    cd.coord.y == coord.y) {
+							return cd;
+						}
+					}
+					return null;
+				}
+			}
+			
+			public IEnumerable<CoordinateData> EnumerateCoords ()
+			{
+				foreach (CoordinateData cd in this.coords) {
+					yield return cd;
+				}
+			}
+		}
+
+		private List<string> columns;
+		private List<YearData> years;
+
+		public ExportData ()
+		{
+			this.columns = new List<string> ();
+			this.years = new List<YearData> ();
+		}
+
+		public YearData NewYear (int year)
+		{
+			if (this[year] == null)
+			{
+				YearData ny = new YearData (year);
+				this.years.Add (ny);
+				return ny;
+			}
+			else return this [year];
+		}
+
+		public YearData this[int year]
+		{
+			get 
+			{
+				foreach (YearData y in this.years) {
+					if (y.year == year) {
+						return y;
+					}
+				}
+				return null;
+			}
+		}
+
+		public void SortYears ()
+		{
+			this.years.Sort (
+			delegate (YearData x, YearData y) {
+				if (x.year > y.year) return 1;
+				if (x.year < y.year) return -1;
+				return 0;
+			});
+		}
+
+		public IEnumerable<string> EnumerateColumns ()
+		{
+			foreach (string c in this.columns) {
+				yield return c;
+			}
+		}
+
+		public IEnumerable<YearData> EnumerateYears ()
+		{
+			foreach (YearData y in this.years) {
+				yield return y;
+			}
+		}
+
+		public void AddColumn (string column)
+		{
+			if (!this.columns.Contains (column)) {
+				this.columns.Add (column);
+			}
+		}
+
+		public string ToCSV ()
+		{
+			string delimiter = ";";
+			StringBuilder sb = new StringBuilder ();
+
+			// Add all columns
+			foreach (string c in this.EnumerateColumns ())
+			{
+				sb.Append (c);
+				sb.Append (delimiter);
+			}
+			sb.AppendLine ();
+
+			// Loop through all years
+			foreach (ExportData.YearData y in EnumerateYears ())
+			{
+				foreach (ExportData.YearData.CoordinateData c in y.EnumerateCoords ())
+				{
+					// Add year
+					sb.Append (y.year);
+					sb.Append (delimiter);
+
+					// Add x,y
+					sb.Append (c.coord.x);
+					sb.Append (delimiter);
+					sb.Append (c.coord.y);
+					sb.Append (delimiter);
+
+					// Loop through all columns
+					int si = 0;
+					foreach (string s in this.EnumerateColumns ())
+					{
+						// We need to skip the year, x and y (0,1,2)
+						if (si++ <= 2) continue;
+
+						// Append row value
+						sb.Append (c[s]);
+						sb.Append (delimiter);
+					}
+					sb.AppendLine ();
+				}
+			}
+			return sb.ToString ();
 		}
 	}
 
@@ -180,14 +374,18 @@ namespace Ecosim.SceneData
 		public SelectionTypes selectionType;
 		public DataTypes dataType;
 
+		public int[] targetAreas;
 		public string[] parameters;
 		public string[] animals;
 		public string[] plants;
+
+		public ExportData currentExportData;
 
 		public ExportMgr (Scene scene)
 		{
 			self = this;
 			this.scene = scene;
+			this.targetAreas = new int[] { };
 			this.parameters = new string[] { };
 			this.animals = new string[] { };
 			this.plants = new string[] { };
@@ -208,6 +406,236 @@ namespace Ecosim.SceneData
 
 			UnityEngine.Debug.Log (id.ToString());
 			return id;
+		}
+
+		public IEnumerator<object> GetExportData ()
+		{
+			// We'll use an abbreviation for less code
+			ExportData ed = new ExportData ();
+			currentExportData = ed;
+
+			// Temp vars
+			ExportData.YearData year;
+			ExportData.YearData.CoordinateData coordData;
+
+			/** COLUMNS **/
+
+			// Add default columns
+			ed.AddColumn ("year");
+			ed.AddColumn ("x");
+			ed.AddColumn ("y");
+
+			// Add target areas
+			for (int i = 1; i < scene.progression.targetAreas + 1; i++) {
+				ed.AddColumn ("targetarea" + i);
+			}
+			yield return null;
+
+			// DEBUG
+			this.selectionType = SelectionTypes.All;
+
+			// TODO: SELECTION TYPE
+
+			// Add all (or part of it) parameters
+			switch (this.selectionType)
+			{
+			case SelectionTypes.All :
+				/*foreach (string p in scene.progression.GetAllDataNames (false)) {
+					ed.AddColumn (p);
+				}*/
+				break;
+			}
+			yield return null;
+
+			/** Inventarisations **/
+			foreach (Progression.InventarisationResult ir in scene.progression.inventarisations) {
+				// Setup columns
+				ed.AddColumn (ir.name);
+				
+				// Setup years and coords
+				year = ed.NewYear (ir.year);
+				foreach (ValueCoordinate vc in ir.AreaMap.EnumerateNotZero ()) {
+					coordData = year.NewCoord ((Coordinate)vc);
+					coordData[ir.name] = ir.DataMap.Get (vc).ToString();
+
+					// Costs
+					BasicAction action = scene.actions.GetAction (ir.actionId);
+					if (action != null) {
+						coordData["costs"] += action.uiList [0].cost;
+					}
+				}
+			}
+			yield return null;
+			
+			/** Research points **/
+			foreach (ResearchPoint r in scene.progression.researchPoints) {
+				foreach (ResearchPoint.Measurement rm in r.measurements) {
+					// Setup years and coords
+					year = ed.NewYear (rm.year);
+					coordData = year.NewCoord (new Coordinate (r.x, r.y));
+					
+					// Setup columns and values
+					foreach (KeyValuePair<string, string> p in rm.data.values) {
+						ed.AddColumn (p.Key);
+						coordData[p.Key] = p.Value;
+					}
+
+					// Costs
+					BasicAction action = scene.actions.GetAction (rm.actionId);
+					if (action != null) {
+						coordData["costs"] += action.uiList [0].cost;
+					}
+				}
+			}
+			yield return null;
+
+			/** Measures (actions) **/
+			foreach (Progression.ActionTaken ta in scene.progression.actionsTaken) {
+				BasicAction a = scene.actions.GetAction (ta.id);
+				if (a != null && ta.years.Count > 0) {
+					// Setup column
+					string key = a.GetDescription ();
+					ed.AddColumn (key);
+					
+					// Loop through all years
+					foreach (int y in ta.years) {
+						// Get the affected area
+						Data area = scene.progression.GetData (a.affectedAreaName, y);
+						if (area != null) {
+							// Setup years and coords
+							year = ed.NewYear (y);
+							foreach (ValueCoordinate vc in area.EnumerateNotZero ()) {
+								coordData = year.NewCoord (vc);
+								coordData[key] = "1";
+
+								// Costs
+								coordData["costs"] += a.uiList [0].cost;
+							}
+						}
+					}
+				}
+			}
+			yield return null;
+
+			/** Target areas **/
+			foreach (ExportData.YearData y in ed.EnumerateYears ()) {
+				foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) {
+					foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
+						// Setup target areas
+						for (int a = 1; a < scene.progression.targetAreas + 1; a++) {
+							Data targetArea = scene.progression.GetData (Progression.TARGET_ID + a);
+							if (targetArea != null) {
+								cd ["targetarea" + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
+							}
+						}
+					}
+				}
+			}
+			yield return null;
+
+			// TODO: Columns - Add all plants
+
+			// TODO: Columns - Add all animals
+
+			// TODO: Columns - Add all measures
+
+			/** VALUES **/
+
+			// TODO: DATA TYPE
+			this.dataType = DataTypes.OnlyWhenSurveyed;
+
+			// Add all/part of the tiles
+			switch (this.dataType)
+			{
+			case DataTypes.Always :
+				// Setup all years and their tiles. i = 1 is to skip the first year, because this does not have any data
+				/*for (int i = 1; i < (scene.progression.year - scene.progression.startYear); i++) {
+					// Setup all tiles
+					ExportData.YearData year = ed.NewYear (scene.progression.startYear + i);
+					foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) 
+					{
+						// Setup new coordinate
+						ExportData.YearData.CoordinateData cd = year.NewCoord ((Coordinate)vc);
+
+						// Set default parameters 
+						foreach (string p in scene.progression.GetAllDataNames (false)) {
+							Data data = scene.progression.GetData (p, year.year);
+							if (data != null) {
+								cd[p] = data.Get (cd.coord).ToString ("0");
+							}
+						}
+					}
+				}*/
+
+				// TODO: Values - Research points
+				
+				// TODO: Values - Add animals
+				
+				// TODO: Values - Add plants
+				break;
+
+			// TODO: DataTypes.OnlyWhenSurveyed
+			case DataTypes.OnlyWhenSurveyed :
+			{
+
+
+				// TODO: Veg types
+			}
+			break;
+			}
+
+			// Cost
+			ed.AddColumn ("cost");
+		}
+
+		public void ExportData ()
+		{
+			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
+			sfd.Filter = "csv files (*.csv)|*.csv";
+			
+			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+			{
+				// Get the export data
+				GameControl.self.StartCoroutine (COExportData(sfd.FileName));
+			}
+		}
+
+		private IEnumerator<object> COExportData (string filePath)
+		{
+			// Get the export data
+			yield return GameControl.self.StartCoroutine (GetExportData ());
+			currentExportData.SortYears ();
+
+			// Create new file
+			FileStream fs = File.Create (filePath);
+
+			// Stringify and save
+			System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
+			string txt = currentExportData.ToCSV ();
+			fs.Write (enc.GetBytes (txt), 0, enc.GetByteCount (txt));
+			
+			// Close and dispose the stream
+			fs.Close ();
+			fs.Dispose ();
+			fs = null;
+		}
+
+		public void AddTargetArea (int area)
+		{
+			List<int> list = new List<int> (this.targetAreas);
+			if (list.Contains (area)) return;
+			list.Add (area);
+			list.Sort ();
+			this.targetAreas = list.ToArray ();
+		}
+
+		public void RemoveTargetArea (int area)
+		{
+			List<int> list = new List<int> (this.targetAreas);
+			if (!list.Contains (area)) return;
+			list.Remove (area);
+			list.Sort ();
+			this.targetAreas = list.ToArray ();
 		}
 
 		public void AddParameter (string param)
@@ -289,6 +717,7 @@ namespace Ecosim.SceneData
 			this.selectionType = (SelectionTypes)System.Enum.Parse (typeof(SelectionTypes), reader.GetAttribute ("selectiontype"));
 			this.dataType = (DataTypes)System.Enum.Parse (typeof(DataTypes), reader.GetAttribute ("datatype"));
 
+			List<int> targetAreaList = new List<int> ();
 			List<string> paramList = new List<string>();
 			List<string> animalList = new List<string> ();
 			List<string> plantList = new List<string>();
@@ -301,6 +730,9 @@ namespace Ecosim.SceneData
 				{
 					switch (reader.Name.ToLower ())
 					{
+					case "targetarea" :
+						targetAreaList.Add (int.Parse (reader.GetAttribute ("id")));
+						break;
 					case "param" :
 						paramList.Add (reader.GetAttribute ("name"));
 						break;
@@ -318,6 +750,7 @@ namespace Ecosim.SceneData
 				}
 			}
 
+			this.targetAreas = targetAreaList.ToArray ();
 			this.parameters = paramList.ToArray ();
 			this.animals = animalList.ToArray ();
 			this.plants = plantList.ToArray ();
@@ -344,6 +777,11 @@ namespace Ecosim.SceneData
 			foreach (string s in this.plants) {
 				writer.WriteStartElement ("plant");
 				writer.WriteAttributeString ("name", s);
+				writer.WriteEndElement ();
+			}
+			foreach (int i in this.targetAreas) {
+				writer.WriteStartElement ("targetarea");
+				writer.WriteAttributeString ("id", i.ToString());
 				writer.WriteEndElement ();
 			}
 			writer.WriteEndElement ();

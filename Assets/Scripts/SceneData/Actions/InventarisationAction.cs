@@ -13,6 +13,7 @@ namespace Ecosim.SceneData.Action
 	{
 		public const string XML_ELEMENT = "inventarisation";
 		public string areaName;
+		public string invAreaName;
 		public int gridIconId;
 		public int invalidTileIconId;
 		private Data selectedArea;
@@ -46,6 +47,7 @@ namespace Ecosim.SceneData.Action
 		{
 			description = "Inventarisation " + id;
 			areaName = "area" + id.ToString ();
+			invAreaName = "";
 			UserInteraction ui = new UserInteraction (this);
 			uiList.Add (ui);
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
@@ -203,14 +205,19 @@ namespace Ecosim.SceneData.Action
 		 */
 		public void StartSelecting (UserInteraction ui)
 		{
-			if (selectedArea == null) {
+			// Setup unique area name
+			invAreaName = this.areaName + "_" + (scene.progression.activeInventarisations.Count).ToString();
+			selectedArea = new SparseBitMap8 (scene);
+
+			/*if (selectedArea == null) {
 				if (uiList.Count > 1) {
 					selectedArea = new SparseBitMap8 (scene);
 				} else {
 					selectedArea = new SparseBitMap1 (scene);
 				}
 				scene.progression.AddData (areaName, selectedArea);
-			}
+			}*/
+
 			edit = EditData.CreateEditData ("action", selectedArea, scene.progression.managedArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
 				if (shift)
 					return 0;
@@ -243,32 +250,44 @@ namespace Ecosim.SceneData.Action
 				// make selection permanent
 				edit.CopyData (selectedArea);
 
+				// Save the selected area in progression
+				scene.progression.AddData (invAreaName, selectedArea);
+
 				// Remember the last taken researche values
 				int selectedTilesCount = 0;
 				foreach (ValueCoordinate vc in selectedArea.EnumerateNotZero()) {
 					selectedTilesCount++;
 				}
-				
+
+				// Save predefined variables
 				scene.progression.variables [Progression.PredefinedVariables.lastResearch.ToString()] = this.description;
 				scene.progression.variables [Progression.PredefinedVariables.lastResearchGroup.ToString()] = "Inventarisation";
 				scene.progression.variables [Progression.PredefinedVariables.lastResearchCount.ToString()] = selectedTilesCount;
 			}
+
 			edit.Delete ();
 			edit = null;
-			RecalculateEstimates (false);
+			//RecalculateEstimates (false);
 
+			// Fire the research conducted methods
 			if (!isCanceled) {
 				scene.actions.ResearchConducted ();
 			}
 		}
 
+		/// <summary>
+		/// Recalculates the estimates. This one is for now just used to reset all estimated costs.
+		/// </summary>
 		public void RecalculateEstimates (bool checkTileIsValid)
 		{
 			foreach (UserInteraction ui in uiList) {
 				ui.estimatedTotalCostForYear = 0L; // first reset...
 			}
-			if (scene.progression.HasData (areaName)) {
-				selectedArea = scene.progression.GetData (areaName);
+
+			// Check if we have the areaname
+			/*string dataName = invAreaName;// areaName;
+			if (!string.IsNullOrEmpty (invAreaName) && scene.progression.HasData (dataName)) {
+				selectedArea = scene.progression.GetData (dataName);
 				if (checkTileIsValid) {
 					selectedArea.ProcessNotZero (delegate(int x, int y, int val, object data) {
 						if (!CanSelectTile (x, y, uiList [val - 1])) {
@@ -284,13 +303,18 @@ namespace Ecosim.SceneData.Action
 				}
 			} else {
 				selectedArea = null;
-			}
+			}*/
 		}
 
 		public override void FinalizeSuccession ()
 		{
 			base.FinalizeSuccession ();
-			RecalculateEstimates (true);
+			//RecalculateEstimates (true);
+
+			// Reset costs
+			foreach (UserInteraction ui in uiList) {
+				ui.estimatedTotalCostForYear = 0L; // first reset...
+			}
 		}
 		
 		public bool IsSelected (UserInteraction ui, int x, int y)

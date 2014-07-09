@@ -10,7 +10,7 @@ namespace Ecosim.GameCtrl
 {
 	public class ExportGraphWindow : GameWindow
 	{
-		// Make sure the width and height don't exceed the screen widht/height
+		// Make sure the width and height don't exceed the screen width/height
 		// because otherwise we won't be able to render the png properly (using ReadPixels)
 		public static int windowWidth { get { return Mathf.Min (800, Screen.width); } }
 		public static int windowHeight { get { return Mathf.Min (400, Screen.height); }	}
@@ -44,6 +44,7 @@ namespace Ecosim.GameCtrl
 		private Dictionary<string, Vector2> prevPoints;
 		private Dictionary<string, bool> iconActiveStates;
 		private string hoverLabel = "";
+		private bool showLabels = false;
 		private string numberFormat = "0";
 
 		private int preSaveQuality = 0;
@@ -109,8 +110,8 @@ namespace Ecosim.GameCtrl
 				new Color (1f, 0f, 0f, 1f),
 				new Color (0f, 1f, 0f, 1f),
 				new Color (0f, 0f, 1f, 1f),
-				new Color (0f, 1f, 1f, 1f),
 				new Color (1f, 1f, 0f, 1f),
+				new Color (0f, 1f, 1f, 1f),
 				new Color (1f, 0f, 1f, 1f)
 			};
 		}
@@ -128,14 +129,22 @@ namespace Ecosim.GameCtrl
 
 			// Title
 			Rect titleRect = graphRect;
-			titleRect.width -= 80f + 1f;
+			titleRect.width -= (120f + 1f) * 2f;
 			GUI.Label (titleRect, "Graph", title);
+
+			// Toggle values button
+			Rect toggleRect = titleRect;
+			toggleRect.x += titleRect.width + 1;
+			toggleRect.width = 120f;
+			if (SimpleGUI.Button (toggleRect, "Toggle values", entry, entrySelected)) {
+				showLabels = !showLabels;
+			}
 
 			// Save Button
 			bool doSave = false;
-			Rect saveRect = titleRect;
+			Rect saveRect = toggleRect;
 			saveRect.x += saveRect.width + 1f;
-			saveRect.width = 80f;
+			//saveRect.width = 80f;
 			if (SimpleGUI.Button (saveRect, "Save...", entry, entrySelected)) 
 			{
 				if (saveGraph == false)
@@ -240,6 +249,11 @@ namespace Ecosim.GameCtrl
 			xRect.x = graphRect.x + valueLabelWidth;
 			xRect.y = graphRect.y + graphRect.height - valueLabelHeight;
 
+			// Reset all previous point
+			foreach (string value in invData.EnumerateValues()) {
+				prevPoints [value] = new Vector2 (-1f, -1f);
+			}
+
 			// Loop through all years
 			int yearsCount = invData.GetYearsCount ();
 			int yearIndex = 0;
@@ -301,11 +315,13 @@ namespace Ecosim.GameCtrl
 						// Draw line
 						end = new Vector2 (pr.x + (pr.width * 0.5f), 
 						                   pr.y + (pr.height * 0.5f));
-						if (yearIndex > 0) {
+						// We draw the line to the previous point, so we should not draw the line to the first prevPoint
+						if (prevPoints [value].x != -1f) {
 							start = prevPoints [value];
 							start = new Vector2 ((int)start.x, (int)start.y);
 							Drawing.DrawLine (start, new Vector2 ((int)end.x, (int)end.y), GUI.color, pointLinesWidth);
-						}
+						} 
+
 						// Remember the value so the next point will draw the line
 						prevPoints [value] = end;
 
@@ -316,7 +332,18 @@ namespace Ecosim.GameCtrl
 						if (iconActive) {
 							GUI.Label (ir, pointIcons [iconIndex]);
 						}
-						if (SimpleGUI.CheckMouseOver (ir)) {
+
+						// Check for label
+						if (showLabels) {
+							// Show the label
+							Rect labelRect = pr;
+							labelRect.x += labelRect.width;
+							//labelRect.y -= labelRect.height;
+							labelRect.width = valueLabelWidth;
+							labelRect.height = valueLabelHeight;
+							GUI.Label (labelRect, v.ToString (numberFormat), leftAlign);
+						}
+						else if (SimpleGUI.CheckMouseOver (ir)) {
 							hoverLabel = v.ToString (numberFormat);
 						}
 
@@ -401,7 +428,7 @@ namespace Ecosim.GameCtrl
 				legendIndex++;
 			}
 
-			// Draw hover label
+			// Draw hover label, if we have a string to show
 			if (hoverLabel.Length > 0) {
 				Rect hoverRect = new Rect (Event.current.mousePosition.x, 
 				                           Event.current.mousePosition.y,

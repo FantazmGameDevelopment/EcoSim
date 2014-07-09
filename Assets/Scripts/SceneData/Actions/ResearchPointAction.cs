@@ -57,7 +57,7 @@ namespace Ecosim.SceneData.Action
 
 		// EcoBase linkage
 		private MethodInfo actionDeselectedMI;
-		private MethodInfo createResearchPointStringMI;
+		private MethodInfo createResearchPointDataMI;
 
 		public ResearchPointAction (Scene scene, int id) : base(scene, id)
 		{
@@ -186,11 +186,13 @@ namespace Ecosim.SceneData.Action
 			{
 				foreach (KeyValuePair<ResearchPoint.Measurement, Coordinate> pair in newMeasurements)
 				{
-					if (createResearchPointStringMI != null) {
-						object msg = createResearchPointStringMI.Invoke (ecoBase, new object[] { pair.Value });
-						pair.Key.message = msg.ToString();
+					if (createResearchPointDataMI != null) {
+						object result = createResearchPointDataMI.Invoke (ecoBase, new object[] { pair.Value });
+						pair.Key.data = (ResearchPointData)result;
 					} else {
-						pair.Key.message = "No logic defined in the scripts for gathering data.";
+						ResearchPointData data = new ResearchPointData ();
+						data.formattedString = "No logic defined in the scripts for gathering data.";
+						pair.Key.data = data;
 					}
 				}
 				newMeasurements.Clear ();
@@ -245,7 +247,7 @@ namespace Ecosim.SceneData.Action
 			// Create a new measurement if there's none or if the last measurement is not temporary
 			if (m == null || !m.isTemporary) 
 			{
-				m = rp.AddNewMeasurement (scene, description);
+				m = rp.AddNewMeasurement (scene, id, description);
 				m.isTemporary = true;
 				marker.SetVisuals (true);
 				RenderResearchPointsMgr.ForceUpdate ();
@@ -271,11 +273,16 @@ namespace Ecosim.SceneData.Action
 			}
 		}
 
+		public override void LoadProgress (bool initScene, Dictionary<string, string> properties)
+		{
+			base.LoadProgress (initScene, properties);
+		}
+
 		protected override void UnlinkEcoBase ()
 		{
 			base.UnlinkEcoBase ();
 			actionDeselectedMI = null;
-			createResearchPointStringMI = null;
+			createResearchPointDataMI = null;
 		}
 		
 		protected override void LinkEcoBase ()
@@ -286,9 +293,9 @@ namespace Ecosim.SceneData.Action
 				                                                   	BindingFlags.NonPublic | BindingFlags.Instance, null,
 				                                                   	new Type[] { typeof(UserInteraction), typeof(bool) }, null);
 
-				createResearchPointStringMI = ecoBase.GetType ().GetMethod ("CreateResearchPointString",
-				                                                   	BindingFlags.NonPublic | BindingFlags.Instance, null,
-	                                                            	new Type[] { typeof(Coordinate) }, null);        
+				createResearchPointDataMI = ecoBase.GetType ().GetMethod ("CreateResearchPointData",
+				                                                          BindingFlags.NonPublic | BindingFlags.Instance, null,
+				                                                          new Type[] { typeof(Coordinate) }, null); 
 			}
 		}
 
