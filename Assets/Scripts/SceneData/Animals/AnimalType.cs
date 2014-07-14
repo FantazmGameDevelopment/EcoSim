@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
+using Ecosim.SceneData;
 using Ecosim.SceneData.Rules;
 using Ecosim.SceneData.AnimalPopulationModel;
 
@@ -10,7 +11,8 @@ namespace Ecosim.SceneData
 	public class AnimalType
 	{
 		public const string XML_ELEMENT = "animal";
-		
+
+		public readonly Scene scene;
 		public string name;
 		public int index;
 		
@@ -26,12 +28,9 @@ namespace Ecosim.SceneData
 
 		public List<IAnimalPopulationModel> models;
 		
-		public AnimalType ()
-		{
-		}
-		
 		public AnimalType (Scene scene, string name)
 		{
+			this.scene = scene;
 			this.name = name;
 			this.index = scene.animalTypes.Length;
 
@@ -85,7 +84,9 @@ namespace Ecosim.SceneData
 		
 		public virtual void UpdateReferences (Scene scene)
 		{
-
+			foreach (IAnimalPopulationModel model in this.models) {
+				model.UpdateReferences (scene);
+			}
 		}
 
 		public virtual void PrepareSuccession ()
@@ -137,6 +138,48 @@ namespace Ecosim.SceneData
 				if (t.name.ToLower() == name) return t;
 			}
 			return null;
+		}
+
+		/// <summary>
+		/// Returns the 'associated' data. Associated data has a unique name identifier
+		/// that links the data named 'name' to this animal automatically.
+		/// </summary>
+		/// <returns>The associated data.</returns>
+		/// <param name="name">Name.</param>
+		public Data GetAssociatedData (string name)
+		{
+			string dataName = ("animal" + this.index + "_" + name);
+			if (scene.progression.HasData (dataName)) {
+				return scene.progression.GetData (dataName);
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Returns the 'associated' data of the given year. Associated data has a unique name identifier
+		/// that links the data named 'name' to this animal automatically.
+		/// </summary>
+		/// <returns>The associated data.</returns>
+		/// <param name="name">Name.</param>
+		public Data GetAssociatedData (string name, int year)
+		{
+			string dataName = ("animal" + this.index + "_" + name);
+			if (scene.progression.HasData (dataName)) {
+				return scene.progression.GetData (dataName, year);
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Adds a new 'associated' data. Associated data has a unique name identifier
+		/// that links the data named 'name' to this animal automatically.
+		/// </summary>
+		/// <param name="name">Name.</param>
+		/// <param name="data">Data.</param>
+		public void AddAssociatedData (string name, Data data)
+		{
+			string dataName = ("animal" + this.index + "_" + name);
+			scene.progression.AddData (dataName, data);
 		}
 	}
 }

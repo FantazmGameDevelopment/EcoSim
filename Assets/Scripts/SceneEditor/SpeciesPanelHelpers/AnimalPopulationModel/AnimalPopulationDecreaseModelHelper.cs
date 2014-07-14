@@ -81,16 +81,42 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 						GUILayout.Space (2);
 						EcoGUI.IntField ("Required food", ref this.model.specifiedNumber.starvation.foodRequiredPerAnimal, 100, 50);
 
-						EcoGUI.RangeSliders ("Rate", 
-						                     ref this.model.specifiedNumber.starvation.minStarveRate,
-						                     ref this.model.specifiedNumber.starvation.maxStarveRate,
-						                     0f, 1f,
-						                     GUILayout.Width (40),
-						                     GUILayout.Width (60));
+						EcoGUI.skipHorizontal = true;
+						GUILayout.BeginHorizontal ();
+						{
+							EcoGUI.RangeSliders ("Range", 
+							                     ref this.model.specifiedNumber.starvation.minStarveRange,
+							                     ref this.model.specifiedNumber.starvation.maxStarveRange,
+							                     0f, 1f,
+							                     GUILayout.Width (40),
+							                     GUILayout.Width (60));
+
+							GUILayout.FlexibleSpace ();
+							if (GUILayout.Button ("?", GUILayout.Width (20))) {
+								string message = @"The chance whether the animal will starve is calculated as follows:
+[min range] + (([max range] - [min range]) * (1 - ([available food] / [required food]))).
+These range values give you some freedom in handling the chances for starvation. 
+
+For example: 
+If you set the range to 0 and 1, the animal will always surivive if it found enough food, but if it did not find any food, the animal will always starve.
+Or if you set the minimum of the range to 0.25, the animal will ALWAYS have a 25% to starve, regardless the amount of food it receives. 
+On the other hand if you set the maximum range to 0.75, the animal does still have 25% (100 - 75) to survive, even if it did not find any food.
+
+Some examples:
+Food: 4/5, Range: 0 - 1 
+Chance = (0 + ((1 - 0) * (1 - (4 / 5)))) = 0.2 = 20% chance to starve.
+Conclusion: If the animal does not find any food, it will starve.
+
+Food: 4/5, Range: 0.3 - 0.8
+Chance = (0.3 + ((0.8 - 0.3) * (1 - (4 / 5)))) = 0.4 = 40% to starve.
+Conclusion: The animal does always have a chance (30%) to starve, and it always have a chance to survive (20%), regardless the amount of food it receives.";
+								panel.ctrl.StartOkDialog (message, null, 350, 400);
+							}
+						}
+						GUILayout.EndHorizontal ();
+						EcoGUI.skipHorizontal = false;
 					}
 					this.RenderHeaderEnd (this.model.specifiedNumber.starvation);
-
-					// TODO: Add "?" to explain the starve rate starvation = (starvation chance) * (starve rate)
 
 					if (this.RenderHeaderStart ("Human induced death", this.model.specifiedNumber.artificialDeath, true))
 					{

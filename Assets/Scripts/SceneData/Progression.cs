@@ -351,6 +351,21 @@ namespace Ecosim.SceneData
 			public readonly int id;
 			public readonly string text;
 		}
+
+		/**
+		 * Stores the data of a variable.
+		 */ 
+		public class VariableData
+		{
+			public string name;
+			public string category;
+
+			public VariableData (string name, string category)
+			{
+				this.name = name;
+				this.category = category;
+			}
+		}
 		
 		/**
 		 * index in message queue of first unread message (if all messages are read
@@ -366,6 +381,7 @@ namespace Ecosim.SceneData
 		public List<InventarisationResult> inventarisations;
 		public List<ResearchPoint> researchPoints;
 		public Dictionary<string, object> variables;
+		public Dictionary<string, VariableData> variablesData;
 		public List<ActionTaken> actionsTaken;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
@@ -493,6 +509,7 @@ namespace Ecosim.SceneData
 			this.scene = scene;
 			dataDict = new Dictionary<string, DataInfo> ();
 			variables = new Dictionary<string, object> ();
+			variablesData = new Dictionary<string, VariableData> ();
 			actionStates = new List<ActionState> ();
 			questionnaireStates = new List<QuestionnaireState>();
 			reportStates = new List<ReportState>();
@@ -525,12 +542,13 @@ namespace Ecosim.SceneData
 			purchasableArea = GetData <BitMap8> (PURCHASABLE_ID);
 
 			// Default variables
-			variables.Add ("lastMeasure", "");
-			variables.Add ("lastMeasureGroup", "");
-			variables.Add ("lastMeasureCount", 0);
-			variables.Add ("lastResearchAction", "");
-			variables.Add ("lastResearchActionGroup", "");
-			variables.Add ("lastResearchActionCount", 0);
+			foreach (string s in predefinedVariables) {
+				if (s.EndsWith ("Count")) {
+					variables.Add (s, 0);
+				} else {
+					variables.Add (s, "");
+				}
+			}
 		}
 		
 		/**
@@ -986,6 +1004,16 @@ namespace Ecosim.SceneData
 							variables.Add (name, var);
 						}
 						variables[name] = var;
+					} else if ((nType == XmlNodeType.Entity) && (reader.Name.ToLower () == "variabledata")) {
+						string var = reader.GetAttribute ("var");
+						string name = reader.GetAttribute ("name");
+						string category = reader.GetAttribute ("cat");
+						VariableData vd = new VariableData (name, category);
+						if (!variablesData.ContainsKey (var)) {
+							variablesData.Add (var, vd);
+						}
+						variablesData [var] = vd;
+
 					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
 					} 
@@ -1276,6 +1304,15 @@ namespace Ecosim.SceneData
 				}
 
 				writer.WriteEndElement ();				
+			}
+
+			// Write variables data
+			foreach (KeyValuePair <string, VariableData> kv in variablesData) {
+				writer.WriteStartElement ("variabledata");
+				writer.WriteAttributeString ("var", kv.Key);
+				writer.WriteAttributeString ("name", kv.Value.name);
+				writer.WriteAttributeString ("cat", kv.Value.category);
+				writer.WriteEndElement ();			
 			}
 			
 			// write action states

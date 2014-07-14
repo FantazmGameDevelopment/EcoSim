@@ -102,8 +102,8 @@ namespace Ecosim.SceneEditor
 
 					// Variables
 					float labelWidth = 100f;
-					EcoGUI.IntField ("Males:", ref editNest.males, labelWidth);
-					EcoGUI.IntField ("Females:", ref editNest.females, labelWidth);
+					editNest.males = EcoGUI.IntField ("Males:", editNest.males, labelWidth);
+					editNest.females = EcoGUI.IntField ("Females:", editNest.females, labelWidth);
 					EcoGUI.IntField ("Max males:", ref editNest.malesCapacity, labelWidth);
 					EcoGUI.IntField ("Max females:", ref editNest.femalesCapacity, labelWidth);
 					EcoGUI.IntField ("Max animals:", ref editNest.totalCapacity, labelWidth);
@@ -219,7 +219,7 @@ namespace Ecosim.SceneEditor
 
 		private void CreateNewNestAt (int x, int y)
 		{
-			AnimalStartPopulationModel.Nests.Nest newNest = new AnimalStartPopulationModel.Nests.Nest ();
+			AnimalStartPopulationModel.Nests.Nest newNest = new AnimalStartPopulationModel.Nests.Nest (this.startPopModel.nests);
 			newNest.x = x;
 			newNest.y = y;
 

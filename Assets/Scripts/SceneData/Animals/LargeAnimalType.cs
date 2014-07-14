@@ -19,11 +19,11 @@ namespace Ecosim.SceneData
 		public Data birthMap;
 		public Data fouragingMap;
 
-		public LargeAnimalType ()
+		public LargeAnimalType (Scene scene) : base (scene, "")
 		{
 			SetupModels ();
 		}
-		
+
 		public LargeAnimalType (Scene scene, string name) : base (scene, name)
 		{
 			SetupModels ();
@@ -34,17 +34,17 @@ namespace Ecosim.SceneData
 			this.models = new List<IAnimalPopulationModel> ();
 
 			// Start population model
-			startPopModel = new AnimalStartPopulationModel ();
+			startPopModel = new AnimalStartPopulationModel (this);
 			startPopModel.nests.show = true;
 			this.models.Add (startPopModel);
 
 			// Growth population model
-			growthModel = new AnimalPopulationGrowthModel ();
+			growthModel = new AnimalPopulationGrowthModel (this);
 			growthModel.fixedNumber.show = true;
 			this.models.Add (growthModel);
 
 			// Decrease population model
-			decreaseModel = new AnimalPopulationDecreaseModel ();
+			decreaseModel = new AnimalPopulationDecreaseModel (this);
 			decreaseModel.fixedNumber.show = true;
 			decreaseModel.specifiedNumber.show = true;
 			decreaseModel.specifiedNumber.naturalDeathRate.show = true;
@@ -53,7 +53,7 @@ namespace Ecosim.SceneData
 			this.models.Add (decreaseModel);
 
 			// Land use population model
-			landUseModel = new AnimalPopulationLandUseModel ();
+			landUseModel = new AnimalPopulationLandUseModel (this);
 			landUseModel.food.show = true;
 			landUseModel.movement.show = true;
 			this.models.Add (landUseModel);
@@ -61,7 +61,7 @@ namespace Ecosim.SceneData
 
 		public static LargeAnimalType Load (XmlTextReader reader, Scene scene)
 		{
-			LargeAnimalType animal = new LargeAnimalType ();
+			LargeAnimalType animal = new LargeAnimalType (scene);
 			AnimalType.Load (animal, reader, scene);
 
 			if (!reader.IsEmptyElement) {
@@ -96,15 +96,6 @@ namespace Ecosim.SceneData
 				m.Save (writer, scene);
 			}
 			writer.WriteEndElement ();
-		}
-
-		public override void UpdateReferences (Scene scene)
-		{
-			base.UpdateReferences (scene);
-
-			foreach (IAnimalPopulationModel m in models) {
-				m.UpdateReferences (scene);
-			}
 		}
 	}
 }

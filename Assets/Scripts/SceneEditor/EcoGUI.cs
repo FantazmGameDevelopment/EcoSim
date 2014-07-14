@@ -21,14 +21,32 @@ namespace Ecosim.SceneEditor
 			}*/
 		}
 
+		public static int IntField (string name, int val)
+		{
+			IntField (name, ref val, 0f);
+			return val;
+		}
+
 		public static void IntField (string name, ref int val)
 		{
 			IntField (name, ref val, null, null);
 		}
 
-		public static void IntField (string name, ref int val, float nameWidth = 0f, float valWidth = 0f)
+		public static int IntField (string name, int val, float nameWidth, float valWidth = 0f)
+		{
+			IntField (name, ref val, nameWidth, valWidth);
+			return val;
+		}
+
+		public static void IntField (string name, ref int val, float nameWidth, float valWidth = 0f)
 		{
 			IntField (name, ref val, nameWidth > 0 ? GUILayout.Width (nameWidth) : null, valWidth > 0 ? GUILayout.Width (valWidth) : null);
+		}
+
+		public static int IntField (string name, int val, GUILayoutOption nameLayout, GUILayoutOption valLayout = null)
+		{
+			IntField (name, ref val, nameLayout, valLayout);
+			return val;
 		}
 
 		public static void IntField (string name, ref int val, GUILayoutOption nameLayout = null, GUILayoutOption valLayout = null)

@@ -22,21 +22,26 @@ namespace Ecosim.SceneEditor
 		int currentTypeIndex = 4;
 		string newVarName = "";
 		string newVarError = "";
-
+		
 		public List<string> keys;
+		public Dictionary<string, string> keyNames;
+		public Dictionary<string, string> keyCategories;
+
+		private bool showPresentValues;
 		
 		public void Setup (EditorCtrl ctrl, Scene scene)
 		{
 			this.ctrl = ctrl;
 			this.scene = scene;
 			keys = new List<string> ();
+			keyNames = new Dictionary<string, string> ();
+			keyCategories = new Dictionary<string, string> ();
 //			tabNormal = ctrl.listItem;
 //			tabSelected = ctrl.listItemSelected;
 			if (scene == null)
 				return;
 			textFieldDict = new Dictionary<string, string> ();
-			SetupTextFieldStrings ();
-			
+			SetupTextFieldStrings ();	
 		}
 		
 		void SetupTextFieldStrings ()
@@ -90,7 +95,7 @@ namespace Ecosim.SceneEditor
 		{
 			string dictName = (index >= 0) ? (name + " " + index) : name;
 			string dictVal = textFieldDict [dictName];
-			string newVal = GUILayout.TextField (dictVal, GUILayout.Width (200));
+			string newVal = GUILayout.TextField (dictVal, GUILayout.Width (120));
 			if (newVal != dictVal) {
 				newVarError = "";
 				// try to update original value
@@ -172,6 +177,20 @@ namespace Ecosim.SceneEditor
 		
 		public bool Render (int mx, int my)
 		{
+			// Show present(ation) values, name etc.
+			if (GUILayout.Button ("Toggle present values", GUILayout.Width (150))) {
+				showPresentValues = !showPresentValues;
+			}
+			if (showPresentValues) {
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Label ("<b> variable</b>", GUILayout.Width (150));
+					GUILayout.Label ("<b> name</b>", GUILayout.Width (100));
+					GUILayout.Label ("<b> category</b>", GUILayout.Width (100));
+				}
+				GUILayout.EndHorizontal ();
+			}
+
 			Dictionary<string, object> variables = scene.progression.variables;
 			scrollPos = GUILayout.BeginScrollView (scrollPos, false, false);
 			GUILayout.BeginVertical ();
@@ -179,43 +198,62 @@ namespace Ecosim.SceneEditor
 //			List<string> keys = new List<string> (variables.Keys);
 			foreach (string key in keys) {
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label (key, GUILayout.Width (100));
+				GUILayout.Label (key, GUILayout.Width (150));
 				object val = variables [key];
-				GUILayout.Label (DisplayType (val), GUILayout.Width (40));
-				if (val is IList) {	
-					IList list = (IList)val;
-					if (GUILayout.Button ("+")) {
-						AddToList (list);
-						SetupTextFieldStrings ();
-						break;
-					}
-					if (GUILayout.Button ("-", GUILayout.Width (20))) {
-						variables.Remove (key);
-						SetupTextFieldStrings ();
-						break;
-					}
-					GUILayout.FlexibleSpace ();
-					GUILayout.EndHorizontal ();
-					for (int i = 0; i < list.Count; i++) {
-						GUILayout.BeginHorizontal ();
-						GUILayout.Label ("", GUILayout.Width (100));
-						GUILayout.Label (i.ToString (), GUILayout.Width (40));
-						EditField (list [i], key, i);
-						if (GUILayout.Button ("-", GUILayout.Width (20))) {
-							list.RemoveAt (i);
+				if (!showPresentValues) {
+					GUILayout.Label ("<b>" + DisplayType (val) + "</b>", GUILayout.Width (40));
+					if (val is IList) {	
+						IList list = (IList)val;
+						if (GUILayout.Button ("+")) {
+							AddToList (list);
 							SetupTextFieldStrings ();
-							return true; // ugly, but can't break out of 2 loops
+							break;
+						}
+						if (GUILayout.Button ("-", GUILayout.Width (20))) {
+							variables.Remove (key);
+							SetupTextFieldStrings ();
+							break;
 						}
 						GUILayout.FlexibleSpace ();
 						GUILayout.EndHorizontal ();
+						for (int i = 0; i < list.Count; i++) {
+							GUILayout.BeginHorizontal ();
+							GUILayout.Label ("", GUILayout.Width (150));
+							GUILayout.Label (i.ToString (), GUILayout.Width (40));
+							EditField (list [i], key, i);
+							GUILayout.FlexibleSpace ();
+							if (GUILayout.Button ("-", GUILayout.Width (20))) {
+								list.RemoveAt (i);
+								SetupTextFieldStrings ();
+								return true; // ugly, but can't break out of 2 loops
+							}
+							GUILayout.EndHorizontal ();
+						}
+					} else {
+						EditField (val, key, -1);
+						GUILayout.FlexibleSpace ();
+						if (GUILayout.Button ("-", GUILayout.Width (20))) {
+							variables.Remove (key);
+							SetupTextFieldStrings ();
+							break;
+						}
+						GUILayout.EndHorizontal ();
 					}
 				} else {
-					EditField (val, key, -1);
-					if (GUILayout.Button ("-", GUILayout.Width (20))) {
-						variables.Remove (key);
-						SetupTextFieldStrings ();
-						break;
+
+					// Name
+					if (!keyNames.ContainsKey (key)) {
+						keyNames.Add (key, "");
 					}
+					string name = keyNames [key];
+					keyNames [key] = GUILayout.TextField (name, GUILayout.Width (100));
+					// Categorie
+					if (!keyCategories.ContainsKey (key)) {
+						keyCategories.Add (key, "");
+					}
+					string category = keyCategories [key];
+					keyCategories [key] = GUILayout.TextField (category, GUILayout.Width (100));
+
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();
 				}

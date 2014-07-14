@@ -20,33 +20,84 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			public class Nest
 			{
 				public const string XML_ELEMENT = "nest";
-				
+
+				public Scene scene;
+				public Nests parent;
+
 				public int x;
 				public int y;
 				
-				public int males;
-				public int females;
-				public int currentFood;
+				public int males { 
+					get { return malesMap.Get (x, y); } 
+					set { malesMap.Set (x, y, value); }
+				}
+				public int females { 
+					get { return femalesMap.Get (x, y); } 
+					set { femalesMap.Set (x, y, value); }
+				}
+				public int currentFood { 
+					get { return foodMap.Get (x, y); } 
+					set { foodMap.Set (x, y, value); }
+				}
 				
 				public int totalCapacity;
 				public int malesCapacity;
 				public int femalesCapacity;
-				
-				public Nest ()
-				{
+
+				private Data _malesMap;
+				private Data _femalesMap;
+				private Data _foodMap;
+
+				public Data malesMap {
+					get {
+						if (_malesMap == null) {
+							_malesMap = parent.model.animal.GetAssociatedData ("males");
+							if (_malesMap == null) {
+								_malesMap = new BitMap16 (parent.model.animal.scene);
+								parent.model.animal.AddAssociatedData ("males", _malesMap);
+							}
+						}
+						return _malesMap;
+					}
+				}
+				public Data femalesMap {
+					get {
+						if (_femalesMap == null) {
+							_femalesMap = parent.model.animal.GetAssociatedData ("females");
+							if (_femalesMap == null) {
+								_femalesMap = new BitMap16 (parent.model.animal.scene);
+								parent.model.animal.AddAssociatedData ("females", _femalesMap);
+							}
+						}
+						return _femalesMap;
+					}
+				}
+				public Data foodMap {
+					get {
+						if (_foodMap == null) {
+							_foodMap = parent.model.animal.GetAssociatedData ("food");
+							if (_foodMap == null) {
+								_foodMap = new BitMap16 (parent.model.animal.scene);
+								parent.model.animal.AddAssociatedData ("food", _foodMap);
+							}
+						}
+						return _foodMap;
+					}
 				}
 				
-				public static Nest Load (XmlTextReader reader, Scene scene)
+				public Nest (Nests parent)
 				{
-					Nest nest = new Nest ();
+					this.parent = parent;
+				}
+				
+				public static Nest Load (Nests parent, XmlTextReader reader, Scene scene)
+				{
+					Nest nest = new Nest (parent);
 					nest.x = int.Parse(reader.GetAttribute ("x"));
 					nest.y = int.Parse(reader.GetAttribute ("y"));
-					nest.males = int.Parse(reader.GetAttribute ("m"));
-					nest.females = int.Parse(reader.GetAttribute ("f"));
 					nest.totalCapacity = int.Parse (reader.GetAttribute ("cap"));
 					nest.malesCapacity = int.Parse (reader.GetAttribute ("mcap"));
 					nest.femalesCapacity = int.Parse (reader.GetAttribute ("fcap"));
-					nest.currentFood = int.Parse (reader.GetAttribute ("food"));
 					IOUtil.ReadUntilEndElement(reader, XML_ELEMENT);
 					return nest;
 				}
@@ -56,18 +107,15 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					writer.WriteStartElement (XML_ELEMENT);
 					writer.WriteAttributeString ("x", x.ToString());
 					writer.WriteAttributeString ("y", y.ToString());
-					writer.WriteAttributeString ("m", males.ToString());
-					writer.WriteAttributeString ("f", females.ToString());
 					writer.WriteAttributeString ("cap", totalCapacity.ToString());
 					writer.WriteAttributeString ("mcap", malesCapacity.ToString());
 					writer.WriteAttributeString ("fcap", femalesCapacity.ToString());
-					writer.WriteAttributeString ("food", currentFood.ToString());
 					writer.WriteEndElement ();
 				}
 				
 				public void UpdateReferences (Scene scene)
 				{
-					
+
 				}
 
 				public override string ToString ()
@@ -81,9 +129,32 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					                      femalesCapacity.ToString(), 
 					                      currentFood);
 				}
+
+				public int GetMalesAt (int year)
+				{
+					Data data = parent.model.animal.GetAssociatedData ("males", year);
+					if (data != null) {
+						return data.Get (x, y);
+					}
+					return 0;
+				}
+
+				public int GetFemalesAt (int year)
+				{
+					Data data = parent.model.animal.GetAssociatedData ("females", year);
+					if (data != null) {
+						return data.Get (x, y);
+					}
+					return 0;
+				}
 			}
 
 			public Nest[] nests = new Nest[0];
+
+			public Nests (IAnimalPopulationModel model) : base (model)
+			{
+				
+			}
 
 			public void UpdateReferences (Scene scene)
 			{
@@ -108,7 +179,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 						{
 							
 							if (readerName == Nest.XML_ELEMENT) {
-								Nest nest = Nest.Load (reader, scene);
+								Nest nest = Nest.Load (this, reader, scene);
 								if (nest != null) {
 									nests.Add (nest);
 								}
@@ -134,8 +205,12 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				writer.WriteEndElement ();
 			}
 		}
+		public Nests nests;
 
-		public Nests nests = new Nests ();
+		public AnimalStartPopulationModel (AnimalType animal) : base (animal)
+		{
+			this.nests = new Nests (this);
+		}
 
 		public override void Load (XmlTextReader reader, Scene scene)
 		{

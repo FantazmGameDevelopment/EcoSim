@@ -23,6 +23,11 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			public int minLitterSize;
 			public int maxLitterSize;
 
+			public FixedNumber (IAnimalPopulationModel model) : base (model)
+			{
+				
+			}
+
 			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
@@ -59,8 +64,13 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				return 0;
 			}*/
 		}
-		public FixedNumber fixedNumber = new FixedNumber();
-		
+		public FixedNumber fixedNumber;
+
+		public AnimalPopulationGrowthModel (AnimalType animal) : base (animal)
+		{
+			this.fixedNumber = new FixedNumber (this);
+		}
+
 		public override void Load (XmlTextReader reader, Scene scene)
 		{
 			if (!reader.IsEmptyElement) 

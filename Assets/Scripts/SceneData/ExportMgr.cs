@@ -611,8 +611,7 @@ namespace Ecosim.SceneData
 							// Get the data, if it's null try the default (init) value
 							Data data = scene.progression.GetData (p, y.year) ?? scene.progression.GetData (p);
 
-							// Exception: calculated data
-							// we need to manually set the year
+							// Exception: calculated data, we need to manually set the year
 							bool isCalcData = (data is CalculatedData);
 							if (isCalcData) {
 								((CalculatedData)data).year = y.year;
@@ -648,23 +647,29 @@ namespace Ecosim.SceneData
 					/** Animals **/
 					foreach (AnimalType a in scene.animalTypes) {
 						// Large animal
-						if (a is LargeAnimalType) 
-						{
-							// TODO: Make the animal save the nest state etc
-							LargeAnimalType la = (LargeAnimalType)a;
-							foreach (AnimalStartPopulationModel.Nests.Nest nest in la.startPopModel.nests.nests) {
+						if (ShouldExportAnimal (a.name)) {
+							// Check the animal type
+							if (a is LargeAnimalType) 
+							{
+								LargeAnimalType la = (LargeAnimalType)a;
+								foreach (AnimalStartPopulationModel.Nests.Nest nest in la.startPopModel.nests.nests) {
+									// We check if we have a coord data of the location of the nest
+									if ((coordData.coord.x == nest.x) && (coordData.coord.y == nest.y)) {
+										// Add the column
+										ed.AddColumn (a.name);
 
+										// Count the total animals in the nest
+										int males = nest.GetMalesAt (y.year);
+										int females = nest.GetFemalesAt(y.year);
+										coordData [a.name] = (males + females).ToString ();
+									}
+								}
 							}
+							// TODO: Add more animal types as they come
 						}
-						// TODO: Add more animal types as they come
 					}
 				}
 			}
-
-			// TODO: Columns - Add all plants
-
-
-			// TODO: Columns - Add all animals
 
 			// Cost
 			ed.AddColumn ("costs");

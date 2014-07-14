@@ -35,10 +35,24 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					field = bool.Parse (attribute);
 			}
 
+			public readonly IAnimalPopulationModel model;
+
+			public AnimalPopulationModelDataBase (IAnimalPopulationModel model)
+			{
+				this.model = model;
+			}
+
 			public virtual void UpdateReferences (Scene scene) { }
 			public virtual void PrepareSuccession () { }
 			public virtual void DoSuccession () { }
 			public virtual void FinalizeSuccession () { }
+		}
+
+		public AnimalType animal;
+
+		public IAnimalPopulationModel (AnimalType animal)
+		{
+			this.animal = animal;
 		}
 
 		public abstract void Load (XmlTextReader reader, Scene scene);

@@ -27,6 +27,11 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				this.gender = gender;
 			}*/
 
+			public Food (IAnimalPopulationModel model) : base (model)
+			{
+				
+			}
+
 			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
@@ -60,7 +65,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				}
 			}
 		}
-		public Food food = new Food ();
+		public Food food;
 		//public Food foodFemales = new Food ("F");
 
 		[System.Serializable]
@@ -79,7 +84,12 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			{
 				this.gender = gender;
 			}*/
-			
+
+			public Movement (IAnimalPopulationModel model) : base (model)
+			{
+				
+			}
+
 			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
@@ -106,8 +116,14 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				this.movePrefData = scene.progression.GetData (movePreferenceAreaParamName);
 			}
 		}
-		public Movement movement = new Movement ();
+		public Movement movement;
 		//public Movement movementFemales = new Movement ("F");
+
+		public AnimalPopulationLandUseModel (AnimalType animal) : base (animal)
+		{
+			this.food = new Food (this);
+			this.movement = new Movement (this);
+		}
 
 		public override void Load (XmlTextReader reader, Scene scene)
 		{
@@ -133,7 +149,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				}
 			}
 		}
-		
+
 		public override void Save (XmlTextWriter writer, Scene scene)
 		{
 			writer.WriteStartElement (XML_ELEMENT);

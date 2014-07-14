@@ -11,6 +11,17 @@ using Ecosim.EcoScript;
 
 namespace Ecosim.SceneData.Action
 {
+	public class VariablePresentData	
+	{
+		public string name;
+		public string category;
+	}
+
+	public class FormulaPresentData : VariablePresentData
+	{
+		public string formula;
+	}
+
 	/**
 	 * Actions can be a lot, it can be a measure taken in the field, like starting mowing, or it can be some research
 	 * like placing a pijlbuis or counting species
@@ -65,6 +76,8 @@ namespace Ecosim.SceneData.Action
 		private MethodInfo measureTakenMI;
 		private MethodInfo researchConductedMI;
 		private MethodInfo actionSelectedMI;
+		private MethodInfo getVariablePresentationDataMI;
+		private MethodInfo getFormulaPresentationDataMI;
 		private MethodInfo debugFnMI;
 		
 		public bool HasDebugFn {
@@ -198,6 +211,8 @@ namespace Ecosim.SceneData.Action
 			measureTakenMI = null;
 			researchConductedMI = null;
 			actionSelectedMI = null;
+			getVariablePresentationDataMI = null;
+			getFormulaPresentationDataMI = null;
 			debugFnMI = null;
 		}
 		
@@ -222,6 +237,10 @@ namespace Ecosim.SceneData.Action
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(string), typeof(string), typeof(int) }, null);
 				actionSelectedMI = ecoBase.GetType ().GetMethod ("ActionSelected",
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(UserInteraction) }, null);
+				getVariablePresentationDataMI = ecoBase.GetType ().GetMethod ("GetVariablePresentationData",
+				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type [] {}, null);
+				getFormulaPresentationDataMI = ecoBase.GetType ().GetMethod ("GetFormulaPresentationData",
+				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type [] {}, null);
 				debugFnMI = ecoBase.GetType ().GetMethod ("Debug",
 				BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(string) }, null);
 			}
@@ -460,6 +479,36 @@ namespace Ecosim.SceneData.Action
 					Log.LogException (e);
 				}
 			}
+		}
+
+		public virtual List<VariablePresentData> GetVariablePresentationsData ()
+		{
+			if (getVariablePresentationDataMI != null) {
+				try {
+					object result = getVariablePresentationDataMI.Invoke (ecoBase, null);
+					return result as List<VariablePresentData>;
+				} catch (Exception e) {
+					Log.LogException (e);
+				}
+			}
+
+			List<VariablePresentData> list = new List<VariablePresentData> ();
+			return list;
+		}
+
+		public virtual List<FormulaPresentData> GetFormulaPresentationData ()
+		{
+			if (getFormulaPresentationDataMI != null) {
+				try {
+					object result = getFormulaPresentationDataMI.Invoke (ecoBase, null);
+					return result as List<FormulaPresentData>;
+				} catch (Exception e) {
+					Log.LogException (e);
+				}
+			}
+
+			List<FormulaPresentData> list = new List<FormulaPresentData> ();
+			return list;
 		}
 		
 		public abstract void Save (XmlTextWriter writer);

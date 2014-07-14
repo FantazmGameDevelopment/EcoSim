@@ -22,7 +22,12 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 			public Types type;
 			public int absolute;
 			public float relative;
-			
+
+			public FixedNumber (IAnimalPopulationModel model) : base (model)
+			{
+
+			}
+
 			public void Load (XmlTextReader reader, Scene scene)
 			{
 				base.Load (reader, scene);
@@ -42,7 +47,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				writer.WriteEndElement ();
 			}
 		}
-		public FixedNumber fixedNumber = new FixedNumber();
+		public FixedNumber fixedNumber;
 
 		[System.Serializable]
 		public class SpecifiedNumber : AnimalPopulationModelDataBase
@@ -56,6 +61,11 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 
 				public float minDeathRate;
 				public float maxDeathRate;
+
+				public NaturalDeathRate (IAnimalPopulationModel model) : base (model)
+				{
+					
+				}
 
 				public void Load (XmlTextReader reader, Scene scene)
 				{
@@ -74,7 +84,7 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					writer.WriteEndElement ();
 				}
 			}
-			public NaturalDeathRate naturalDeathRate = new NaturalDeathRate ();
+			public NaturalDeathRate naturalDeathRate;
 
 			[System.Serializable]
 			public class Starvation : AnimalPopulationModelDataBase
@@ -82,15 +92,20 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				public string XML_ELEMENT = "starvation";
 
 				public int foodRequiredPerAnimal;
-				public float minStarveRate = 1f;
-				public float maxStarveRate = 1f;
-				
+				public float minStarveRange = 0f;
+				public float maxStarveRange = 1f;
+
+				public Starvation (IAnimalPopulationModel model) : base (model)
+				{
+					
+				}
+
 				public void Load (XmlTextReader reader, Scene scene)
 				{
 					base.Load (reader, scene);
 					this.foodRequiredPerAnimal = int.Parse (reader.GetAttribute ("foodreq"));
-					this.minStarveRate = float.Parse (reader.GetAttribute ("min"));
-					this.maxStarveRate = float.Parse (reader.GetAttribute ("max"));
+					this.minStarveRange = float.Parse (reader.GetAttribute ("min"));
+					this.maxStarveRange = float.Parse (reader.GetAttribute ("max"));
 					IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);
 				}
 				
@@ -99,12 +114,12 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 					writer.WriteStartElement (XML_ELEMENT);
 					base.Save (writer, scene);
 					writer.WriteAttributeString ("foodreq", this.foodRequiredPerAnimal.ToString());
-					writer.WriteAttributeString ("min", this.minStarveRate.ToString());
-					writer.WriteAttributeString ("max", this.maxStarveRate.ToString());
+					writer.WriteAttributeString ("min", this.minStarveRange.ToString());
+					writer.WriteAttributeString ("max", this.maxStarveRange.ToString());
 					writer.WriteEndElement ();
 				}
 			}
-			public Starvation starvation = new Starvation ();
+			public Starvation starvation;
 
 			[System.Serializable]
 			/**
@@ -132,7 +147,12 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 						
 						public float min = 0f;
 						public float max = 1f;
-						
+
+						public FixedChance (IAnimalPopulationModel model) : base (model)
+						{
+							
+						}
+
 						public void Load (XmlTextReader reader, Scene scene)
 						{
 							base.Load (reader, scene);
@@ -150,13 +170,14 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 							writer.WriteEndElement ();
 						}
 					}
-					public FixedChance fixedChance = new FixedChance ();
+					public FixedChance fixedChance;
 
 					public Data data;
 
-					public ArtificialDeathEntry (string name)
+					public ArtificialDeathEntry (string name, IAnimalPopulationModel model) : base (model)
 					{
 						this.name = name;
+						this.fixedChance = new FixedChance (model);
 					}
 					
 					public void Load (XmlTextReader reader, Scene scene)
@@ -209,6 +230,11 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 
 				public ArtificialDeathEntry[] entries = new ArtificialDeathEntry[0];
 
+				public ArtificialDeath (IAnimalPopulationModel model) : base (model)
+				{
+
+				}
+
 				public void Load (XmlTextReader reader, Scene scene)
 				{
 					base.Load (reader, scene);
@@ -253,8 +279,8 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 
 				public ArtificialDeathEntry AddEntry (string name)
 				{
-					ArtificialDeathEntry entry = new ArtificialDeathEntry (name);
-					List<ArtificialDeathEntry> entries = new List<ArtificialDeathEntry>(this.entries);
+					ArtificialDeathEntry entry = new ArtificialDeathEntry (name, this.model);
+					List<ArtificialDeathEntry> entries = new List<ArtificialDeathEntry> (this.entries);
 					entries.Add (entry);
 					this.entries = entries.ToArray ();
 					return entry;
@@ -262,12 +288,19 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 
 				public void RemoveEntry (ArtificialDeathEntry entry)
 				{
-					List<ArtificialDeathEntry> entries = new List<ArtificialDeathEntry>(this.entries);
+					List<ArtificialDeathEntry> entries = new List<ArtificialDeathEntry> (this.entries);
 					entries.Remove (entry);
 					this.entries = entries.ToArray ();
 				}
 			}
-			public ArtificialDeath artificialDeath = new ArtificialDeath ();
+			public ArtificialDeath artificialDeath;
+
+			public SpecifiedNumber (IAnimalPopulationModel model) : base (model)
+			{
+				this.artificialDeath = new ArtificialDeath (model);
+				this.naturalDeathRate = new NaturalDeathRate (model);
+				this.starvation = new Starvation (model);
+			}
 
 			public void Load (XmlTextReader reader, Scene scene)
 			{
@@ -316,7 +349,13 @@ namespace Ecosim.SceneData.AnimalPopulationModel
 				artificialDeath.UpdateReferences (scene);
 			}
 		}
-		public SpecifiedNumber specifiedNumber = new SpecifiedNumber();
+		public SpecifiedNumber specifiedNumber;
+
+		public AnimalPopulationDecreaseModel (AnimalType animal) : base (animal)
+		{
+			this.fixedNumber = new FixedNumber (this);
+			this.specifiedNumber = new SpecifiedNumber (this);
+		}
 
 		public override void Load (XmlTextReader reader, Scene scene)
 		{

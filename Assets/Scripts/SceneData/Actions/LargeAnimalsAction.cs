@@ -482,7 +482,7 @@ namespace Ecosim.SceneData.Action
 			AnimalPopulationDecreaseModel.SpecifiedNumber.Starvation starvation = animal.decreaseModel.specifiedNumber.starvation;
 
 			// Formula : (available food / req food) * starve rate
-			float starveRate = RndUtil.RndRange (ref rnd, starvation.minStarveRate, starvation.maxStarveRate);
+			/*float starveRate = RndUtil.RndRange (ref rnd, starvation.minStarveRate, starvation.maxStarveRate);
 			if (starveRate > 0f) 
 			{
 				// Get the amount of available food for the animal.
@@ -492,6 +492,22 @@ namespace Ecosim.SceneData.Action
 
 				// Check if the animal will starve
 				float starveChance = (1f - ((float)availableFood / (float)requiredFood)) * starveRate;
+				return (rnd.NextDouble () <= starveChance);
+			}*/
+
+			// Formula : (min range + ((max range - min range) * (1 - (available food / required food)))).
+			if (starvation.maxStarveRange > 0f) 
+			{
+				// Get the amount of available food for the animal.
+				int requiredFood = starvation.foodRequiredPerAnimal;
+				int availableFood = Mathf.Clamp (requiredFood, 0, nest.currentFood);
+				nest.currentFood -= availableFood;
+
+				// Check if the animal will starve
+				float foodPerc = ((float)availableFood / (float)requiredFood);
+				float min = starvation.minStarveRange;
+				float max = starvation.maxStarveRange;
+				float starveChance = min + ((max - min) * (1f - foodPerc));
 				return (rnd.NextDouble () <= starveChance);
 			}
 			return false;
