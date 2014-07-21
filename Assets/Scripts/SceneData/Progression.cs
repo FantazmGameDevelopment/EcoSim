@@ -441,7 +441,7 @@ namespace Ecosim.SceneData
 			}
 			// Add the year
 			if (!at.years.Contains (year)) {
-				at.years.Add (year);
+				at.years.Add (year + 1); // Or else the matching is wrong
 			}
 		}
 
@@ -710,6 +710,11 @@ namespace Ecosim.SceneData
 				dataDict.Add (name, newDataInfo);
 			}
 			return newData;
+		}
+
+		public Data GetTargetArea (int targetArea)
+		{
+			return GetData (Progression.TARGET_ID + targetArea.ToString());
 		}
 
 		/**

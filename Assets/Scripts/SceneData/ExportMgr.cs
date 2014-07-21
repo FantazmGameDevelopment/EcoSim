@@ -204,7 +204,7 @@ namespace Ecosim.SceneData
 			}
 
 			public readonly int year;
-			private List<CoordinateData> coords;
+			public List<CoordinateData> coords;
 
 			public YearData (int year)
 			{
@@ -245,8 +245,8 @@ namespace Ecosim.SceneData
 			}
 		}
 
-		private List<string> columns;
-		private List<YearData> years;
+		public List<string> columns;
+		public List<YearData> years;
 
 		public ExportData ()
 		{
@@ -413,8 +413,6 @@ namespace Ecosim.SceneData
 					id.GetYear (ir.year, true).AddValue (ir.name, (float)ir.DataMap.GetSum ());
 				}
 			}
-
-			UnityEngine.Debug.Log (id.ToString());
 			return id;
 		}
 
@@ -544,6 +542,7 @@ namespace Ecosim.SceneData
 			}
 
 			/** Measures (actions) **/
+			Debug.Log ("TakenActions: " + scene.progression.actionsTaken.Count);
 			foreach (Progression.ActionTaken ta in scene.progression.actionsTaken) {
 				BasicAction a = scene.actions.GetAction (ta.id);
 				if (a != null && ta.years.Count > 0) {
@@ -710,7 +709,7 @@ namespace Ecosim.SceneData
 			return true;
 		}
 
-		public void ExportData ()
+		public void ExportCurrentData (System.Action onComplete)
 		{
 			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
 			sfd.Filter = "csv files (*.csv)|*.csv";
@@ -718,24 +717,23 @@ namespace Ecosim.SceneData
 			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
 			{
 				// Get the export data
-				GameControl.self.StartCoroutine (COExportData(sfd.FileName));
+				GameControl.self.StartCoroutine (COExportCurrentData(sfd.FileName, onComplete));
 			}
 		}
 
-		private IEnumerator<object> COExportData (string filePath)
+		public void GetNewExportData ()
 		{
-			// Enable spinner and hide interface
-			SimpleSpinner.ActivateSpinner ();
-			GameControl.self.isProcessing = true;
-			GameMenu.show = false;
+			currentExportData = null;
+			GameControl.self.StartCoroutine (COGetExportData());
+		}
 
-			yield return 0;
-			
+		private IEnumerator<object> COGetExportData ()
+		{
 			#pragma warning disable 162
 			isWorking = true;
 			// Get the export data
 			ThreadPool.QueueUserWorkItem (RetrieveExportData);
-
+			
 			while (isWorking) {
 				yield return 0;
 			}
@@ -743,6 +741,16 @@ namespace Ecosim.SceneData
 
 			// Sort the years
 			currentExportData.SortYears ();
+		}
+
+		private IEnumerator<object> COExportCurrentData (string filePath, System.Action onComplete)
+		{
+			// Enable spinner and hide interface
+			SimpleSpinner.ActivateSpinner ();
+			GameControl.self.isProcessing = true;
+			GameMenu.show = false;
+
+			yield return 0;
 
 			// Disable spinner and show interface
 			SimpleSpinner.DeactivateSpinner ();
@@ -761,6 +769,9 @@ namespace Ecosim.SceneData
 			fs.Close ();
 			fs.Dispose ();
 			fs = null;
+
+			if (onComplete != null)
+				onComplete ();
 		}
 
 		public void AddTargetArea (int area)

@@ -56,8 +56,8 @@ namespace Ecosim.SceneData.Action
 				if (scene.progression.HasData (affectedAreaName)) {
 					data = scene.progression.GetData (affectedAreaName);
 				} else {
-					data = new BitMap1 (scene);
-					scene.progression.AddData (affectedAreaName, AffectedArea);
+					data = new BitMap8 (scene);
+					scene.progression.AddData (affectedAreaName, data);
 				}
 				return data;
 			}

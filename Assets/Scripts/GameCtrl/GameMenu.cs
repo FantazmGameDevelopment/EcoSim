@@ -141,13 +141,13 @@ public class GameMenu : MonoBehaviour
 		}
 
 		// Export button
-		if (scene != null && scene.exporter.exportEnabled) {
+		/*if (scene != null && scene.exporter.exportEnabled) {
 			if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 			    "Export data...", styleDarkNormal, styleDarkOver)) 
 			{
-				scene.exporter.ExportData ();
+				scene.exporter.ExportCurrentData ();
 			}
-		}
+		}*/
 	}
 	
 	private string scenePath;

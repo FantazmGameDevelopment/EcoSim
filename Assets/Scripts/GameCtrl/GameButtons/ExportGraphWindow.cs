@@ -26,7 +26,9 @@ namespace Ecosim.GameCtrl
 		public const int legendHeight = 40;
 		public const int legendLineWidth = 35;
 		public const int yAxisSteps = 6;
-		public const float pointLinesWidth = 3f;
+		public const float pointLinesWidth = 2f;
+		public const float pointIconWidth = 10f;
+		public const float pointIconHeight = 10f;
 		public const float gridLinesWidth = 1.5f;
 		public const float gridLineIndent = 5f;
 		public Color gridLinesColor = new Color (0.85f, 0.85f, 0.85f, 1f);
@@ -295,8 +297,8 @@ namespace Ecosim.GameCtrl
 
 						// Get the rect
 						Rect pr = xr;
-						pr.width = pointIcons [iconIndex].width;
-						pr.height = pointIcons [iconIndex].height;
+						pr.width = pointIconWidth;// pointIcons [iconIndex].width;
+						pr.height = pointIconHeight;// pointIcons [iconIndex].height;
 						pr.x += valueLabelWidth * 0.5f;
 						pr.x -= pr.width * 0.5f;
 
@@ -394,8 +396,8 @@ namespace Ecosim.GameCtrl
 				Drawing.DrawLine (start, end, GUI.color, pointLinesWidth);
 
 				// Show legend icon
-				lr.width = pointIcons [iconIndex].width;
-				lr.height = pointIcons [iconIndex].height;
+				lr.width = pointIconWidth;//pointIcons [iconIndex].width;
+				lr.height = pointIconHeight;//pointIcons [iconIndex].height;
 				lr.x += legendLineWidth * 0.5f;
 				lr.x -= (lr.width * 0.5f);
 
