@@ -27,6 +27,8 @@ namespace Ecosim.SceneData
 		
 		public void AddValue (string dataName, object value)
 		{
+			Debug.Log ("AddValue : " + dataName + " = " + value);
+
 			if (values.ContainsKey (dataName)) 
 				values [dataName] = value.ToString ();
 			else 

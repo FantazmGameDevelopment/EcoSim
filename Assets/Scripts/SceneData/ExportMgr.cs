@@ -359,6 +359,34 @@ namespace Ecosim.SceneData
 		}
 	}
 
+	public class ExportSettings
+	{
+		public Data area;
+		public List<string> years;
+		public List<string> dataNames;
+
+		public ExportData exportData;
+
+		public ExportSettings (Data area, List<string> years, List<string> dataNames)
+		{
+			this.area = area;
+			this.years = years;
+			this.dataNames = dataNames;
+		}
+	}
+
+	public class YearExportSettings
+	{
+		public ExportSettings settings;
+		public int year;
+
+		public YearExportSettings (ExportSettings settings, int year)
+		{
+			this.settings = settings;
+			this.year = year;
+		}
+	}
+
 	public class ExportMgr
 	{
 		public enum SelectionTypes
@@ -389,7 +417,7 @@ namespace Ecosim.SceneData
 
 		public ExportData currentExportData;
 
-		private volatile bool isWorking = false;
+		private volatile int activeThreads = 0;
 
 		public ExportMgr (Scene scene)
 		{
@@ -416,11 +444,11 @@ namespace Ecosim.SceneData
 			return id;
 		}
 
-		private void RetrieveExportData (System.Object args)
+		private IEnumerator<object> RetrieveExportData (ExportSettings settings)
 		{
 			// We'll use an abbreviation for less code
 			ExportData ed = new ExportData ();
-			currentExportData = ed;
+			settings.exportData = ed;
 
 			// Temp vars
 			ExportData.YearData year;
@@ -449,59 +477,40 @@ namespace Ecosim.SceneData
 				ed.AddColumn ("succession");
 			}
 
-			/** Selection type **/
-			switch (this.selectionType) 
-			{
-				case SelectionTypes.All : 
-				{
-					// If we select all, then we should add columns for all data names
-					foreach (string p in scene.progression.GetAllDataNames (false)) {
-						ed.AddColumn (p);
-					}
-				}
-				break;
+			// Add all data names
+			foreach (string s in settings.dataNames) {
+				ed.AddColumn (s);
+			}
 
-				case SelectionTypes.Selection : 
-				{
-					// Check if we must add the parameter
-					foreach (string p in scene.progression.GetAllDataNames (false)) {
-						if (ShouldExportParameter (p)) {	
-							ed.AddColumn (p);
-						}
+			// Loop through all tiles of the managed area and add them to all tiles of every (past) year
+			for (int i = 0; i < (scene.progression.year - scene.progression.startYear); i++) {
+				// New/get year
+				int y = scene.progression.startYear + i;
+				if (settings.years.Contains (y.ToString ())) {
+					year = ed.NewYear (y);
+					foreach (ValueCoordinate vc in settings.area.EnumerateNotZero ()) {
+						// New/get coord
+						coordData = year.NewCoord (vc);
 					}
-					break;
 				}
 			}
 
-			/** Data type **/
-			switch (this.dataType)
-			{
-				case DataTypes.Always :
-				{
-					// Loop through all tiles of the managed area and add them to all tiles of every (past) year
-					for (int i = 0; i < (scene.progression.year - scene.progression.startYear); i++) {
-						// New/get year
-						year = ed.NewYear (scene.progression.startYear + i);
-						foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
-							// New/get coord
-							coordData = year.NewCoord (vc);
-						}
-					}
-				}
-				break;
-
-				case DataTypes.OnlyWhenSurveyed : break;
-			}
+			#pragma warning disable 162
+			// Setup threads
+			activeThreads = 0;
 
 			/** Inventarisations **/
 			foreach (Progression.InventarisationResult ir in scene.progression.inventarisations) {
-				// Setup columns
-				ed.AddColumn (ir.name);
-				
+				// Check for name
+				if (!settings.dataNames.Contains (ir.name)) continue;
+
 				// Setup years and coords
-				year = ed.NewYear (ir.year);
+				year = ed [ir.year];
+				if (year == null) continue;
+
 				foreach (ValueCoordinate vc in ir.AreaMap.EnumerateNotZero ()) {
-					coordData = year.NewCoord ((Coordinate)vc);
+					coordData = year[(Coordinate)vc];
+					if (coordData == null) continue;
 					coordData[ir.name] = ir.DataMap.Get (vc).ToString();
 
 					// Costs
@@ -519,15 +528,16 @@ namespace Ecosim.SceneData
 			foreach (ResearchPoint r in scene.progression.researchPoints) {
 				foreach (ResearchPoint.Measurement rm in r.measurements) {
 					// Setup years and coords
-					year = ed.NewYear (rm.year);
-					coordData = year.NewCoord (new Coordinate (r.x, r.y));
-					
+					year = ed[rm.year];
+					if (year == null) continue;
+					coordData = year[new Coordinate (r.x, r.y)];
+					if (coordData == null) continue;
+
 					// Setup columns and values
 					foreach (KeyValuePair<string, string> p in rm.data.values) {
-						if (ShouldExportParameter (p.Key)) {
-							ed.AddColumn (p.Key);
-							coordData[p.Key] = p.Value;
-						}
+						// Check for name
+						if (!settings.dataNames.Contains (p.Key)) continue;
+						coordData[p.Key] = p.Value;
 					}
 
 					// Costs
@@ -542,23 +552,25 @@ namespace Ecosim.SceneData
 			}
 
 			/** Measures (actions) **/
-			Debug.Log ("TakenActions: " + scene.progression.actionsTaken.Count);
 			foreach (Progression.ActionTaken ta in scene.progression.actionsTaken) {
 				BasicAction a = scene.actions.GetAction (ta.id);
 				if (a != null && ta.years.Count > 0) {
 					// Setup column
 					string key = a.GetDescription ();
-					ed.AddColumn (key);
-					
+					// Check for name
+					if (!settings.dataNames.Contains (key)) continue;
+
 					// Loop through all years
 					foreach (int y in ta.years) {
 						// Get the affected area
 						Data area = scene.progression.GetData (a.affectedAreaName, y);
 						if (area != null) {
 							// Setup years and coords
-							year = ed.NewYear (y);
+							year = ed[y];
+							if (year == null) continue;
 							foreach (ValueCoordinate vc in area.EnumerateNotZero ()) {
-								coordData = year.NewCoord (vc);
+								coordData = year[vc];
+								if (coordData == null) continue;
 								coordData[key] = "1";
 
 								// Update costs
@@ -572,68 +584,100 @@ namespace Ecosim.SceneData
 			}
 
 			// Loop through all coordinates
+			activeThreads += ed.years.Count;
 			foreach (ExportData.YearData y in ed.EnumerateYears ()) {
-				year = y;
-				foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) {
-					coordData = cd;
-					/** Target areas **/
-					foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
-						// Setup target areas
-						for (int a = 1; a < scene.progression.targetAreas + 1; a++) {
-							Data targetArea = scene.progression.GetData (Progression.TARGET_ID + a);
-							if (ed.HasColumn ("targetarea " + a)) {
-								cd ["targetarea " + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
-							}
+				// Start thread(s)
+				ThreadPool.QueueUserWorkItem (ProcessYearData, new YearExportSettings (settings, y.year));
+			}
+
+			// Cost
+			ed.AddColumn ("costs");
+
+			while (activeThreads > 0) {
+				yield return 0;
+			}
+
+			#pragma warning restore 162
+
+			// Set current export data
+			currentExportData = ed;
+		}
+
+		private void ProcessYearData (System.Object args)
+		{
+			// Temp vars
+			YearExportSettings ySettings = (YearExportSettings)args;
+			ExportSettings settings = ySettings.settings;
+			ExportData ed = settings.exportData;
+			ExportData.YearData year;
+			ExportData.YearData.CoordinateData coordData;
+
+			ExportData.YearData y = ed [ySettings.year];
+			foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) {
+				coordData = cd;
+				/** Target areas **/
+				foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
+					// Setup target areas
+					for (int a = 1; a < scene.progression.targetAreas + 1; a++) {
+						Data targetArea = scene.progression.GetData (Progression.TARGET_ID + a);
+						if (ed.HasColumn ("targetarea " + a)) {
+							cd ["targetarea " + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
 						}
 					}
-
-					/** Vegetation types **/
-					if (exportVegetationTypes || exportSuccessionTypes) {
-						// Get the tile type
-						TileType tile = scene.progression.vegetation.GetTileType (cd.coord.x, cd.coord.y);
-
-						// Set the data
-						if (exportVegetationTypes) {
-							// Set vegetation and succession type
-							cd["vegetation"] = tile.vegetationType.name;
-						}
-						if (exportSuccessionTypes) {
-							cd["succession"] = tile.vegetationType.successionType.name;
-						}
+				}
+				
+				/** Vegetation types **/
+				if (exportVegetationTypes || exportSuccessionTypes) {
+					// Get the tile type
+					TileType tile = scene.progression.vegetation.GetTileType (cd.coord.x, cd.coord.y);
+					
+					// Set the data
+					if (exportVegetationTypes) {
+						// Set vegetation and succession type
+						cd["vegetation"] = tile.vegetationType.name;
 					}
-
-					/** Parameters **/
-					foreach (string p in scene.progression.GetAllDataNames (false)) {
-						// Check if we should set parameter
-						if (string.IsNullOrEmpty (cd [p]) && ShouldExportParameter (p)) {
-
-							// Get the data, if it's null try the default (init) value
-							Data data = scene.progression.GetData (p, y.year) ?? scene.progression.GetData (p);
-
-							// Exception: calculated data, we need to manually set the year
-							bool isCalcData = (data is CalculatedData);
-							if (isCalcData) {
-								((CalculatedData)data).year = y.year;
-							}
-
-							// Set the value
-							if (data != null) {
-								cd [p] = data.Get (cd.coord).ToString ();
-							}
-
-							// Reset the calc data to the current year to avoid messing up the game logic
-							if (isCalcData) {
-								((CalculatedData)data).year = -1;
+					if (exportSuccessionTypes) {
+						cd["succession"] = tile.vegetationType.successionType.name;
+					}
+				}
+				
+				/** Data Type **/
+				switch (this.dataType)
+				{
+					// If we ALWAYS show the data, get all parameters and show them
+					// also we get the data from the plants and animals and show it
+					case DataTypes.Always :
+					{
+						/** Parameters **/
+						foreach (string p in scene.progression.GetAllDataNames (false)) {
+							// Check if we should set parameter
+							if (string.IsNullOrEmpty (cd [p]) && ShouldExportParameter (p)) {
+								
+								// Get the data, if it's null try the default (init) value
+								Data data = scene.progression.GetData (p, y.year) ?? scene.progression.GetData (p);
+								
+								// Exception: calculated data, we need to manually set the year
+								bool isCalcData = (data is CalculatedData);
+								if (isCalcData) {
+									((CalculatedData)data).year = y.year;
+								}
+								
+								// Set the value
+								if (data != null) {
+									cd [p] = data.Get (cd.coord).ToString ();
+								}
+								
+								// Reset the calc data to the current year to avoid messing up the game logic
+								if (isCalcData) {
+									((CalculatedData)data).year = -1;
+								}
 							}
 						}
-					}
 
-					/** Plants **/
-					foreach (PlantType p in scene.plantTypes) {
-						// Check if we should export the plant
-						if (ShouldExportPlant (p.name)) {
-							// Add the column
-							ed.AddColumn (p.name);
+						/** Plants **/
+						foreach (PlantType p in scene.plantTypes) {
+							// Check for name
+							if (!settings.dataNames.Contains (p.name)) continue;
 							
 							// Get the data
 							Data data = scene.progression.GetData (p.dataName, y.year);
@@ -641,12 +685,12 @@ namespace Ecosim.SceneData
 								cd [p.name] = data.Get (cd.coord).ToString ();
 							}
 						}
-					}
-
-					/** Animals **/
-					foreach (AnimalType a in scene.animalTypes) {
-						// Large animal
-						if (ShouldExportAnimal (a.name)) {
+						
+						/** Animals **/
+						foreach (AnimalType a in scene.animalTypes) {
+							// Check for name
+							if (!settings.dataNames.Contains (a.name)) continue;
+							
 							// Check the animal type
 							if (a is LargeAnimalType) 
 							{
@@ -654,9 +698,6 @@ namespace Ecosim.SceneData
 								foreach (AnimalStartPopulationModel.Nests.Nest nest in la.startPopModel.nests.nests) {
 									// We check if we have a coord data of the location of the nest
 									if ((coordData.coord.x == nest.x) && (coordData.coord.y == nest.y)) {
-										// Add the column
-										ed.AddColumn (a.name);
-
 										// Count the total animals in the nest
 										int males = nest.GetMalesAt (y.year);
 										int females = nest.GetFemalesAt(y.year);
@@ -667,17 +708,32 @@ namespace Ecosim.SceneData
 							// TODO: Add more animal types as they come
 						}
 					}
+					break;
+					
+					case DataTypes.OnlyWhenSurveyed : break;
 				}
 			}
 
-			// Cost
-			ed.AddColumn ("costs");
-
-			// Thread finished
-			isWorking = false;
+			ThreadFinished ();
 		}
 
-		private bool ShouldExportParameter (string param)
+		private void Thread (System.Object args)
+		{
+			// Temp vars
+			ExportSettings settings = (ExportSettings)args;
+			ExportData ed = settings.exportData;
+			ExportData.YearData year;
+			ExportData.YearData.CoordinateData coordData;
+
+			ThreadFinished ();
+		}
+
+		private void ThreadFinished ()
+		{
+			activeThreads--;
+		}
+
+		public bool ShouldExportParameter (string param)
 		{
 			if (this.selectionType == SelectionTypes.Selection) {
 				return this.parameters.Contains (param);
@@ -685,7 +741,7 @@ namespace Ecosim.SceneData
 			return true;
 		}
 
-		private bool ShouldExportAnimal (string animal)
+		public bool ShouldExportAnimal (string animal)
 		{
 			if (this.selectionType == SelectionTypes.Selection) {
 				return this.animals.Contains (animal);
@@ -693,7 +749,7 @@ namespace Ecosim.SceneData
 			return true;
 		}
 
-		private bool ShouldExportTargetArea (int area)
+		public bool ShouldExportTargetArea (int area)
 		{
 			if (this.selectionType == SelectionTypes.Selection) {
 				return this.targetAreas.Contains (area);
@@ -701,7 +757,7 @@ namespace Ecosim.SceneData
 			return true;
 		}
 
-		private bool ShouldExportPlant (string plant)
+		public bool ShouldExportPlant (string plant)
 		{
 			if (this.selectionType == SelectionTypes.Selection) {
 				return this.plants.Contains (plant);
@@ -709,7 +765,7 @@ namespace Ecosim.SceneData
 			return true;
 		}
 
-		public void ExportCurrentData (System.Action onComplete)
+		public void ExportData (ExportSettings settings, System.Action onComplete)
 		{
 			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
 			sfd.Filter = "csv files (*.csv)|*.csv";
@@ -717,33 +773,11 @@ namespace Ecosim.SceneData
 			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
 			{
 				// Get the export data
-				GameControl.self.StartCoroutine (COExportCurrentData(sfd.FileName, onComplete));
+				GameControl.self.StartCoroutine (COExportData (settings, sfd.FileName, onComplete));
 			}
 		}
 
-		public void GetNewExportData ()
-		{
-			currentExportData = null;
-			GameControl.self.StartCoroutine (COGetExportData());
-		}
-
-		private IEnumerator<object> COGetExportData ()
-		{
-			#pragma warning disable 162
-			isWorking = true;
-			// Get the export data
-			ThreadPool.QueueUserWorkItem (RetrieveExportData);
-			
-			while (isWorking) {
-				yield return 0;
-			}
-			#pragma warning restore 162
-
-			// Sort the years
-			currentExportData.SortYears ();
-		}
-
-		private IEnumerator<object> COExportCurrentData (string filePath, System.Action onComplete)
+		private IEnumerator<object> COExportData (ExportSettings settings, string filePath, System.Action onComplete)
 		{
 			// Enable spinner and hide interface
 			SimpleSpinner.ActivateSpinner ();
@@ -751,6 +785,10 @@ namespace Ecosim.SceneData
 			GameMenu.show = false;
 
 			yield return 0;
+			yield return GameControl.self.StartCoroutine (RetrieveExportData (settings));
+			
+			// Sort the years
+			currentExportData.SortYears ();
 
 			// Disable spinner and show interface
 			SimpleSpinner.DeactivateSpinner ();

@@ -12,10 +12,13 @@ namespace Ecosim.GameCtrl.GameButtons
 	{
 		private class ExportDataWindow : GameWindow
 		{
+			private readonly Scene scene;
 			private readonly Export parent;
 			private string[] selectionTypes;
 			private int currentSelectionType;
 			private Dictionary<string, bool> toggleStates = new Dictionary<string, bool>();
+
+			private bool isExporting;
 
 			private Vector2 scrollPos;
 			private EditData edit;
@@ -26,10 +29,19 @@ namespace Ecosim.GameCtrl.GameButtons
 			private Material areaMat;
 			private Material selectedAreaMat;
 
+			private List<string> years = new List<string> ();
+			private List<string> parameters = new List<string>();
+			private List<string> inventarisations = new List<string>();
+			private List<string> animals = new List<string>();
+			private List<string> plants = new List<string>();
+			private List<string> measures = new List<string>();
+
+			private Dictionary<string, List<string>> lists = new Dictionary<string, List<string>> ();
+
 			public ExportDataWindow (Export parent) : base (-1, -1, 512, parent.iconTex)
 			{
 				this.parent = parent;
-				ExportMgr.self.GetNewExportData ();
+				this.scene = GameControl.self.scene;
 
 				// Setup selection types
 				List<string> selectionTypes = new List<string> ();
@@ -46,7 +58,64 @@ namespace Ecosim.GameCtrl.GameButtons
 
 				// Setup edit data
 				customSelectionData = new BitMap1 (GameControl.self.scene);
-				SetupEditData (GameControl.self.scene.progression.managedArea, false);
+				SetupEditData ();
+
+				// Setup years
+				for (int i = scene.progression.startYear; i < scene.progression.year; i++) {
+					years.Add (i.ToString ());
+				}
+
+				// Setup data names (parameters)
+				foreach (string p in scene.progression.GetAllDataNames (false)) {
+					if (ExportMgr.self.ShouldExportParameter (p)) {	
+						if (parameters.Contains (p)) continue;
+						parameters.Add (p);
+					}
+				}
+
+				// If we only show data when surveyed, then animals and plants will NEVER
+				// show up, because the data is only retrieved when surveying. So we can't choose
+				// animals and plants...
+				if (ExportMgr.self.dataType == ExportMgr.DataTypes.Always)
+				{
+					// Animals
+					foreach (AnimalType a in scene.animalTypes) {
+						if (ExportMgr.self.ShouldExportAnimal (a.name)) {
+							animals.Add (a.name);
+						}
+					}
+
+					// Plants
+					foreach (PlantType p in scene.plantTypes) {
+						if (ExportMgr.self.ShouldExportPlant (p.name)) {
+							plants.Add (p.name);
+						}
+					}
+				}
+
+				// Inventarisations
+				foreach (Progression.InventarisationResult ir in scene.progression.inventarisations) {
+					if (inventarisations.Contains (ir.name)) continue;
+					inventarisations.Add (ir.name);
+				}
+
+				// Measures
+				foreach (Progression.ActionTaken ta in scene.progression.actionsTaken) {
+					BasicAction a = scene.actions.GetAction (ta.id);
+					if (a != null) {
+						string key = a.GetDescription ();
+						if (measures.Contains (key)) continue;
+						measures.Add (key);
+					}
+				}
+
+				// Setup lists dict
+				lists.Add ("Years", years);
+				lists.Add ("Animals", animals);
+				lists.Add ("Plants", plants);
+				lists.Add ("Parameters", parameters);
+				lists.Add ("Inventarisations", inventarisations);
+				lists.Add ("Measures", measures);
 			}
 			
 			/**
@@ -54,18 +123,59 @@ namespace Ecosim.GameCtrl.GameButtons
 			 */
 			public override void Render ()
 			{
-				SimpleGUI.Label (new Rect (xOffset + 65, yOffset, this.width, 32), "Export data", title);
+				if (isExporting) return;
 
-				// Check if we have export data
-				if (ExportMgr.self.currentExportData == null) 
+				Rect r = new Rect (xOffset + 65, yOffset, this.width - 101, 32);
+				SimpleGUI.Label (r, "Export data", title);
+
+				// Save etc
+				r.x += r.width + 1;
+				r.width = 100;
+				if (SimpleGUI.Button (r, "Save...", entry, entrySelected)) 
 				{
-					SimpleGUI.Label (new Rect (xOffset, yOffset + 33, this.width + 65, 32), "Loading please wait...", parent.textBgStyle);
-					base.Render ();
-					return;
+					isExporting = true;
+					
+					// Years
+					List<string> years = new List<string> ();
+					foreach (string y in this.years) {
+						if (GetToggleState (y)) {
+							years.Add (y);
+						}
+					}
+					
+					// Datanames
+					List<string> dataNames = new List<string> ();
+					foreach (string s in this.parameters) {
+						if (GetToggleState (s)) {
+							dataNames.Add (s);
+						}
+					}
+					
+					// Delete edit data
+					if (edit != null) {
+						edit.ClearData ();
+						edit.ClearSelection ();
+						edit.Delete ();
+					}
+					
+					// Do export and save
+					ExportSettings settings = new ExportSettings (GetAreaSelection (), years, dataNames);
+					ExportMgr.self.ExportData (settings, delegate { 
+						isExporting = false; 
+						SetupEditData ();
+					});
 				}
 
+				// Check if we have export data
+				/*if (ExportMgr.self.currentExportData == null) 
+				{
+					SimpleGUI.Label (new Rect (xOffset, yOffset + 33, this.width + 65, 32), "Loading please wait...", header);
+					base.Render ();
+					return;
+				}*/
+
 				float width = this.width + 65;
-				GUILayout.BeginArea (new Rect (xOffset, yOffset + 33, width, 640f));
+				GUILayout.BeginArea (new Rect (xOffset, yOffset + 33, width, Mathf.Min (600f, Screen.height - (yOffset + 33))));
 				scrollPos = GUILayout.BeginScrollView (scrollPos);
 				{
 					// Selection
@@ -87,19 +197,7 @@ namespace Ecosim.GameCtrl.GameButtons
 
 								// Check for selection
 								if (prevCurrSelectionType != currentSelectionType) {
-									// Get the data
-									if (currentSelectionType == 0) 
-									{
-										SetupEditData (GameControl.self.scene.progression.managedArea, false);
-									} 
-									else if (currentSelectionType == selectionTypes.Length - 1) 
-									{
-										SetupEditData (customSelectionData, true);
-									} 
-									else 
-									{
-										SetupEditData (GameControl.self.scene.progression.GetTargetArea (currentSelectionType), false);
-									}
+									SetupEditData ();
 								}
 							}
 							GUILayout.EndHorizontal ();
@@ -107,128 +205,75 @@ namespace Ecosim.GameCtrl.GameButtons
 						}
 					}
 
-					GUILayout.Space (1);
-					if (RenderToggleButton ("Years"))
+					// Show all lists
+					foreach (KeyValuePair <string, List<string>> pair in lists) 
 					{
-						foreach (ExportData.YearData y in ExportMgr.self.currentExportData.years)
+						if (pair.Value.Count > 0) 
 						{
 							GUILayout.Space (1);
-							RenderEntryToggleButton (y.year.ToString ());
-						}
-					}
-
-					GUILayout.Space (1);
-					if (RenderToggleButton ("Data"))
-					{
-						foreach (string s in ExportMgr.self.currentExportData.EnumerateColumns())
-						{
-							if (s != "year" && s != "x" && s != "y" && s != "costs")
+							bool toggled = false;
+							GUILayout.BeginHorizontal ();
 							{
+								// Toggle
+								toggled = RenderToggleButton (pair.Key);
+
+								// Select all
 								GUILayout.Space (1);
-								RenderEntryToggleButton (s);
+								if (GUILayout.Button ("Select all", entry, GUILayout.Width (100f))) {
+									foreach (string s in pair.Value) {
+										GetToggleState (s);
+										toggleStates [s] = true;
+									}
+								}
+
+								// Deselect all
+								GUILayout.Space (1);
+								if (GUILayout.Button ("Deselect all", entry, GUILayout.Width (100f))) {
+									foreach (string s in pair.Value) {
+										GetToggleState (s);
+										toggleStates [s] = false;
+									}
+								}
+							}
+							GUILayout.EndHorizontal ();
+
+							if (toggled) {
+								foreach (string s in pair.Value) {
+									GUILayout.Space (1);
+									RenderEntryToggleButton (s);
+								}
 							}
 						}
 					}
-					GUILayout.Space (1);
-
-					// Save etc
-					GUILayout.BeginHorizontal ();
-					{
-						GUILayout.Label ("", header, GUILayout.MaxWidth (1500f));
-						if (GUILayout.Button ("Save...", entry, GUILayout.Width (100f))) 
-						{
-							// Remove columns so that they aren't exported
-							List<string> savedColumns = new List<string> (ExportMgr.self.currentExportData.columns);
-							for (int i = ExportMgr.self.currentExportData.columns.Count - 1; i >= 0; i--) {
-								string c = ExportMgr.self.currentExportData.columns [i];
-								if (c != "year" && c != "x" && c != "y" && c != "costs") {
-									if (!GetToggleState (c)) {
-										ExportMgr.self.currentExportData.columns.Remove (c);
-									}
-								}
-							}
-
-							// Saved years and coords
-							Dictionary<ExportData.YearData, List<ExportData.YearData.CoordinateData>> savedYears = new Dictionary<ExportData.YearData, List<ExportData.YearData.CoordinateData>> ();
-							foreach (ExportData.YearData y in ExportMgr.self.currentExportData.years) {
-								List<ExportData.YearData.CoordinateData> coords = new List<ExportData.YearData.CoordinateData> ();
-								savedYears.Add (y, coords);
-								foreach (ExportData.YearData.CoordinateData c in y.coords) {
-									coords.Add (c);
-								}
-							}
-
-							// Remove years
-							for (int i = ExportMgr.self.currentExportData.years.Count - 1; i >= 0; i--) {
-								ExportData.YearData y = ExportMgr.self.currentExportData.years [i];
-								string ys = y.year.ToString ();
-								if (!GetToggleState (ys)) {
-									ExportMgr.self.currentExportData.years.Remove (y);
-								}
-							}
-
-							// Remove coordinates (if curr selection type = 0, then it's ALL)
-							if (currentSelectionType > 0) {
-								// Check all coords of all years
-								foreach (ExportData.YearData y in ExportMgr.self.currentExportData.years) {
-									for (int i = y.coords.Count - 1; i >= 0; i--) {
-										// Get coord
-										ExportData.YearData.CoordinateData coord = y.coords [i];
-
-										/** Check the selection type **/
-
-										// All (managed)
-										if (currentSelectionType == 0) 
-										{
-											if (GameControl.self.scene.progression.managedArea.Get (coord.coord) <= 0) {
-												// Remove coord
-												y.coords.Remove (coord);
-											}
-										}
-										// Custom...
-										else if (currentSelectionType == selectionTypes.Length - 1) 
-										{
-											if (customSelectionData == null || customSelectionData.Get (coord.coord) <= 0) {
-												// Remove coord
-												y.coords.Remove (coord);
-											}
-										} 
-										// Target areas
-										else 
-										{
-											int targetArea = currentSelectionType;
-											Data area = GameControl.self.scene.progression.GetTargetArea (targetArea);
-											if (area.Get (coord.coord) <= 0) {
-												// Remove coord
-												y.coords.Remove (coord);
-											}
-										}
-									}
-								}
-							}
-
-							// Export data
-							ExportMgr.self.ExportCurrentData (delegate 
-							{
-								// Reset
-								ExportMgr.self.currentExportData.columns = savedColumns;
-								ExportMgr.self.currentExportData.years = new List<ExportData.YearData> ();
-								foreach (KeyValuePair<ExportData.YearData, List<ExportData.YearData.CoordinateData>> pair in savedYears) {
-									ExportMgr.self.currentExportData.years.Add (pair.Key);
-									pair.Key.coords = new List<ExportData.YearData.CoordinateData> ();
-									foreach (ExportData.YearData.CoordinateData c in pair.Value) {
-										pair.Key.coords.Add (c);
-									}
-								}
-							});
-						}
-					}
-					GUILayout.EndHorizontal ();
 				}
 				GUILayout.EndScrollView ();
+
 				GUILayout.EndArea ();
 
 				base.Render ();
+			}
+
+			private Data GetAreaSelection ()
+			{
+				// Check the selection type //
+				
+				// All (managed)
+				if (currentSelectionType == 0)
+				{
+					return scene.progression.managedArea;
+				}
+				// Custom...
+				else if (currentSelectionType == selectionTypes.Length - 1) 
+				{
+					return customSelectionData;
+				} 
+				// Target areas
+				else 
+				{
+					int targetArea = currentSelectionType;
+					return scene.progression.GetTargetArea (targetArea);
+				}
+				return null;
 			}
 
 			public bool RenderEntryToggleButton (string name)
@@ -257,7 +302,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			{
 				bool toggled = GetToggleState (name, true);
 
-				if (GUILayout.Button ("Toggle " + name, entry, GUILayout.MaxWidth (1500f))) {
+				if (GUILayout.Button ("" + name, entry, GUILayout.MaxWidth (1500f))) {
 					toggled = !toggled;
 					toggleStates[name] = toggled;
 				}
@@ -287,8 +332,28 @@ namespace Ecosim.GameCtrl.GameButtons
 				parent.ClosedWindow ();
 			}
 
-			protected void SetupEditData (Data data, bool canEdit)
+			protected void SetupEditData ()
 			{
+				Data data;
+				bool canEdit;
+
+				// Set the data and canEdit bool
+				if (currentSelectionType == 0) 
+				{
+					data = GameControl.self.scene.progression.managedArea;
+					canEdit = false;
+				} 
+				else if (currentSelectionType == selectionTypes.Length - 1) 
+				{
+					data = customSelectionData;
+					canEdit = true;
+				} 
+				else 
+				{
+					data = GameControl.self.scene.progression.GetTargetArea (currentSelectionType);
+					canEdit = false;
+				}
+
 				// Check for custom data
 				customDataActive = (data == customSelectionData);
 
@@ -363,6 +428,11 @@ namespace Ecosim.GameCtrl.GameButtons
 
 		}
 
+		public override void UpdateState (GameButton button)
+		{
+			button.isVisible = ExportMgr.self.exportEnabled;
+		}
+
 		public override void OnClick ()
 		{
 			if (window != null) {
@@ -371,12 +441,6 @@ namespace Ecosim.GameCtrl.GameButtons
 
 			window = new ExportDataWindow (this);
 			base.OnClick ();
-		}
-		
-		public override void UpdateState (GameButton button)
-		{
-			button.isVisible = CameraControl.IsNear;
-			button.alwaysRender = false;
 		}	
 
 		public void ClosedWindow () 

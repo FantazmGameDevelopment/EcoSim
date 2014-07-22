@@ -251,7 +251,7 @@ namespace Ecosim.SceneData.Action
 				edit.CopyData (selectedArea);
 
 				// Save the selected area in progression
-				scene.progression.AddData (invAreaName, selectedArea);
+				//scene.progression.AddData (invAreaName, selectedArea);
 
 				// Remember the last taken researche values
 				int selectedTilesCount = 0;

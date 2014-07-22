@@ -195,118 +195,125 @@ namespace Ecosim.SceneEditor
 					}
 					GUILayout.EndVertical ();
 
-					GUILayout.BeginVertical (ctrl.skin.box);
+					// Exception time! When we only show data when OnlyWhenSurveyed
+					// then the data of animals and plants will NEVER show up,
+					// so we won't have to make a selection for them. The data only shows up
+					// and will only be available when using a survey/inventarisation.
+					if (mgr.dataType == ExportMgr.DataTypes.Always)
 					{
-						GUILayout.BeginHorizontal ();
+						GUILayout.BeginVertical (ctrl.skin.box);
 						{
-							EcoGUI.Foldout ("Animals", ref animalsOpened);
-							GUILayout.FlexibleSpace ();
-
-							if (scene.animalTypes.Length > 0 && GUILayout.Button ("+", GUILayout.Width (20f))) 
+							GUILayout.BeginHorizontal ();
 							{
-								GUILayout.Space (3f);
-								
-								List<string> names = new List<string> ();
-								foreach (AnimalType t in scene.animalTypes) {
-									names.Add (t.name);
-								}
+								EcoGUI.Foldout ("Animals", ref animalsOpened);
+								GUILayout.FlexibleSpace ();
 
-								foreach (string animal in mgr.animals) {
-									names.Remove (animal);
-								}
-								
-								if (names.Count > 0) {
-									ctrl.StartSelection (names.ToArray(), 0, delegate(int index, string result) {
-										mgr.AddAnimal (result);
-									});
-								} else {
-									ctrl.StartOkDialog ("No animals to add.", null);
-								}
-							}
-						}
-						GUILayout.EndHorizontal ();
-						GUILayout.Space (2f);
-
-						if (animalsOpened)
-						{
-							int idx = 0;
-							foreach (string animal in mgr.animals)
-							{
-								GUILayout.BeginHorizontal ();
+								if (scene.animalTypes.Length > 0 && GUILayout.Button ("+", GUILayout.Width (20f))) 
 								{
-									GUILayout.Space (5f);
-									if (GUILayout.Button ("-", GUILayout.Width (20f))) {
-										mgr.RemoveAnimal (animal);
-										break;
+									GUILayout.Space (3f);
+									
+									List<string> names = new List<string> ();
+									foreach (AnimalType t in scene.animalTypes) {
+										names.Add (t.name);
 									}
-									GUILayout.Space (5f);
-									GUILayout.Label (animal);
+
+									foreach (string animal in mgr.animals) {
+										names.Remove (animal);
+									}
+									
+									if (names.Count > 0) {
+										ctrl.StartSelection (names.ToArray(), 0, delegate(int index, string result) {
+											mgr.AddAnimal (result);
+										});
+									} else {
+										ctrl.StartOkDialog ("No animals to add.", null);
+									}
 								}
-								GUILayout.EndHorizontal ();
 							}
+							GUILayout.EndHorizontal ();
+							GUILayout.Space (2f);
 
-							if (scene.animalTypes.Length == 0) {
-								GUILayout.Label ("No animals to add.");
-							}
-						}
-					}
-					GUILayout.EndVertical ();
-
-					GUILayout.BeginVertical (ctrl.skin.box);
-					{
-						GUILayout.BeginHorizontal ();
-						{
-							EcoGUI.Foldout ("Plants", ref plantsOpened);
-							GUILayout.FlexibleSpace ();
-							if (scene.plantTypes.Length > 0 && GUILayout.Button ("+", GUILayout.Width (20f))) 
+							if (animalsOpened)
 							{
-								GUILayout.Space (3f);
-								
-								List<string> names = new List<string> ();
-								foreach (PlantType t in scene.plantTypes) {
-									names.Add (t.name);
-								}
-								
-								foreach (string plant in mgr.plants) {
-									names.Remove (plant);
-								}
-								
-								if (names.Count > 0) {
-									ctrl.StartSelection (names.ToArray(), 0, delegate(int index, string result) {
-										mgr.AddPlant (result);
-									});
-								} else {
-									ctrl.StartOkDialog ("No plants to add.", null);
-								}
-							}
-						}
-						GUILayout.EndHorizontal ();
-						GUILayout.Space (2f);
-
-						if (plantsOpened)
-						{
-							int idx = 0;
-							foreach (string plant in mgr.plants)
-							{
-								GUILayout.BeginHorizontal ();
+								int idx = 0;
+								foreach (string animal in mgr.animals)
 								{
-									GUILayout.Space (5f);
-									if (GUILayout.Button ("-", GUILayout.Width (20f))) {
-										mgr.RemovePlant (plant);
-										break;
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Space (5f);
+										if (GUILayout.Button ("-", GUILayout.Width (20f))) {
+											mgr.RemoveAnimal (animal);
+											break;
+										}
+										GUILayout.Space (5f);
+										GUILayout.Label (animal);
 									}
-									GUILayout.Space (5f);
-									GUILayout.Label (plant);
+									GUILayout.EndHorizontal ();
 								}
-								GUILayout.EndHorizontal ();
-							}
-							
-							if (scene.plantTypes.Length == 0) {
-								GUILayout.Label ("No plants to add.");
+
+								if (scene.animalTypes.Length == 0) {
+									GUILayout.Label ("No animals to add.");
+								}
 							}
 						}
+						GUILayout.EndVertical ();
+
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+							GUILayout.BeginHorizontal ();
+							{
+								EcoGUI.Foldout ("Plants", ref plantsOpened);
+								GUILayout.FlexibleSpace ();
+								if (scene.plantTypes.Length > 0 && GUILayout.Button ("+", GUILayout.Width (20f))) 
+								{
+									GUILayout.Space (3f);
+									
+									List<string> names = new List<string> ();
+									foreach (PlantType t in scene.plantTypes) {
+										names.Add (t.name);
+									}
+									
+									foreach (string plant in mgr.plants) {
+										names.Remove (plant);
+									}
+									
+									if (names.Count > 0) {
+										ctrl.StartSelection (names.ToArray(), 0, delegate(int index, string result) {
+											mgr.AddPlant (result);
+										});
+									} else {
+										ctrl.StartOkDialog ("No plants to add.", null);
+									}
+								}
+							}
+							GUILayout.EndHorizontal ();
+							GUILayout.Space (2f);
+
+							if (plantsOpened)
+							{
+								int idx = 0;
+								foreach (string plant in mgr.plants)
+								{
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Space (5f);
+										if (GUILayout.Button ("-", GUILayout.Width (20f))) {
+											mgr.RemovePlant (plant);
+											break;
+										}
+										GUILayout.Space (5f);
+										GUILayout.Label (plant);
+									}
+									GUILayout.EndHorizontal ();
+								}
+								
+								if (scene.plantTypes.Length == 0) {
+									GUILayout.Label ("No plants to add.");
+								}
+							}
+						}
+						GUILayout.EndVertical ();
 					}
-					GUILayout.EndVertical ();
 				}
 			}
 			GUILayout.EndVertical ();

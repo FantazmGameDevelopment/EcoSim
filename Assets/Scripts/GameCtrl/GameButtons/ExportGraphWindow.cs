@@ -27,14 +27,14 @@ namespace Ecosim.GameCtrl
 		public const int legendLineWidth = 35;
 		public const int yAxisSteps = 6;
 		public const float pointLinesWidth = 2f;
-		public const float pointIconWidth = 10f;
-		public const float pointIconHeight = 10f;
+		public const float pointIconWidth = 20f;
+		public const float pointIconHeight = 20f;
 		public const float gridLinesWidth = 1.5f;
 		public const float gridLineIndent = 5f;
 		public Color gridLinesColor = new Color (0.85f, 0.85f, 0.85f, 1f);
 
 		private Vector2 pointOffset = new Vector2 (-1f, 0f);
-		private Vector2 pointIconOffset = new Vector2 (3f, 0f);
+		private Vector2 pointIconOffset = new Vector2 (6f, 2f);
 		private Texture2D[] pointIcons;
 		private Color[] pointColors;
 		private GUIStyle rightAlign;
