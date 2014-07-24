@@ -80,6 +80,13 @@ namespace Ecosim.SceneData
 		 * properties.
 		 */
 		public void InitReports (bool isNewGame) {
+			if (!isNewGame) {
+				// Exception: Check if this is the first year still
+				if (progression.startYear >= progression.year) {
+					isNewGame = true;
+				}
+			}
+
 			if (isNewGame) {
 				reports.Init ();
 			}

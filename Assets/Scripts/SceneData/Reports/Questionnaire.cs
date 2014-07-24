@@ -179,7 +179,7 @@ namespace Ecosim.SceneData
 				useMaxChars = false;
 				copyToReport = false;
 				reportIndices = new List<int>();
-				reportIndices.Add (0);
+				reportIndices.Add (1);
 			}
 			
 			override public void Save (XmlTextWriter writer, Scene scene)
@@ -268,6 +268,7 @@ namespace Ecosim.SceneData
 		
 		override public void Load (XmlTextReader reader, Scene scene)
 		{
+			this.body = reader.GetAttribute ("body");
 			this.answers = new List<Answer> ();
 
 			if (!reader.IsEmptyElement)

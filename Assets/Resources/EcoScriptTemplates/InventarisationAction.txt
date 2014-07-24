@@ -14,9 +14,9 @@ void DoSuccession() {
 		// the resulting dataset
 		// value 0 is used for all cells not selected in
 		// the AREA map (not selected by user).
-		// The area map is used for visualisation.
+		// The icons map is used for visualisation.
 		// The data map is used for recording the actual values.
-		SparseBitMap8 area = new SparseBitMap8 (scene);
+		SparseBitMap8 icons = new SparseBitMap8 (scene);
 		SparseBitMap8 data = new SparseBitMap8 (scene);
 		
 		int tileCount = 0; // we'll count the number of tiles selected
@@ -26,12 +26,12 @@ void DoSuccession() {
 			int value = analyse.Get (vc);
 			
 			// somehow map the values of the data we analyse
-			// to the result set...
+			// to the icons set...
 			switch (value) {
-				case 0 : area.Set (vc, 1); break;
+				case 0 : icons.Set (vc, 1); break;
 				case 1 :
-				case 2 : area.Set (vc, 2); break;
-				default : area.Set (vc, 3); break;
+				case 2 : icons.Set (vc, 2); break;
+				default : icons.Set (vc, 3); break;
 			}
 			
 			// save the actual data
@@ -39,17 +39,11 @@ void DoSuccession() {
 		}
 		
 		// Make the report available.
-		AddInventarisation (inv.Name, area, data);
+		AddInventarisation (inv.Name, icons, data);
 		
 		// The user has to pay for the number of tiles selected.
 		budget -= inv.Cost;
 	}
-}
-
-void FinalizeSuccession() {
-	// destroy the selection area, otherwise we will redo the
-	// inventarisation next year!
-	scene.progression.DeleteData (AREA);
 }
 
 bool CanSelectTile (int x, int y, UserInteraction ui) {

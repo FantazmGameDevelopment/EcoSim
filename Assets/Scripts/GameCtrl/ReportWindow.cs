@@ -38,8 +38,9 @@ public class ReportWindow : ReportBaseWindow
 		foreach (Questionnaire qn in ReportsMgr.self.questionnaires) 
 		{
 			if (!qn.enabled) continue;
-			foreach (Question q in qn.questions) 
+			for (int n = 0; n < qn.questions.Count; n++) 
 			{
+				Question q = qn.questions [n];
 				if (!(q is OpenQuestion)) continue;
 
 				OpenQuestion oq = (OpenQuestion)q;
@@ -53,7 +54,7 @@ public class ReportWindow : ReportBaseWindow
 							// Find the question state
 							Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (qn.id, false);
 							if (qs != null)
-								this.copyToReportQuestions.Add (qs.GetQuestionState (i));
+								this.copyToReportQuestions.Add (qs.GetQuestionState (n));
 						}
 					}
 				}
@@ -125,12 +126,12 @@ public class ReportWindow : ReportBaseWindow
 			rp = this.report.paragraphs [i];
 
 			// Header
-			GUILayout.BeginHorizontal ();
-			{
-				GUILayout.Label ((i+1).ToString(), headerDark, GUILayout.Width (30), defaultOption);
-				if (rp.useTitle) GUILayout.Label (rp.title, headerDark, GUILayout.Width (width - 30), defaultOption);
-			}
-			GUILayout.EndHorizontal ();
+			//GUILayout.BeginHorizontal ();
+			//{
+				//GUILayout.Label ((i+1).ToString(), headerDark, GUILayout.Width (30), defaultOption);
+				if (rp.useTitle) GUILayout.Label ((i+1).ToString() + " " + rp.title, headerDark, GUILayout.Width (width), defaultOption);
+			//}
+			//GUILayout.EndHorizontal ();
 
 			// Description
 			if (rp.useDescription) {

@@ -141,7 +141,9 @@ namespace Ecosim.GameCtrl.GameButtons
 			OnClose ();
 			windows.Remove (this);
 			UpdateDepth ();
-			GameObject.DestroyImmediate (instance.gameObject);
+			if (instance != null) {
+				GameObject.DestroyImmediate (instance.gameObject);
+			}
 		}
 		
 		/**

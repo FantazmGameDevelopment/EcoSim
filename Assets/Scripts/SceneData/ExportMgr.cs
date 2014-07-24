@@ -587,7 +587,9 @@ namespace Ecosim.SceneData
 			activeThreads += ed.years.Count;
 			foreach (ExportData.YearData y in ed.EnumerateYears ()) {
 				// Start thread(s)
-				ThreadPool.QueueUserWorkItem (ProcessYearData, new YearExportSettings (settings, y.year));
+				//ThreadPool.QueueUserWorkItem (ProcessYearData, new YearExportSettings (settings, y.year));
+				ProcessYearData (new YearExportSettings (settings, y.year));
+				yield return new WaitForSeconds (0.1f);
 			}
 
 			// Cost

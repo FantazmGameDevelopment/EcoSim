@@ -264,7 +264,9 @@ namespace Ecosim.GameCtrl
 				// Set x position
 				Rect xr = xRect;
 				xr.x = xr.x - (xr.width * 0.5f);
-				xr.x += ((graphRect.width - xr.width) / (float)(yearsCount - 1)) * yearIndex;
+				if (yearsCount > 1) {
+					xr.x += ((graphRect.width - xr.width) / (float)(yearsCount - 1)) * yearIndex;
+				}
 				xr.x = (int)xr.x;
 
 				// Draw line
@@ -340,7 +342,7 @@ namespace Ecosim.GameCtrl
 							// Show the label
 							Rect labelRect = pr;
 							labelRect.x += labelRect.width;
-							//labelRect.y -= labelRect.height;
+							labelRect.y -= labelRect.height * 0.5f;
 							labelRect.width = valueLabelWidth;
 							labelRect.height = valueLabelHeight;
 							GUI.Label (labelRect, v.ToString (numberFormat), leftAlign);

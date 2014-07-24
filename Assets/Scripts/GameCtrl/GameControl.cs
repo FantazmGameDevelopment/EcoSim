@@ -122,7 +122,12 @@ public class GameControl : MonoBehaviour
 		long expenses = self.scene.actions.GetYearExpenses ();
 		self.expenseText = expenses.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 	}
-	
+
+	public static void BudgetChanged ()
+	{
+		self.budgetText = self.scene.progression.budget.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
+	}
+
 	void CalculateLayout ()
 	{
 		if (scene == null)
@@ -152,8 +157,8 @@ public class GameControl : MonoBehaviour
 		}
 		
 		// calculate info panel
-		budgetText = scene.progression.budget.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 		ExpensesChanged ();
+		BudgetChanged ();
 		yearText = scene.progression.year.ToString ();
 		budgetR = new Rect (Screen.width - 129 - 33, 1, 128, 32);
 		budgetIconR = new Rect (Screen.width - 33, 1, 32, 32);
@@ -165,7 +170,7 @@ public class GameControl : MonoBehaviour
 		// calculate succession button position
 		successionR = new Rect (Screen.width - 65, Screen.height - 65, 64, 64);
 	}
-	
+
 	void OnGUI ()
 	{
 		if (isProcessing)

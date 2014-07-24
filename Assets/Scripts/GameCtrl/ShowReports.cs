@@ -83,9 +83,11 @@ public class ShowReports : MonoBehaviour
 		if (this.questionnaireWindow == null) {
 			this.questionnaireWindow = new QuestionnaireWindow (currentQuestionnaire, delegate() 
 			{
-				if (this.currentQuestionnaire.useBudget) {
+				if (this.currentQuestionnaire.useBudget) 
+				{
 					int totalMoneyEarned = EditorCtrl.self.scene.progression.GetQuestionnaireState (this.currentQuestionnaire.id).totalMoneyEarned;
 					EditorCtrl.self.scene.progression.budget += totalMoneyEarned;
+					GameControl.BudgetChanged ();
 				}
 
 				this.currentQuestionnaire = null;

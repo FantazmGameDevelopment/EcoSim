@@ -374,9 +374,6 @@ namespace Ecosim.SceneData.Action
 						// Calculate the chance
 						float dataChance = (float)de.data.Get (coord) / (float)de.data.GetMax ();
 						float deathChance = dataChance; 
-						/*if (de.fixedChance.min != 0f || de.fixedChance.max != 1f){
-							deathChance = RndUtil.RndRange (ref data.rnd, de.fixedChance.min, de.fixedChance.max);
-						}*/ // TODO: Fix?
 
 						// Check death
 						if (data.rnd.NextDouble () <= deathChance)
@@ -662,7 +659,7 @@ namespace Ecosim.SceneData.Action
 
 					Debug.Log (string.Format("\tCurrent nest state:\n\t{0}", nest.ToString ()), null);
 
-					// TODO: Check if surplus logic is correct and if we want to use it
+					// HAndle surplus
 					int total = nest.males + nest.females;
 					int surplus = total - nest.totalCapacity;
 					while (surplus > 0)

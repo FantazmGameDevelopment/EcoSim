@@ -145,7 +145,13 @@ namespace Ecosim.GameCtrl.GameButtons
 					
 					// Datanames
 					List<string> dataNames = new List<string> ();
-					foreach (string s in this.parameters) {
+					List<string> allDataNames = new List<string> ();
+					allDataNames.AddRange (this.parameters);
+					allDataNames.AddRange (this.plants);
+					allDataNames.AddRange (this.animals);
+					allDataNames.AddRange (this.inventarisations);
+					allDataNames.AddRange (this.measures);
+					foreach (string s in allDataNames) {
 						if (GetToggleState (s)) {
 							dataNames.Add (s);
 						}

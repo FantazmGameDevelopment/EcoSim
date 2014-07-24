@@ -208,6 +208,7 @@ namespace Ecosim.SceneData.Action
 			// Setup unique area name
 			invAreaName = this.areaName + "_" + (scene.progression.activeInventarisations.Count).ToString();
 			selectedArea = new SparseBitMap8 (scene);
+			scene.progression.AddData (invAreaName, selectedArea);
 
 			/*if (selectedArea == null) {
 				if (uiList.Count > 1) {

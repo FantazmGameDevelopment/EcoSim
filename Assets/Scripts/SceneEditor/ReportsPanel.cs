@@ -526,7 +526,7 @@ namespace Ecosim.SceneEditor
 			{
 				// Foldout header
 				EcoGUI.skipHorizontal = true;
-				EcoGUI.FoldoutEditableName (ref question.body, ref question.opened, GUILayout.MaxWidth (250));
+				EcoGUI.FoldoutEditableName (ref question.body, ref question.opened, GUILayout.MaxWidth (225));
 				EcoGUI.skipHorizontal = false;
 
 				// Type
@@ -553,7 +553,7 @@ namespace Ecosim.SceneEditor
 				GUI.enabled = true;
 
 				// Remove
-				GUILayout.Space (5);
+				GUILayout.FlexibleSpace ();
 				if (GUILayout.Button ("-", GUILayout.Width (20)))
 				{
 					Question tmpQ = question;
@@ -764,18 +764,24 @@ namespace Ecosim.SceneEditor
 				GUILayout.Space (5f);
 				GUILayout.Label ("ID:" + r.id, GUILayout.Width (30));
 				GUILayout.Space (5f);
+				GUILayout.FlexibleSpace ();
 
-				// TODO:
-				/*if (GUILayout.Button ("-", GUILayout.Width (20))) 
+				if (GUILayout.Button ("-", GUILayout.Width (20))) 
 				{
-					Questionnaire tmpQ = q;
-					ctrl.StartDialog (string.Format ("Are you sure you want to delete '{0}' (ID:{1})", tmpQ.name, tmpQ.id.ToString()), 
+					ReportBase tmp = r;
+					ctrl.StartDialog (string.Format ("Are you sure you want to delete '{0}' (ID:{1})", tmp.name, tmp.id.ToString()), 
 					delegate(bool result) {
 						if (result) {
-							scene.reports.questionnaires.Remove (tmpQ);
+
+							// FIXME: Make this more generic
+							if (r is Questionnaire) {
+								scene.reports.questionnaires.Remove (tmp as Questionnaire);
+							} else if (r is Report) {
+								scene.reports.reports.Remove (tmp as Report);
+							}
 						}
 					}, null);
-				}*/
+				}
 			}
 			GUILayout.EndHorizontal (); // ~Header
 		}

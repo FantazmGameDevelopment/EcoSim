@@ -78,7 +78,7 @@ namespace Ecosim.SceneData
 
 			public readonly int year;
 			public readonly int actionId;
-			public ResearchPointData data; // TODO:
+			public ResearchPointData data;
 
 			public string name;
 			public bool isTemporary = false;

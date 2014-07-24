@@ -437,10 +437,8 @@ namespace Ecosim.SceneData.Action
 		/**
 		 * Called when a measure is taken.
 		 */
-		// TODO: Add to .txt script files
 		public virtual void MeasureTaken (string name, string group, int count)
 		{
-			// TODO:
 			if (measureTakenMI != null) {
 				try {
 					measureTakenMI.Invoke (ecoBase, new object[] {name, group, count});
@@ -453,10 +451,8 @@ namespace Ecosim.SceneData.Action
 		/**
 		 * Called when research is conducted.
 		 */
-		// TODO: Add to .txt script files
 		public virtual void ResearchConducted (string name, string group, int count)
 		{
-			// TODO:
 			if (researchConductedMI != null) {
 				try {
 					researchConductedMI.Invoke (ecoBase, new object[] {name, group, count});
@@ -469,7 +465,6 @@ namespace Ecosim.SceneData.Action
 		/**
 		 * Called when a encylcopedia item is consulted.
 		 */
-		// TODO: Add to .txt script files
 		public virtual void EncyclopediaOpened (int itemNr, string itemTitle)
 		{
 			if (encyclopediaOpenedMI != null) {

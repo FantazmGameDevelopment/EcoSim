@@ -272,7 +272,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 	{
 		Questionnaire q = questionnaire;
 		GUILayout.BeginArea (new Rect (left, top, width + 20, height));
-		scrollPosition = GUILayout.BeginScrollView (scrollPosition); // TODO: Scrollbar Skin
+		scrollPosition = GUILayout.BeginScrollView (scrollPosition);
 
 		// Header
 		GUILayout.BeginHorizontal ();
@@ -323,7 +323,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 				{
 					EcoGUI.SplitLabel (qidx + ". " + qState.questionName, headerDark, GUILayout.Width (width));
 					//GUILayout.Space (1);
-					
+
 					//GUILayout.Label ("Your answer:", headerLight, GUILayout.Width (width));
 					EcoGUI.SplitLabel (qState.questionAnswer, textArea, GUILayout.Width (width));
 					GUILayout.Space (5);
@@ -333,7 +333,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 				// Money gained
 				if (passed && q.useBudget)
 				{
-					GUILayout.Label ("Money earned: " + qs.totalScore, headerDark, GUILayout.Width (width), defaultOption);
+					GUILayout.Label ("Money earned: " + qs.totalMoneyEarned, headerDark, GUILayout.Width (width), defaultOption);
 					//GUILayout.Space (1);
 					if (q.useBudgetFeedback) 
 					{
@@ -365,8 +365,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 				if (q.usePassedFeedback)
 				{
 					EcoGUI.SplitLabel (q.passedFeedback, headerLight, GUILayout.Width (width), defaultOption);
-					GUILayout.Space (1);
 				}
+				GUILayout.Space (1);
 				
 				GUILayout.BeginHorizontal ();
 				{
@@ -504,7 +504,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 				}
 				this.messageScrollPos = GUILayout.BeginScrollView (this.messageScrollPos);
 				{
-					GUILayout.Label (this.message, headerLight, GUILayout.Width (width - 10f), GUILayout.ExpandHeight (true), defaultOption);
+					GUILayout.Label (this.message, textArea, GUILayout.Width (width - 10f), GUILayout.ExpandHeight (true), defaultOption);
 					GUILayout.Space (1);
 				}
 				GUILayout.EndScrollView ();

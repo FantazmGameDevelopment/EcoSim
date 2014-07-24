@@ -14,7 +14,7 @@ namespace Ecosim.SceneData
 		public bool useShowQuestionnaireAtStart;
 		public bool useShowQuestionnaireAtEnd;
 		public int showQuestionnaireAtStartId;
-		public int showQuestionnaireAtEndId; // TODO: Is this necessary?
+		public int showQuestionnaireAtEndId; // FIXME: Is this necessary?
 
 		public bool useShowReportAtEnd;
 		public int showReportAtEndId;
