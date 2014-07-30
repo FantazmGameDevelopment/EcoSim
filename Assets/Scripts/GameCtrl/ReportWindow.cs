@@ -187,15 +187,12 @@ public class ReportWindow : ReportBaseWindow
 
 	private void DoSave ()
 	{
-		// Save to .txt
-		System.Windows.Forms.SaveFileDialog sfd = this.GetSaveFileDialog ();
-		sfd.FileName = string.Format ("report_{0}", this.report.id);
-		System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
-		
-		if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+		string url;
+		if (SaveFileDialog.Show (string.Format ("report_{0}", this.report.id), out url, "txt files (*.txt)|*.txt"))
 		{
 			// Create new file
-			FileStream fs = File.Create (sfd.FileName);
+			System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
+			FileStream fs = File.Create (url);
 			System.Text.StringBuilder sb = new System.Text.StringBuilder ();
 
 			if (this.report.useName) sb.AppendFormat ("Name: {0}\n", this.state.name);

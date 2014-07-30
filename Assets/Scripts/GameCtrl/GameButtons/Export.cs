@@ -73,6 +73,35 @@ namespace Ecosim.GameCtrl.GameButtons
 					}
 				}
 
+				// Filter out parameters if we have only when surveyed
+				if (ExportMgr.self.dataType == ExportMgr.DataTypes.OnlyWhenSurveyed) 
+				{
+					// Get all datanames from all surveys
+					List<string> surveyDataNames = new List<string> ();
+
+					// Research points
+					foreach (ResearchPoint r in scene.progression.researchPoints) {
+						foreach (ResearchPoint.Measurement rm in r.measurements) {
+							// Check each value and check if it 
+							foreach (KeyValuePair<string, string> p in rm.data.values) {
+								if (surveyDataNames.Contains (p.Key) == false) {
+									surveyDataNames.Add (p.Key);
+								}
+							}
+						}
+					}
+
+					// TODO: Also for inventarisations?
+
+					// Remove all parameters that aren't in the survery data names list
+					for (int i = parameters.Count - 1; i >= 0; i--) 
+					{
+						if (!surveyDataNames.Contains (parameters [i])) {
+							parameters.RemoveAt (i);
+						}
+					}
+				}
+
 				// If we only show data when surveyed, then animals and plants will NEVER
 				// show up, because the data is only retrieved when surveying. So we can't choose
 				// animals and plants...

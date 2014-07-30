@@ -477,10 +477,14 @@ namespace Ecosim.SceneData
 				ed.AddColumn ("succession");
 			}
 
+			yield return new WaitForEndOfFrame ();
+
 			// Add all data names
 			foreach (string s in settings.dataNames) {
 				ed.AddColumn (s);
 			}
+
+			yield return new WaitForEndOfFrame ();
 
 			// Loop through all tiles of the managed area and add them to all tiles of every (past) year
 			for (int i = 0; i < (scene.progression.year - scene.progression.startYear); i++) {
@@ -494,6 +498,8 @@ namespace Ecosim.SceneData
 					}
 				}
 			}
+
+			yield return new WaitForEndOfFrame ();
 
 			#pragma warning disable 162
 			// Setup threads
@@ -522,6 +528,8 @@ namespace Ecosim.SceneData
 						coordData["costs"] = (prevCosts + (int)action.uiList [0].cost).ToString();
 					}
 				}
+
+				yield return new WaitForEndOfFrame ();
 			}
 			
 			/** Research points **/
@@ -549,6 +557,8 @@ namespace Ecosim.SceneData
 						coordData["costs"] = (prevCosts + (int)action.uiList [0].cost).ToString();
 					}
 				}
+
+				yield return new WaitForEndOfFrame ();
 			}
 
 			/** Measures (actions) **/
@@ -581,6 +591,8 @@ namespace Ecosim.SceneData
 						}
 					}
 				}
+
+				yield return new WaitForEndOfFrame ();
 			}
 
 			// Loop through all coordinates
@@ -588,7 +600,7 @@ namespace Ecosim.SceneData
 			foreach (ExportData.YearData y in ed.EnumerateYears ()) {
 				// Start thread(s)
 				//ThreadPool.QueueUserWorkItem (ProcessYearData, new YearExportSettings (settings, y.year));
-				ProcessYearData (new YearExportSettings (settings, y.year));
+				yield return GameControl.self.StartCoroutine ( ProcessYearData (new YearExportSettings (settings, y.year)) );
 				yield return new WaitForSeconds (0.1f);
 			}
 
@@ -605,8 +617,12 @@ namespace Ecosim.SceneData
 			currentExportData = ed;
 		}
 
-		private void ProcessYearData (System.Object args)
+		private IEnumerator<object> ProcessYearData (System.Object args)
 		{
+			// Coords per frame
+			int coordPerFrame = 100;
+			int totalCoordsProcessed = 0;
+
 			// Temp vars
 			YearExportSettings ySettings = (YearExportSettings)args;
 			ExportSettings settings = ySettings.settings;
@@ -614,17 +630,39 @@ namespace Ecosim.SceneData
 			ExportData.YearData year;
 			ExportData.YearData.CoordinateData coordData;
 
+			// Save the parameters and filter the list
+			List<string> parametersList = new List<string> ();
+			foreach (string s in scene.progression.GetAllDataNames (false)) {
+				if (ShouldExportParameter (s) && settings.dataNames.Contains (s)) {
+					parametersList.Add (s);
+				}
+			}
+
+			// Save the plants list and filter the list
+			List<PlantType> plantsList = new List<PlantType> ();
+			foreach (PlantType p in scene.plantTypes) {
+				if (ShouldExportPlant (p.name) && settings.dataNames.Contains (p.name)) {
+					plantsList.Add (p);
+				}
+			}
+
+			// Save the animals list and filter the list
+			List<AnimalType> animalsList = new List<AnimalType> ();
+			foreach (AnimalType a in scene.animalTypes) {
+				if (ShouldExportAnimal (a.name) && settings.dataNames.Contains (a.name)) {
+					animalsList.Add (a);
+				}
+			}
+
 			ExportData.YearData y = ed [ySettings.year];
-			foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) {
+			foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) 
+			{
 				coordData = cd;
 				/** Target areas **/
-				foreach (ValueCoordinate vc in scene.progression.managedArea.EnumerateNotZero ()) {
-					// Setup target areas
-					for (int a = 1; a < scene.progression.targetAreas + 1; a++) {
+				for (int a = 1; a < scene.progression.targetAreas + 1; a++) {
+					if (ed.HasColumn ("targetarea " + a)) {
 						Data targetArea = scene.progression.GetData (Progression.TARGET_ID + a);
-						if (ed.HasColumn ("targetarea " + a)) {
-							cd ["targetarea " + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
-						}
+						cd ["targetarea " + a] = (targetArea.Get (cd.coord) > 0) ? "1" : "0";
 					}
 				}
 				
@@ -651,9 +689,9 @@ namespace Ecosim.SceneData
 					case DataTypes.Always :
 					{
 						/** Parameters **/
-						foreach (string p in scene.progression.GetAllDataNames (false)) {
+						foreach (string p in parametersList) {
 							// Check if we should set parameter
-							if (string.IsNullOrEmpty (cd [p]) && ShouldExportParameter (p)) {
+							if (string.IsNullOrEmpty (cd [p])) {
 								
 								// Get the data, if it's null try the default (init) value
 								Data data = scene.progression.GetData (p, y.year) ?? scene.progression.GetData (p);
@@ -677,10 +715,7 @@ namespace Ecosim.SceneData
 						}
 
 						/** Plants **/
-						foreach (PlantType p in scene.plantTypes) {
-							// Check for name
-							if (!settings.dataNames.Contains (p.name)) continue;
-							
+						foreach (PlantType p in plantsList) {
 							// Get the data
 							Data data = scene.progression.GetData (p.dataName, y.year);
 							if (data != null) {
@@ -689,10 +724,7 @@ namespace Ecosim.SceneData
 						}
 						
 						/** Animals **/
-						foreach (AnimalType a in scene.animalTypes) {
-							// Check for name
-							if (!settings.dataNames.Contains (a.name)) continue;
-							
+						foreach (AnimalType a in animalsList) {
 							// Check the animal type
 							if (a is LargeAnimalType) 
 							{
@@ -713,6 +745,13 @@ namespace Ecosim.SceneData
 					break;
 					
 					case DataTypes.OnlyWhenSurveyed : break;
+				}
+
+				// Check if we should wait a frame
+				totalCoordsProcessed++;
+				if (totalCoordsProcessed > coordPerFrame) {
+					totalCoordsProcessed = 0;
+					yield return new WaitForEndOfFrame ();
 				}
 			}
 
@@ -769,13 +808,11 @@ namespace Ecosim.SceneData
 
 		public void ExportData (ExportSettings settings, System.Action onComplete)
 		{
-			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
-			sfd.Filter = "csv files (*.csv)|*.csv";
-			
-			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+			string url;
+			if (SaveFileDialog.Show ("export", out url, "csv files (*.csv)|*.csv"))
 			{
 				// Get the export data
-				GameControl.self.StartCoroutine (COExportData (settings, sfd.FileName, onComplete));
+				GameControl.self.StartCoroutine (COExportData (settings, url, onComplete));
 			}
 		}
 

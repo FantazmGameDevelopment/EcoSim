@@ -420,15 +420,12 @@ public class QuestionnaireWindow : ReportBaseWindow
 	{
 		if (GUILayout.Button ("Save", button, GUILayout.Width (80), defaultOption)) 
 		{
-			// Save to .txt
-			System.Windows.Forms.SaveFileDialog sfd = this.GetSaveFileDialog ();
-			sfd.FileName = "questionnaire_" + this.questionnaire.id;
-			System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
-			
-			if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+			string url;
+			if (SaveFileDialog.Show ("questionnaire_" + this.questionnaire.id, out url, "txt files (*.txt)|*.txt"))
 			{
 				// Create new file
-				FileStream fs = File.Create (sfd.FileName);
+				System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
+				FileStream fs = File.Create (url);
 				System.Text.StringBuilder sb = new System.Text.StringBuilder ();
 				
 				Scene scene = EditorCtrl.self.scene;

@@ -175,15 +175,10 @@ namespace Ecosim.GameCtrl
 					preSaveQuality = QualitySettings.GetQualityLevel ();
 					QualitySettings.SetQualityLevel (5, true);
 
-					System.Windows.Forms.SaveFileDialog sfd = this.GetSaveFileDialog ();
-					sfd.FileName = "ecosim graph";
-					System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
-					
-					if (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK)
+					if (SaveFileDialog.Show ("ecosim graph", out savePath, "png (*.png)|*.png"))
 					{
 						// We mark "save" as true so the OnPostRender can handle the save
 						saveGraph = true;
-						savePath = sfd.FileName;
 						instance.StartCoroutine ( RenderAndSaveGraph () );
 					}
 				}
@@ -443,16 +438,6 @@ namespace Ecosim.GameCtrl
 			}
 
 			base.Render ();
-		}
-
-		[System.Runtime.InteropServices.DllImport ("user32.dll")]
-		private static extern void SaveFileDialog ();
-		
-		public System.Windows.Forms.SaveFileDialog GetSaveFileDialog ()
-		{
-			System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
-			sfd.Filter = "png (*.png)|*.png";
-			return sfd;
 		}
 
 		private IEnumerator RenderAndSaveGraph ()

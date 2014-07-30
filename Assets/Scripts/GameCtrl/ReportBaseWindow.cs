@@ -58,16 +58,6 @@ public class ReportBaseWindow
 		defaultOption = GUILayout.MinWidth (0);//GUILayout.MinHeight (28f);//GUILayout.ExpandHeight (true);
 	}
 
-	[System.Runtime.InteropServices.DllImport ("user32.dll")]
-	private static extern void SaveFileDialog ();
-
-	public System.Windows.Forms.SaveFileDialog GetSaveFileDialog ()
-	{
-		System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
-		sfd.Filter = "txt files (*.txt)|*.txt";
-		return sfd;
-	}
-
 	public virtual void Dispose ()
 	{
 		this.onFinished = null;
