@@ -23,7 +23,7 @@ namespace Ecosim.GameCtrl
 		public const int legendLabelHeight = 20;
 		public const int legendWidthOffset = 20;
 		public const int legendLineSpace = 10;
-		public const int legendHeight = 40;
+		public const int legendHeight = 60;
 		public const int legendLineWidth = 35;
 		public const int yAxisSteps = 6;
 		public const float pointLinesWidth = 2f;

@@ -401,6 +401,13 @@ namespace Ecosim.SceneData
 			OnlyWhenSurveyed
 		}
 
+		public enum CostTypes
+		{
+			None,
+			OnePrice,
+			PricePerYear
+		}
+
 		public const int COORDS_PER_FRAME = 100;
 
 		public static ExportMgr self { get; private set; }
@@ -411,6 +418,8 @@ namespace Ecosim.SceneData
 		public DataTypes dataType;
 		public bool exportVegetationTypes;
 		public bool exportSuccessionTypes;
+		public CostTypes costType;
+		public int costs;
 
 		public List<int> targetAreas;
 		public List<string> parameters;
@@ -974,6 +983,13 @@ namespace Ecosim.SceneData
 			this.exportSuccessionTypes = bool.Parse (reader.GetAttribute ("exportsucctypes"));
 			this.exportVegetationTypes = bool.Parse (reader.GetAttribute ("exportvegtypes"));
 
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("costtype"))) {
+				this.costType = (CostTypes)System.Enum.Parse (typeof(CostTypes), reader.GetAttribute ("costtype"));
+			}
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("costs"))) {
+				this.costs = int.Parse (reader.GetAttribute ("costs"));
+			}
+
 			List<int> targetAreaList = new List<int>();
 			List<string> paramList = new List<string>();
 			List<string> animalList = new List<string>();
@@ -1023,6 +1039,8 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("exportsucctypes", this.exportSuccessionTypes.ToString().ToLower());
 			writer.WriteAttributeString ("selectiontype", this.selectionType.ToString());
 			writer.WriteAttributeString ("datatype", this.dataType.ToString());
+			writer.WriteAttributeString ("costtype", this.costType.ToString());
+			writer.WriteAttributeString ("costs", this.costs.ToString ());
 			foreach (string s in this.parameters) {
 				writer.WriteStartElement ("param");
 				writer.WriteAttributeString ("name", s);

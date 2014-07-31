@@ -159,7 +159,7 @@ namespace Ecosim.SceneEditor.Helpers
 					if (GUILayout.Button ("+", GUILayout.Width (20)))
 					{
 						scene.progression.targetAreas++;
-						scene.progression.AddData (Progression.TARGET_ID + scene.progression.targetAreas.ToString(), new BitMap8 (scene));
+						scene.progression.AddData (Progression.TARGET_ID + scene.progression.targetAreas.ToString(), new BitMap1 (scene));
 						currentTargetAreaIndex = scene.progression.targetAreas;
 						UpdateCurrentArea ();
 					}

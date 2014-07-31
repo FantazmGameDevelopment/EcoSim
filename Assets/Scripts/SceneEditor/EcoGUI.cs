@@ -226,8 +226,15 @@ namespace Ecosim.SceneEditor
 				{
 					List<string> items = new List<string>(System.Enum.GetNames (value.GetType()));
 					int selected = items.IndexOf (value.ToString());
+					for (int i = 0; i < items.Count; i++) {
+						// Format the PascalCase with spaces
+						string itemName = System.Text.RegularExpressions.Regex.Replace (items[i], "[a-z][A-Z]", m => m.Value[0] + " " + m.Value[1]);
+						itemName = itemName.Trim ();
+						items[i] = itemName;
+					}
+
 					EditorCtrl.self.StartSelection (items.ToArray(), selected, delegate(int index) {
-						onChanged ((T)System.Enum.Parse (typeof(T), items[index]));
+						onChanged ((T)System.Enum.Parse (typeof(T), items[index].Replace (" ", "")));
 					});
 				}
 			}

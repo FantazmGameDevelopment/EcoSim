@@ -44,6 +44,7 @@ namespace Ecosim.SceneData
 		public const string PURCHASABLE_ID = "_purchasable";
 
 		public long budget = 0; // budget left
+		public long expenses = 0; // only used for get purposes
 		public int year = 0; // year of this progression
 		public int startYear = 2013; // not really progression, but for determining first progression data
 

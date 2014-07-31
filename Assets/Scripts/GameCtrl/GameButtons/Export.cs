@@ -161,140 +161,245 @@ namespace Ecosim.GameCtrl.GameButtons
 			public override void Render ()
 			{
 				if (isExporting) return;
-
-				Rect r = new Rect (xOffset + 65, yOffset, this.width - 101, 32);
+				
+				Rect r = new Rect (xOffset + 65, yOffset, this.width, 32);
 				SimpleGUI.Label (r, "Export data", title);
 
-				// Save etc
-				r.x += r.width + 1;
-				r.width = 100;
-				if (SimpleGUI.Button (r, "Save...", entry, entrySelected)) 
-				{
-					isExporting = true;
-					
-					// Years
-					List<string> years = new List<string> ();
-					foreach (string y in this.years) {
-						if (GetToggleState (y)) {
-							years.Add (y);
-						}
-					}
-					
-					// Datanames
-					List<string> dataNames = new List<string> ();
-					List<string> allDataNames = new List<string> ();
-					allDataNames.AddRange (this.parameters);
-					allDataNames.AddRange (this.plants);
-					allDataNames.AddRange (this.animals);
-					allDataNames.AddRange (this.inventarisations);
-					allDataNames.AddRange (this.measures);
-					allDataNames.AddRange (this.researchPoints);
-					foreach (string s in allDataNames) {
-						if (GetToggleState (s)) {
-							dataNames.Add (s);
-						}
-					}
-					
-					// Delete edit data
-					if (edit != null) {
-						edit.ClearData ();
-						edit.ClearSelection ();
-						edit.Delete ();
-					}
-					
-					// Do export and save
-					ExportSettings settings = new ExportSettings (GetAreaSelection (), years, dataNames);
-					ExportMgr.self.ExportData (settings, delegate { 
-						isExporting = false; 
-						SetupEditData ();
-					});
-				}
-
-				// Check if we have export data
-				/*if (ExportMgr.self.currentExportData == null) 
-				{
-					SimpleGUI.Label (new Rect (xOffset, yOffset + 33, this.width + 65, 32), "Loading please wait...", header);
-					base.Render ();
-					return;
-				}*/
-
+				// Setup cost and save UI
 				float width = this.width + 65;
+				int saveBtnWidth = 150;
+				int costTextWidth = 150;
+
 				GUILayout.BeginArea (new Rect (xOffset, yOffset + 33, width, Mathf.Min (600f, Screen.height - (yOffset + 33))));
-				scrollPos = GUILayout.BeginScrollView (scrollPos);
 				{
-					// Selection
-					if (RenderToggleButton ("Selection"))
+					int totalCosts = 0;
+					bool enoughBudget = true;
+
+					switch (ExportMgr.self.costType)
 					{
-						int idx = 0;
-						foreach (string s in selectionTypes)
+					case ExportMgr.CostTypes.OnePrice :
+					{
+						totalCosts = ExportMgr.self.costs;
+						enoughBudget = (scene.progression.budget + scene.progression.expenses) > totalCosts;
+
+						GUILayout.BeginHorizontal ();
 						{
+							// Cost
+							GUILayout.Label ("", header, GUILayout.Width (width - costTextWidth - saveBtnWidth));
 							GUILayout.Space (1);
-							GUILayout.BeginHorizontal ();
-							{
-								int prevCurrSelectionType = currentSelectionType;
+							GUILayout.Label ("Cost", entry, GUILayout.Width (costTextWidth));
+							GUILayout.Space (1);
 
-								// Setup toggle state
-								toggleStates [s] = (idx == currentSelectionType);
-								if (RenderEntryToggleButton (s)) {
-									currentSelectionType = idx;
-								}
-
-								// Check for selection
-								if (prevCurrSelectionType != currentSelectionType) {
-									SetupEditData ();
-								}
-							}
-							GUILayout.EndHorizontal ();
-							idx++;
+							// Check if we have enough budget
+							if (!enoughBudget) GUI.color = Color.red;
+							GUILayout.Label (ExportMgr.self.costs.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB")), entry, GUILayout.Width (saveBtnWidth));
+							GUI.color = Color.white;
 						}
+						GUILayout.EndHorizontal ();
+					}
+					break;
+
+					case ExportMgr.CostTypes.PricePerYear : 
+					{
+						// Count selected years
+						int yearsSelected = 0;
+						foreach (string y in this.years) {
+							if (GetToggleState (y)) {
+								yearsSelected ++;
+							}
+						}
+
+						// Years selected
+						GUILayout.BeginHorizontal ();
+						{
+							GUILayout.Label ("", header, GUILayout.Width (width - costTextWidth - saveBtnWidth - 1));
+							GUILayout.Space (1);
+							GUILayout.Label ("Selected years", entry, GUILayout.Width (saveBtnWidth));
+							GUILayout.Space (1);
+							GUILayout.Label (yearsSelected.ToString (), entry, GUILayout.Width (saveBtnWidth - 33));
+							GUILayout.Space (1);
+							GUILayout.Label ("", entry, GUILayout.Width (32));
+						}
+						GUILayout.EndHorizontal ();
+						GUILayout.Space (1);
+
+						// Cost per year
+						GUILayout.BeginHorizontal ();
+						{
+							GUILayout.Label ("", header, GUILayout.Width (width - costTextWidth - saveBtnWidth - 1));
+							GUILayout.Space (1);
+							GUILayout.Label ("Cost per year", entry, GUILayout.Width (saveBtnWidth));
+							GUILayout.Space (1);
+							GUILayout.Label (ExportMgr.self.costs.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB")), entry, GUILayout.Width (saveBtnWidth - 33));
+							GUILayout.Space (1);
+							GUILayout.Label ("x", entry, GUILayout.Width (32));
+						}
+						GUILayout.EndHorizontal ();
+						GUILayout.Space (1);
+
+						totalCosts = ExportMgr.self.costs * yearsSelected;
+						enoughBudget = (scene.progression.budget + scene.progression.expenses) > totalCosts;
+						
+						// Total cost
+						GUILayout.BeginHorizontal ();
+						{
+							GUILayout.Label ("", header, GUILayout.Width (width - costTextWidth - saveBtnWidth - 1));
+							GUILayout.Space (1);
+							GUILayout.Label ("Total cost", entry, GUILayout.Width (saveBtnWidth));
+							GUILayout.Space (1);
+
+							// Check if we have enough budget
+							if (!enoughBudget) GUI.color = Color.red;
+							GUILayout.Label (totalCosts.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB")), entry, GUILayout.Width (saveBtnWidth - 33));
+							GUI.color = Color.white;
+
+							GUILayout.Space (1);
+							GUILayout.Label ("=", entry, GUILayout.Width (32));
+						}
+						GUILayout.EndHorizontal ();
+					}
+					break;
 					}
 
-					// Show all lists
-					foreach (KeyValuePair <string, List<string>> pair in lists) 
+					// Save button
+					GUILayout.Space (1);
+					GUILayout.BeginHorizontal ();
 					{
-						if (pair.Value.Count > 0) 
+						GUILayout.Label ("", header, GUILayout.Width (width - saveBtnWidth));
+						GUILayout.Space (1);
+
+						// Check if we have enough budget
+						GUI.enabled = enoughBudget;
+						if (GUILayout.Button ("Save...", entry, GUILayout.Width (saveBtnWidth))) 
 						{
-							GUILayout.Space (1);
-							bool toggled = false;
-							GUILayout.BeginHorizontal ();
+							// Update budget
+							scene.progression.budget -= totalCosts;
+							GameControl.BudgetChanged ();
+
+							DoExport ();
+						}
+						GUI.enabled = true;
+					}
+					GUILayout.EndHorizontal ();
+					GUILayout.Space (1);
+
+					scrollPos = GUILayout.BeginScrollView (scrollPos);
+					{
+						// Selection
+						if (RenderToggleButton ("Selection"))
+						{
+							int idx = 0;
+							foreach (string s in selectionTypes)
 							{
-								// Toggle
-								toggled = RenderToggleButton (pair.Key);
-
-								// Select all
 								GUILayout.Space (1);
-								if (GUILayout.Button ("Select all", entry, GUILayout.Width (100f))) {
-									foreach (string s in pair.Value) {
-										GetToggleState (s);
-										toggleStates [s] = true;
+								GUILayout.BeginHorizontal ();
+								{
+									int prevCurrSelectionType = currentSelectionType;
+
+									// Setup toggle state
+									toggleStates [s] = (idx == currentSelectionType);
+									if (RenderEntryToggleButton (s)) {
+										currentSelectionType = idx;
+									}
+
+									// Check for selection
+									if (prevCurrSelectionType != currentSelectionType) {
+										SetupEditData ();
 									}
 								}
-
-								// Deselect all
-								GUILayout.Space (1);
-								if (GUILayout.Button ("Deselect all", entry, GUILayout.Width (100f))) {
-									foreach (string s in pair.Value) {
-										GetToggleState (s);
-										toggleStates [s] = false;
-									}
-								}
+								GUILayout.EndHorizontal ();
+								idx++;
 							}
-							GUILayout.EndHorizontal ();
+						}
 
-							if (toggled) {
-								foreach (string s in pair.Value) {
+						// Show all lists
+						foreach (KeyValuePair <string, List<string>> pair in lists) 
+						{
+							if (pair.Value.Count > 0) 
+							{
+								GUILayout.Space (1);
+								bool toggled = false;
+								GUILayout.BeginHorizontal ();
+								{
+									// Toggle
+									toggled = RenderToggleButton (pair.Key);
+
+									// Select all
 									GUILayout.Space (1);
-									RenderEntryToggleButton (s);
+									if (GUILayout.Button ("Select all", entry, GUILayout.Width (100f))) {
+										foreach (string s in pair.Value) {
+											GetToggleState (s);
+											toggleStates [s] = true;
+										}
+									}
+
+									// Deselect all
+									GUILayout.Space (1);
+									if (GUILayout.Button ("Deselect all", entry, GUILayout.Width (100f))) {
+										foreach (string s in pair.Value) {
+											GetToggleState (s);
+											toggleStates [s] = false;
+										}
+									}
+								}
+								GUILayout.EndHorizontal ();
+
+								if (toggled) {
+									foreach (string s in pair.Value) {
+										GUILayout.Space (1);
+										RenderEntryToggleButton (s);
+									}
 								}
 							}
 						}
 					}
+					GUILayout.EndScrollView ();
 				}
-				GUILayout.EndScrollView ();
-
 				GUILayout.EndArea ();
 
 				base.Render ();
+			}
+
+			private void DoExport ()
+			{
+				isExporting = true;
+				
+				// Years
+				List<string> years = new List<string> ();
+				foreach (string y in this.years) {
+					if (GetToggleState (y)) {
+						years.Add (y);
+					}
+				}
+				
+				// Datanames
+				List<string> dataNames = new List<string> ();
+				List<string> allDataNames = new List<string> ();
+				allDataNames.AddRange (this.parameters);
+				allDataNames.AddRange (this.plants);
+				allDataNames.AddRange (this.animals);
+				allDataNames.AddRange (this.inventarisations);
+				allDataNames.AddRange (this.measures);
+				allDataNames.AddRange (this.researchPoints);
+				foreach (string s in allDataNames) {
+					if (GetToggleState (s)) {
+						dataNames.Add (s);
+					}
+				}
+				
+				// Delete edit data
+				if (edit != null) {
+					edit.ClearData ();
+					edit.ClearSelection ();
+					edit.Delete ();
+				}
+				
+				// Do export and save
+				ExportSettings settings = new ExportSettings (GetAreaSelection (), years, dataNames);
+				ExportMgr.self.ExportData (settings, delegate { 
+					isExporting = false; 
+					SetupEditData ();
+				});
 			}
 
 			private Data GetAreaSelection ()

@@ -39,50 +39,62 @@ namespace Ecosim.SceneEditor
 
 			GUILayout.BeginVertical ();
 			{
-				GUILayout.BeginVertical (ctrl.skin.box);
-				{
-					EcoGUI.Foldout ("Sheet export", ref sheetOpened);
-					if (sheetOpened)
-					{
-						EcoGUI.Toggle ("Data Export enabled", ref mgr.exportEnabled);
-						if (mgr.exportEnabled)
-						{
-							EcoGUI.EnumButton<ExportMgr.SelectionTypes>("Selection type:", mgr.selectionType, OnSelectionTypeChanged, 80f, 150f);
-							EcoGUI.EnumButton<ExportMgr.DataTypes>("Data type:", mgr.dataType, OnDataTypeChanged, 80f, 150f);
-
-							EcoGUI.Toggle ("Export succession type", ref mgr.exportSuccessionTypes);
-							EcoGUI.Toggle ("Export vegetation type", ref mgr.exportVegetationTypes);
-
-							switch (mgr.selectionType)
-							{
-							case ExportMgr.SelectionTypes.Selection :
-								RenderSelectionType (mgr, mx, my);
-								break;
-							}
-						}
-					}
-				}
-				GUILayout.EndVertical ();
-				GUILayout.Space (2f);
-
-				/*GUILayout.BeginVertical (ctrl.skin.box);
-				{
-					EcoGUI.Foldout ("Graph export", ref graphOpened);
-					if (graphOpened)
-					{
-						GUILayout.BeginVertical (ctrl.skin.box);
-						{
-
-						}
-						GUILayout.EndVertical ();
-					}
-				}
-				GUILayout.EndVertical ();*/
-
+				RenderGraph (mx, my);
+				GUILayout.Space (2);
+				RenderSheet (mx, my);
 				GUILayout.FlexibleSpace ();
 			}
 			GUILayout.EndVertical ();
 			return false;
+		}
+
+		private void RenderGraph (int mx, int my) 
+		{
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				EcoGUI.Foldout ("Graph export", ref graphOpened);
+				if (graphOpened)
+				{
+					GUILayout.BeginVertical (ctrl.skin.box);
+					{
+
+					}
+					GUILayout.EndVertical ();
+				}
+			}
+			GUILayout.EndVertical ();
+		}
+
+		private void RenderSheet (int mx, int my) 
+		{
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				EcoGUI.Foldout ("Sheet export", ref sheetOpened);
+				if (sheetOpened)
+				{
+					EcoGUI.Toggle ("Data Export enabled", ref mgr.exportEnabled);
+					if (mgr.exportEnabled)
+					{
+						EcoGUI.EnumButton<ExportMgr.SelectionTypes>("Selection type:", mgr.selectionType, OnSelectionTypeChanged, 80f, 150f);
+						EcoGUI.EnumButton<ExportMgr.DataTypes>("Data type:", mgr.dataType, OnDataTypeChanged, 80f, 150f);
+						EcoGUI.EnumButton<ExportMgr.CostTypes>("Cost type:", mgr.costType, OnCostTypeChanged, 80f, 150f);
+						if (mgr.costType != ExportMgr.CostTypes.None) {
+							EcoGUI.IntField ("Price:", ref mgr.costs, 80f, 150f);
+						}
+
+						EcoGUI.Toggle ("Export succession type", ref mgr.exportSuccessionTypes);
+						EcoGUI.Toggle ("Export vegetation type", ref mgr.exportVegetationTypes);
+						
+						switch (mgr.selectionType)
+						{
+						case ExportMgr.SelectionTypes.Selection :
+							RenderSelectionType (mgr, mx, my);
+							break;
+						}
+					}
+				}
+			}
+			GUILayout.EndVertical ();
 		}
 
 		private void RenderSelectionType (ExportMgr mgr, int mx, int my)
@@ -322,6 +334,11 @@ namespace Ecosim.SceneEditor
 		private void OnSelectionTypeChanged (ExportMgr.SelectionTypes newType)
 		{
 			scene.exporter.selectionType = newType;
+		}
+
+		private void OnCostTypeChanged (ExportMgr.CostTypes newType)
+		{
+			scene.exporter.costType = newType;
 		}
 
 		private void OnDataTypeChanged (ExportMgr.DataTypes newType)

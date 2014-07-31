@@ -120,6 +120,7 @@ public class GameControl : MonoBehaviour
 	
 	public static void ExpensesChanged () {
 		long expenses = self.scene.actions.GetYearExpenses ();
+		self.scene.progression.expenses = expenses;
 		self.expenseText = expenses.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 	}
 
