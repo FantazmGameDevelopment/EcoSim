@@ -126,9 +126,6 @@ namespace Ecosim.GameCtrl.GameButtons
 
 			GameControl.ExpensesChanged ();
 
-			// Reset the ui total costs
-			ui.estimatedTotalCostForYear = preTotalCost;
-
 			base.OnClose ();
 		}
 		

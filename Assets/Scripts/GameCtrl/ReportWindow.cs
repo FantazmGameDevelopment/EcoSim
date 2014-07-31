@@ -187,9 +187,10 @@ public class ReportWindow : ReportBaseWindow
 
 	private void DoSave ()
 	{
-		string url;
-		if (SaveFileDialog.Show (string.Format ("report_{0}", this.report.id), out url, "txt files (*.txt)|*.txt"))
+		instance.StartCoroutine (SaveFileDialog.Show (string.Format ("report_{0}", this.report.id), "txt files (*.txt)|*.txt", delegate(bool ok, string url)
 		{
+			if (!ok) return;
+
 			// Create new file
 			System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
 			FileStream fs = File.Create (url);
@@ -252,7 +253,7 @@ public class ReportWindow : ReportBaseWindow
 			fs.Close ();
 			fs.Dispose ();
 			fs = null;
-		}
+		}));
 	}
 
 	public override void Dispose ()

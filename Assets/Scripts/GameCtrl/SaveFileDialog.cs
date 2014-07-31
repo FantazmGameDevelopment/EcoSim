@@ -8,18 +8,10 @@ public class SaveFileDialog
 	[System.Runtime.InteropServices.DllImport ("user32.dll")]
 	private static extern void _saveFileDialog ();
 
-	public static bool Show (string fileName, out string url)
-	{
-		return Show (fileName, out url, "");
-	}
+	public delegate void ResultDelegate (bool ok, string url);
 
-	public static bool Show (string fileName, out string url, string filters)
+	public static IEnumerator Show (string fileName, string filters, ResultDelegate onResult)
 	{
-		// Save to .txt
-		System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
-		sfd.Filter = filters;
-		sfd.FileName = fileName;
-
 		// If we're in full screen we switch back to non-fullscreen
 		bool fullscreen = Screen.fullScreen;
 		Resolution currentResolution = Screen.currentResolution;
@@ -27,17 +19,32 @@ public class SaveFileDialog
 		{
 			Resolution maxRes = Screen.resolutions [Screen.resolutions.Length - 1];
 			Screen.SetResolution (maxRes.width, maxRes.height, false);
+			//Screen.fullScreen = false;
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
 		}
+
+		// Save to .txt
+		System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
+		sfd.Filter = filters;
+		sfd.FileName = fileName;
 
 		// Check result
 		bool result = (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK);
-		url = sfd.FileName;
+		string url = sfd.FileName;
 
 		// Check if we we're fullscreen and reset it
 		if (fullscreen) 
 		{
 			Screen.SetResolution (currentResolution.width, currentResolution.height, true);
+			//Screen.fullScreen = true;
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
+			yield return new WaitForEndOfFrame ();
 		}
-		return result;
+
+		if (onResult != null)
+			onResult (result, url);
 	}
 }

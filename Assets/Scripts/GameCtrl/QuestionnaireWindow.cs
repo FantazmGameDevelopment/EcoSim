@@ -430,9 +430,10 @@ public class QuestionnaireWindow : ReportBaseWindow
 	{
 		if (GUILayout.Button ("Save", button, GUILayout.Width (80), defaultOption)) 
 		{
-			string url;
-			if (SaveFileDialog.Show ("questionnaire_" + this.questionnaire.id, out url, "txt files (*.txt)|*.txt"))
+			GameControl.self.StartCoroutine (SaveFileDialog.Show ("questionnaire_" + this.questionnaire.id, "txt files (*.txt)|*.txt", delegate(bool ok, string url) 
 			{
+				if (!ok) return;
+
 				// Create new file
 				System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding ();
 				FileStream fs = File.Create (url);
@@ -478,7 +479,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 				fs.Close ();
 				fs.Dispose ();
 				fs = null;
-			}
+			}));
 		}
 	}
 

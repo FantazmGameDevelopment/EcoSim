@@ -565,6 +565,11 @@ namespace Ecosim.SceneData
 					coordData = year[new Coordinate (r.x, r.y)];
 					if (coordData == null) continue;
 
+					// Setup name
+					if (settings.dataNames.Contains (rm.name)) {
+						coordData[rm.name] = "1";
+					}
+
 					// Setup columns and values
 					foreach (KeyValuePair<string, string> p in rm.data.values) {
 						// Check for name
@@ -835,12 +840,11 @@ namespace Ecosim.SceneData
 
 		public void ExportData (ExportSettings settings, System.Action onComplete)
 		{
-			string url;
-			if (SaveFileDialog.Show ("export", out url, "csv files (*.csv)|*.csv"))
+			GameControl.self.StartCoroutine (SaveFileDialog.Show ("export", "csv files (*.csv)|*.csv", delegate(bool ok, string url)
 			{
 				// Get the export data
 				GameControl.self.StartCoroutine (COExportData (settings, url, onComplete));
-			}
+			}));
 		}
 
 		private IEnumerator<object> COExportData (ExportSettings settings, string filePath, System.Action onComplete)

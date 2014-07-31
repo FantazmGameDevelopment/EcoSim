@@ -175,12 +175,13 @@ namespace Ecosim.GameCtrl
 					preSaveQuality = QualitySettings.GetQualityLevel ();
 					QualitySettings.SetQualityLevel (5, true);
 
-					if (SaveFileDialog.Show ("ecosim graph", out savePath, "png (*.png)|*.png"))
-					{
-						// We mark "save" as true so the OnPostRender can handle the save
-						saveGraph = true;
-						instance.StartCoroutine ( RenderAndSaveGraph () );
-					}
+					instance.StartCoroutine (SaveFileDialog.Show ("ecosim graph", "png (*.png)|*.png", delegate(bool ok, string url) {
+						if (ok) {
+							// We mark "save" as true so the OnPostRender can handle the save
+							saveGraph = true;
+							instance.StartCoroutine ( RenderAndSaveGraph () );
+						}
+					}));
 				}
 			}
 

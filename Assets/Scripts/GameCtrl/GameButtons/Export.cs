@@ -35,6 +35,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			private List<string> animals = new List<string>();
 			private List<string> plants = new List<string>();
 			private List<string> measures = new List<string>();
+			private List<string> researchPoints = new List<string> ();
 
 			private Dictionary<string, List<string>> lists = new Dictionary<string, List<string>> ();
 
@@ -128,6 +129,12 @@ namespace Ecosim.GameCtrl.GameButtons
 					inventarisations.Add (ir.name);
 				}
 
+				// Research points
+				foreach (ResearchPoint rp in scene.progression.researchPoints) {
+					if (!rp.HasMeasurements () || researchPoints.Contains (rp.measurements [0].name)) continue;
+					researchPoints.Add (rp.measurements [0].name);
+				}
+
 				// Measures
 				foreach (Progression.ActionTaken ta in scene.progression.actionsTaken) {
 					BasicAction a = scene.actions.GetAction (ta.id);
@@ -144,6 +151,7 @@ namespace Ecosim.GameCtrl.GameButtons
 				lists.Add ("Plants", plants);
 				lists.Add ("Parameters", parameters);
 				lists.Add ("Inventarisations", inventarisations);
+				lists.Add ("Research points", researchPoints);
 				lists.Add ("Measures", measures);
 			}
 			
@@ -180,6 +188,7 @@ namespace Ecosim.GameCtrl.GameButtons
 					allDataNames.AddRange (this.animals);
 					allDataNames.AddRange (this.inventarisations);
 					allDataNames.AddRange (this.measures);
+					allDataNames.AddRange (this.researchPoints);
 					foreach (string s in allDataNames) {
 						if (GetToggleState (s)) {
 							dataNames.Add (s);
