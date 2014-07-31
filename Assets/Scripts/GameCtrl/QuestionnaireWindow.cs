@@ -14,14 +14,23 @@ public class QuestionnaireWindow : ReportBaseWindow
 	private Vector2 messageScrollPos;
 	private Answer selectedAnswer;
 	private System.Action <Answer, bool> onMessageContinueClick;
+
 	private string messageTitle;
 	private string message;
+	//private int messageXOffset;
+	//private int messageYOffset;
 	private int messageLines;
 	private int messageTitleLines;
+	//private bool messageIsDragging;
+	//private Vector2 messageMouseDragPosition;
 
 	public QuestionnaireWindow (Questionnaire questionnaire, System.Action onFinished) : base (onFinished)
 	{
 		this.questionnaire = questionnaire;
+
+		//messageXOffset = -1;
+		//messageYOffset = -1;
+		//message = null;
 	}
 
 	public override void Render ()
@@ -106,18 +115,19 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 		RenderQuestionStart (question);
 		{
-			GUILayout.Label (question.body, headerLight, GUILayout.Width (width), defaultOption);
-			GUILayout.Space (1);
+			GUILayout.Space (1f);
+			GUILayout.Label (question.body, headerDark, GUILayout.Width (width), defaultOption);
+			//GUILayout.Space (1);
 			GUILayout.Label ("Choose your answer:", headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (1);
 
 			// Answers
-			GUILayout.BeginVertical (headerLight, GUILayout.Width (width));
+			GUILayout.BeginVertical ( GUILayout.Width (width));
 			{
-				GUILayout.Space (5);
+				//GUILayout.Space (5);
 				foreach (MPCQuestion.MPCAnswer a in question.answers)
 				{
-					if (GUILayout.Button (a.body, button, GUILayout.Width (width - 10), defaultOption))
+					if (GUILayout.Button (a.body, button, GUILayout.Width (width), defaultOption))
 					{
 						if (selectedAnswer == null)
 						{
@@ -126,7 +136,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 					}
 					GUILayout.Space (1);
 				}
-				GUILayout.Space (4);
+				//GUILayout.Space (4);
 			}
 			GUILayout.EndVertical ();
 		}
@@ -190,9 +200,10 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 		RenderQuestionStart (question);
 		{
-			OpenQuestion.OpenAnswer a = question.answers[0] as OpenQuestion.OpenAnswer;
-			GUILayout.Label (question.body, headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (1);
+			OpenQuestion.OpenAnswer a = question.answers[0] as OpenQuestion.OpenAnswer;
+			GUILayout.Label (question.body, headerDark, GUILayout.Width (width), defaultOption);
+			//GUILayout.Space (1);
 			GUILayout.Label ("Write your answer:", headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (1);
 			if (a.useMaxChars)
@@ -203,8 +214,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 			GUILayout.BeginHorizontal ();
 			{
-				string label = (a.useMaxChars) ? string.Format("Characters {0}/{1}", a.body.Length, a.maxChars) : "";
-				GUILayout.Label (label, headerLight, GUILayout.Width (width - 52), defaultOption);
+				string label = (a.useMaxChars) ? string.Format("<size=10>Characters {0}/{1}</size>", a.body.Length, a.maxChars) : "";
+				GUILayout.Label (label, headerLight, GUILayout.Width (width - 52), GUILayout.Height (30), defaultOption);
 				GUILayout.Space (1);
 				if (GUILayout.Button ("Done", button, GUILayout.Width (51), defaultOption))
 				{
@@ -232,7 +243,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 		{
 			this.message = "Your answer can't be empty.";
 			this.selectedAnswer = a;
-			this.messageTitle = null;
+			this.messageTitle = "Oops...";
 			this.onMessageContinueClick = HandleOpenAnswer;
 			this.messageLines = 1;
 			this.messageTitleLines = 1;
@@ -279,10 +290,10 @@ public class QuestionnaireWindow : ReportBaseWindow
 		{
 			GUILayout.Label ("Questionnaire: " + q.name, headerDark, GUILayout.Width (width - 40), defaultOption);
 			GUILayout.Space (1);
-			GUILayout.Label (string.Format ("{0}/{1}", (q.currentQuestionIndex + 1), q.questions.Count), headerLight, GUILayout.Width (39), defaultOption);
+			GUILayout.Label (string.Format ("{0}/{1}", (q.currentQuestionIndex + 1), q.questions.Count), headerDark, GUILayout.Width (39), defaultOption);
 		}
 		GUILayout.EndHorizontal ();
-		GUILayout.Space (1);
+		//GUILayout.Space (1);
 	}
 	private void RenderQuestionEnd (Question question)
 	{
@@ -355,10 +366,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 					GUILayout.Space (1);
 				}
 				
-				GUILayout.Label ("Result: " + ((passed) ? "Passed" : "Failed"), headerLight, GUILayout.Width (width), defaultOption);
-				GUILayout.Space (1);
+				GUILayout.Label ("Result: " + ((passed) ? "Passed" : "Failed"), headerDark, GUILayout.Width (width), defaultOption);
 			}
-			
+
 			// Continue button
 			if (passed) 
 			{
@@ -387,8 +397,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 				if (q.useFailedFeedback)
 				{
 					EcoGUI.SplitLabel (q.failedFeedback, headerLight, GUILayout.Width (width), defaultOption);
-					GUILayout.Space (1);
 				}
+				GUILayout.Space (1);
 				
 				GUILayout.BeginHorizontal ();
 				{
@@ -487,38 +497,64 @@ public class QuestionnaireWindow : ReportBaseWindow
 		width = Screen.width * 0.5f;
 		height = (messageLines + messageTitleLines + 1) * 50f;
 		height = Mathf.Clamp (height, 0f, Screen.height * 0.75f);
-		left = left = ((Screen.width - width) * 0.5f) + editorWidth;
+
+		// Check x y offsets
+		/*if (messageXOffset == -1) {
+			messageXOffset = (int)(((Screen.width - width) * 0.5f) + editorWidth);
+		}
+		if (messageYOffset == -1) {
+			messageYOffset = (int)((Screen.height * 0.5f) - (height * 0.5f));
+		}*/
+
+		left = ((Screen.width - width) * 0.5f) + editorWidth;
 		top = (Screen.height * 0.5f) - (height * 0.5f);
-		
+
 		GUILayout.BeginArea (new Rect (left, top, width, height));
 		{
-			GUILayout.BeginVertical (headerLight, GUILayout.Width (width + 10f));
+			GUILayout.Label (messageTitle ?? "", headerDark, GUILayout.Width (width), defaultOption);
+
+			// Check for drag
+			/*if (Event.current.type == EventType.MouseUp) 
 			{
-				GUILayout.Space (5f);
-				if (this.messageTitle != null) {
-					GUILayout.Label (messageTitle, headerLight, GUILayout.Width (width- 10f), defaultOption);
-					GUILayout.Space (1);
-				}
-				this.messageScrollPos = GUILayout.BeginScrollView (this.messageScrollPos);
-				{
-					GUILayout.Label (this.message, textArea, GUILayout.Width (width - 10f), GUILayout.ExpandHeight (true), defaultOption);
-					GUILayout.Space (1);
-				}
-				GUILayout.EndScrollView ();
-				GUILayout.BeginHorizontal ();
-				{
-					GUILayout.Label ("", headerLight, GUILayout.Width (width - 90), defaultOption);
-					if (GUILayout.Button ("Continue", button, GUILayout.Width (80), defaultOption))
-					{
-						this.message = null;
-						if (onMessageContinueClick != null)
-							onMessageContinueClick (this.selectedAnswer, false);
-					}
-				}
-				GUILayout.EndHorizontal ();
-				GUILayout.Space (5f);
+				// Cancel drag
+				messageIsDragging = false;
+			} 
+			else if (messageIsDragging) 
+			{
+				// Do drag
+				Vector2 guiMousePos = Event.current.mousePosition;
+				messageXOffset += (int)(guiMousePos.x - messageMouseDragPosition.x);
+				messageYOffset += (int)(guiMousePos.y - messageMouseDragPosition.y);
+				messageMouseDragPosition = guiMousePos;
 			}
-			GUILayout.EndVertical ();
+			if (Event.current.type == EventType.MouseDown)
+			{
+				// Start drag
+				if (GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)) 
+				{
+					messageIsDragging = true;
+					messageMouseDragPosition = Event.current.mousePosition;
+					Event.current.Use ();
+				}
+			}*/ 
+			GUILayout.Space (1);
+			this.messageScrollPos = GUILayout.BeginScrollView (this.messageScrollPos);
+			{
+				GUILayout.Label (this.message, textArea, GUILayout.Width (width), GUILayout.ExpandHeight (true), defaultOption);
+				GUILayout.Space (1);
+			}
+			GUILayout.EndScrollView ();
+			GUILayout.BeginHorizontal ();
+			{
+				GUILayout.Label ("", headerLight, GUILayout.Width (width - 90), defaultOption);
+				if (GUILayout.Button ("Continue", button, GUILayout.Width (90), defaultOption))
+				{
+					this.message = null;
+					if (onMessageContinueClick != null)
+						onMessageContinueClick (this.selectedAnswer, false);
+				}
+			}
+			GUILayout.EndHorizontal ();
 		}
 		GUILayout.EndArea ();
 	}

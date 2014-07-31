@@ -103,7 +103,7 @@ public class ReportWindow : ReportBaseWindow
 		// Introduction
 		if (this.report.useIntroduction)
 		{
-			GUILayout.Label ("Introduction:", headerLight, GUILayout.Width (width), defaultOption);
+			GUILayout.Label ("Introduction:", headerDark, GUILayout.Width (width), defaultOption);
 			GUILayout.Label (this.report.introduction, headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 		}
@@ -113,7 +113,7 @@ public class ReportWindow : ReportBaseWindow
 		{
 			// Name
 			GUILayout.Label ("\"" + qs.questionName + "\"", headerDark, GUILayout.Width (width), defaultOption);
-			GUILayout.Label ("\"" + qs.questionAnswer + "\"", headerLight, GUILayout.Width (width), defaultOption);
+			GUILayout.Label ("\"" + qs.questionAnswer + "\"", textArea, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 		}
 
@@ -135,14 +135,14 @@ public class ReportWindow : ReportBaseWindow
 
 			// Description
 			if (rp.useDescription) {
-				GUILayout.Label (rp.description, headerLight, GUILayout.Width (width), defaultOption);
+				GUILayout.Label (rp.description, headerDark, GUILayout.Width (width), defaultOption);
 			}
 
 			// Body
 			if (rp.useMaxChars) 
 			{
 				ps.body = GUILayout.TextArea (ps.body, rp.maxChars, textArea, GUILayout.Width (width), defaultOption);
-				GUILayout.Label (string.Format("Characters {0}/{1}", ps.body.Length, rp.maxChars), headerLight, GUILayout.Width (width), defaultOption);
+				GUILayout.Label (string.Format("<size=10>Characters {0}/{1}</size>", ps.body.Length, rp.maxChars), headerLight , GUILayout.Width (width), GUILayout.Height (30), defaultOption);
 			} else 
 			{
 				ps.body = GUILayout.TextArea (ps.body, textArea, GUILayout.Width (width), defaultOption);
@@ -154,7 +154,7 @@ public class ReportWindow : ReportBaseWindow
 		// Conclusion
 		if (this.report.useConclusion)
 		{
-			GUILayout.Label ("Conclusion:", headerLight, GUILayout.Width (width), defaultOption);
+			GUILayout.Label ("Conclusion:", headerDark, GUILayout.Width (width), defaultOption);
 			GUILayout.Label (this.report.conclusion, headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 		}

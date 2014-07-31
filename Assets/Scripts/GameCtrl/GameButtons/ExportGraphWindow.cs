@@ -138,7 +138,7 @@ namespace Ecosim.GameCtrl
 			Rect toggleRect = titleRect;
 			toggleRect.x += titleRect.width + 1;
 			toggleRect.width = 120f;
-			if (SimpleGUI.Button (toggleRect, "Toggle values", entry, entrySelected)) {
+			if (SimpleGUI.Button (toggleRect, ((showLabels)?"Hide Values":"Show Values"), entry, entrySelected)) {
 				showLabels = !showLabels;
 			}
 

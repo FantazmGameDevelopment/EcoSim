@@ -401,6 +401,8 @@ namespace Ecosim.SceneData
 			OnlyWhenSurveyed
 		}
 
+		public const int COORDS_PER_FRAME = 100;
+
 		public static ExportMgr self { get; private set; }
 		private readonly Scene scene;
 
@@ -490,16 +492,28 @@ namespace Ecosim.SceneData
 			for (int i = 0; i < (scene.progression.year - scene.progression.startYear); i++) {
 				// New/get year
 				int y = scene.progression.startYear + i;
-				if (settings.years.Contains (y.ToString ())) {
+				if (settings.years.Contains (y.ToString ())) 
+				{
 					year = ed.NewYear (y);
-					foreach (ValueCoordinate vc in settings.area.EnumerateNotZero ()) {
+
+					// Coords per frame
+					int totalCoordsProcessed = 0;
+					foreach (ValueCoordinate vc in settings.area.EnumerateNotZero ())
+					{
 						// New/get coord
 						coordData = year.NewCoord (vc);
+
+						// Check if we should wait a frame
+						totalCoordsProcessed++;
+						if (totalCoordsProcessed > COORDS_PER_FRAME) {
+							totalCoordsProcessed = 0;
+							yield return new WaitForEndOfFrame ();
+						}
 					}
 				}
-			}
 
-			yield return new WaitForEndOfFrame ();
+				yield return new WaitForEndOfFrame ();
+			}
 
 			#pragma warning disable 162
 			// Setup threads
@@ -514,7 +528,10 @@ namespace Ecosim.SceneData
 				year = ed [ir.year];
 				if (year == null) continue;
 
-				foreach (ValueCoordinate vc in ir.AreaMap.EnumerateNotZero ()) {
+				// Coords per frame
+				int totalCoordsProcessed = 0;
+				foreach (ValueCoordinate vc in ir.AreaMap.EnumerateNotZero ()) 
+				{
 					coordData = year[(Coordinate)vc];
 					if (coordData == null) continue;
 					coordData[ir.name] = ir.DataMap.Get (vc).ToString();
@@ -526,6 +543,13 @@ namespace Ecosim.SceneData
 						int prevCosts = 0;
 						int.TryParse (coordData["costs"], out prevCosts);
 						coordData["costs"] = (prevCosts + (int)action.uiList [0].cost).ToString();
+					}
+
+					// Check if we should wait a frame
+					totalCoordsProcessed++;
+					if (totalCoordsProcessed > COORDS_PER_FRAME) {
+						totalCoordsProcessed = 0;
+						yield return new WaitForEndOfFrame ();
 					}
 				}
 
@@ -556,6 +580,8 @@ namespace Ecosim.SceneData
 						int.TryParse (coordData["costs"], out prevCosts);
 						coordData["costs"] = (prevCosts + (int)action.uiList [0].cost).ToString();
 					}
+
+					yield return new WaitForEndOfFrame ();
 				}
 
 				yield return new WaitForEndOfFrame ();
@@ -589,6 +615,8 @@ namespace Ecosim.SceneData
 								coordData["costs"] = (prevCosts + (int)a.uiList [0].cost).ToString();
 							}
 						}
+
+						yield return new WaitForEndOfFrame ();
 					}
 				}
 
@@ -620,7 +648,6 @@ namespace Ecosim.SceneData
 		private IEnumerator<object> ProcessYearData (System.Object args)
 		{
 			// Coords per frame
-			int coordPerFrame = 100;
 			int totalCoordsProcessed = 0;
 
 			// Temp vars
@@ -749,7 +776,7 @@ namespace Ecosim.SceneData
 
 				// Check if we should wait a frame
 				totalCoordsProcessed++;
-				if (totalCoordsProcessed > coordPerFrame) {
+				if (totalCoordsProcessed > COORDS_PER_FRAME) {
 					totalCoordsProcessed = 0;
 					yield return new WaitForEndOfFrame ();
 				}
@@ -820,8 +847,13 @@ namespace Ecosim.SceneData
 		{
 			// Enable spinner and hide interface
 			SimpleSpinner.ActivateSpinner ();
-			GameControl.self.isProcessing = true;
+			//GameControl.self.isProcessing = true;
+			GameControl.self.hideToolBar = true;
+			GameControl.self.hideSuccessionButton = true;
 			GameMenu.show = false;
+
+			string help = "Gathering data. Depending on the amount of data, this may take a few minutes.";
+			GameControl.ExtraHelp (help);
 
 			yield return 0;
 			yield return GameControl.self.StartCoroutine (RetrieveExportData (settings));
@@ -831,8 +863,12 @@ namespace Ecosim.SceneData
 
 			// Disable spinner and show interface
 			SimpleSpinner.DeactivateSpinner ();
-			GameControl.self.isProcessing = false;
+			//GameControl.self.isProcessing = false;
+			GameControl.self.hideToolBar = false;
+			GameControl.self.hideSuccessionButton = false;
 			GameMenu.show = true;
+
+			GameControl.ClearExtraHelp (help);
 
 			// Create new file
 			FileStream fs = File.Create (filePath);

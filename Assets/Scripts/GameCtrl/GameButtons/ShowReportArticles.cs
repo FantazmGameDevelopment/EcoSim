@@ -55,7 +55,7 @@ namespace Ecosim.GameCtrl.GameButtons
 						parent.RenderArticle ();
 					}
 				}
-				SimpleGUI.Label (new Rect (xOffset + 65, yOffset, tex.width - 131, 32), "Game Reports", title);
+				SimpleGUI.Label (new Rect (xOffset + 65, yOffset, tex.width - 131, 32), "Game Messages", title);
 				SimpleGUI.Label (new Rect (xOffset, yOffset + 33, tex.width, tex.height), tex);
 				base.Render ();
 			}
@@ -76,7 +76,7 @@ namespace Ecosim.GameCtrl.GameButtons
 				articleWindow.Close ();
 			}
 			if (GameControl.self.scene.progression.reports.Count == 0) {
-				string text = "[letter]\n[par]There are no reports.";
+				string text = "[letter]\n[par]There are no messages.";
 				RenderFontToTexture.self.RenderNewsArticle (text, GameControl.self.scene, articleTex, true);
 			}
 			else {

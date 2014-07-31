@@ -54,11 +54,11 @@ namespace Ecosim.GameCtrl.GameButtons
 			RetrieveInventarisations ();
 
 			int colWidth = 164;
-			int yearWidth = 65;
+			int yearWidth = 80;
 			int yearToggleBtnWidth = 32;
 			int graphEditorWidth = 150;
 			int invGraphEditorBtnWidth = 100;
-			int graphBtnWidth = 120;
+			int graphBtnWidth = 80;
 			int entryHeight = 32;
 
 			foreach (Inventarisation inv in inventarisations) 
@@ -83,19 +83,24 @@ namespace Ecosim.GameCtrl.GameButtons
 				Rect graphRect = new Rect (x, y, graphEditorWidth, entryHeight);
 
 				// Label
-				graphRect.width = colWidth;
+				graphRect.width = colWidth + yearWidth - 135;
 				isOver |= SimpleGUI.Label (graphRect, "Graph Editor", header);  
 				graphRect.x += graphRect.width + 1;
 
-				graphRect.width = yearWidth;
+				graphRect.width = 135;
 				isOver |= SimpleGUI.CheckMouseOver (graphRect); 
-				if (SimpleGUI.Button (graphRect, "Toggle", entry, entrySelected)) {
+				if (SimpleGUI.Button (graphRect, ((graphEditorOpened)?"Hide Functions":"Show Functions"), entry, entrySelected)) {
 					graphEditorOpened = !graphEditorOpened;
 				}
 				
 				// Show graph editor controls
 				if (graphEditorOpened) 
 				{
+					// Calculate graph btn width
+					int newGraphBtnWidth = (int)((float)(colWidth + yearWidth) / 3f);
+					if (newGraphBtnWidth > graphBtnWidth)
+						graphBtnWidth = newGraphBtnWidth;
+
 					y += entryHeight + 1;
 					Rect r = new Rect (x, y, graphBtnWidth, entryHeight);
 					
@@ -111,7 +116,7 @@ namespace Ecosim.GameCtrl.GameButtons
 					// Clear selection
 					r.x += r.width + 1;
 					isOver |= SimpleGUI.CheckMouseOver (r);
-					if (SimpleGUI.Button (r, "Clear selection", entry, entrySelected)) { 
+					if (SimpleGUI.Button (r, "Clear all", entry, entrySelected)) { 
 						foreach (Inventarisation i in inventarisations) {
 							foreach (Progression.InventarisationResult ir in i.results) {
 								ir.selected = false;
@@ -136,7 +141,7 @@ namespace Ecosim.GameCtrl.GameButtons
 
 			if (isOver) {
 				selectedIR = null;
-				selectedInvName = null;
+				//selectedInvName = null;
 			}
 
 			// Show sorted inventarisations
@@ -170,7 +175,9 @@ namespace Ecosim.GameCtrl.GameButtons
 					// Entry
 					bool hl = (inv.name == selectedInvName);
 					Rect invR = new Rect (x, y + (entryHeight + 1) * (r + 1), colWidth, entryHeight);
-					bool isOverGroup = SimpleGUI.Label (invR, inv.name + graphSuffix, hl ? entrySelected : entry);
+					bool isOverGroup = false;
+					if (hl) isOverGroup = SimpleGUI.Label (invR, inv.name + graphSuffix, hl ? entrySelected : entry);
+					else isOverGroup = SimpleGUI.Label (invR, inv.name + graphSuffix, entry, entrySelected);
 					invR.x += invR.width + 1;
 
 					// Graph controls
@@ -200,7 +207,7 @@ namespace Ecosim.GameCtrl.GameButtons
 						invR.x += invBtnR.width + 1;*/
 
 						// Toggle when clicking on the entry
-						if (isOverGroup && Event.current.type == EventType.MouseDown) {
+						/*if (isOverGroup && Event.current.type == EventType.MouseDown) {
 							// Use the event
 							Event.current.Use ();
 
@@ -217,14 +224,50 @@ namespace Ecosim.GameCtrl.GameButtons
 								// If we found a selected, deselect, if we didn't find a selected, select it
 								ir.selected = !foundSelected;
 							}
-						}
+						}*/
+					}
+
+					// Select the group when clicking on it
+					if (isOverGroup && Event.current.type == EventType.mouseDown) {
+						// Use the event
+						Event.current.Use ();
+						
+						// Select the inventarisation
+						selectedInvName = inv.name;
 					}
 
 					isOver |= isOverGroup;
 					r++;
 
-					if (isOverGroup) selectedInvName = inv.name;
-					if (!isOverGroup && !hl) continue;
+					// Show functions if selected and editor is opened
+					if (hl && graphEditorOpened)
+					{
+						int funcW = Mathf.Clamp ((int)(colWidth / 2f), 80, 300);
+						Rect funcR = new Rect (x, y + (entryHeight + 1) * (r + 1), funcW, entryHeight);
+
+						// Select all
+						isOver |= SimpleGUI.CheckMouseOver (funcR);
+						if (SimpleGUI.Button (funcR, "Select all", entry, entrySelected)) { 
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								ir.selected = true;
+							}
+						}
+						// Clear selection
+						funcR.x += funcR.width + 1;
+						funcR.width--;
+						isOver |= SimpleGUI.CheckMouseOver (funcR);
+						if (SimpleGUI.Button (funcR, "Clear all", entry, entrySelected)) { 
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								ir.selected = false;
+							}
+						}
+
+						// Up the r so the rest of the invs are positioned properly
+						r++;
+					}
+
+					// Don't show the years if not highlighted (selected)
+					if (!hl) continue;
 
 					// Show years seperately
 					int i = 0;
@@ -343,6 +386,8 @@ namespace Ecosim.GameCtrl.GameButtons
 
 		private void RetrieveInventarisations ()
 		{
+			if (inventarisations != null) return;
+
 			// Get and sort all inventarisations
 			inventarisations = new List<Inventarisation> ();
 			
@@ -369,7 +414,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		{
 			windows.Remove (ir);
 			inventarisations = null;
-			selectedInvName = null;
+			//selectedInvName = null;
 			selectedIR = null;
 		}
 		

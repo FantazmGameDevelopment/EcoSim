@@ -7,11 +7,11 @@ using System;
 using System.IO;
 using Ecosim.SceneEditor;
 
-public class ReportBaseWindow
+public class ReportBaseWindow : GameWindow
 {
 	protected System.Action onFinished;
 	protected Vector2 scrollPosition;
-	
+
 	protected float width;
 	protected float height;
 	protected float left;
@@ -22,26 +22,27 @@ public class ReportBaseWindow
 	protected static GUIStyle white;
 	protected static GUIStyle headerDark;
 	protected static GUIStyle textArea;
-	protected static GUIStyle titleNoText;
+	//protected static GUIStyle titleNoText;
 	protected static GUIStyle headerLight;
 	protected static GUIStyle button;
-	protected static GUIStyle formatted;
-	
+	//protected static GUIStyle formatted;
+
 	public static void Reset ()
 	{
 		if (black != null) return; // already did stuff below
 		black = GameControl.self.skin.FindStyle ("BGBlack");
 		white = GameControl.self.skin.FindStyle ("BGWhite");
-		headerDark = GameControl.self.skin.FindStyle ("ArialB16-75");
-		headerLight = GameControl.self.skin.FindStyle ("ArialB16-50");
-		textArea = GameControl.self.skin.FindStyle ("TextArea B16-50");
-		button = GameControl.self.skin.FindStyle ("Arial16-75");
-		formatted = GameControl.self.skin.FindStyle ("Arial16-50-formatted");
+		headerDark = GameControl.self.skin.FindStyle ("ArialB16-95");
+		headerLight = GameControl.self.skin.FindStyle ("Arial16-75");
+		textArea = GameControl.self.skin.FindStyle ("TextArea B16-75");
+		button = GameControl.self.skin.FindStyle ("Arial16-95"); // -> Make this one darker
+		//formatted = GameControl.self.skin.FindStyle ("Arial16-50-formatted");
 	}
 	
-	public ReportBaseWindow (System.Action onFinished)
+	public ReportBaseWindow (System.Action onFinished) : base(-1, -1, 650, null)
 	{
 		this.onFinished = onFinished;
+		this.canCloseManually = false;
 		Reset ();
 	}
 	
@@ -51,10 +52,10 @@ public class ReportBaseWindow
 		if (EditorCtrl.self.isOpen) {
 			editorWidth = 400;
 		}
-		width = (Screen.width - editorWidth) * 0.65f;
-		height = Screen.height * 0.75f;
-		left = ((Screen.width - width) * 0.5f) + editorWidth;
-		top = (Screen.height - height) * 0.5f;
+		width = 650;//Screen.width * 0.65;
+		height = 512;//Screen.height * 0.75f;
+		left = this.xOffset;// ((Screen.width - width) * 0.5f) + editorWidth;
+		top = this.yOffset;//(Screen.height - height) * 0.5f;
 		defaultOption = GUILayout.MinWidth (0);//GUILayout.MinHeight (28f);//GUILayout.ExpandHeight (true);
 	}
 
@@ -62,6 +63,8 @@ public class ReportBaseWindow
 	{
 		this.onFinished = null;
 		this.defaultOption = null;
+
+		this.Close ();
 	}
 }
 
