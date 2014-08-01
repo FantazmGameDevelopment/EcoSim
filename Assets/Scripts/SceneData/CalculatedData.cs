@@ -187,6 +187,11 @@ namespace Ecosim.SceneData
 			}
 		}
 
+		public CalculatedData (Scene scene) : base (scene)
+		{
+
+		}
+
 		public CalculatedData (Scene scene, string name) :	base(scene)
 		{
 			this.name = name;

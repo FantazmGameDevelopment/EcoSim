@@ -290,7 +290,7 @@ namespace Ecosim.SceneEditor
 		private bool reuseAnimals = true;
 		private bool reuseActionObjectGroups = true;
 		private bool reuseResearchPoints = true;
-		private bool reuseCalculations = true;
+		private bool reuseCalculations = false;
 		
 		bool RenderNew (int mx, int my)
 		{
@@ -355,7 +355,8 @@ namespace Ecosim.SceneEditor
 				reuseVegetation = GUILayout.Toggle (reuseVegetation, "Use current vegetation");
 				reusePlants = GUILayout.Toggle (reusePlants, "Use current plants");
 				reuseAnimals = GUILayout.Toggle (reuseAnimals, "Use current animals");
-				reuseCalculations = GUILayout.Toggle (reuseCalculations, "Use current Calculated data calculations");
+				// FIXME: Something goes wrong if we reuse the calculations? Check this some time.
+				//reuseCalculations = GUILayout.Toggle (reuseCalculations, "Use current Calculated data calculations");
 			}
 
 			return false;

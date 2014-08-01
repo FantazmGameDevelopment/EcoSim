@@ -246,11 +246,13 @@ namespace Ecosim.SceneData
 		}
 
 		public List<string> columns;
+		public List<string> defaultColumns;
 		public List<YearData> years;
 
 		public ExportData ()
 		{
 			this.columns = new List<string> ();
+			this.defaultColumns = new List<string> ();
 			this.years = new List<YearData> ();
 		}
 
@@ -295,6 +297,17 @@ namespace Ecosim.SceneData
 			}
 		}
 
+		public IEnumerable<string> EnumerateColumns (bool skipDefault)
+		{
+			foreach (string c in this.columns) {
+				if (skipDefault) {
+					if (!this.defaultColumns.Contains (c))
+						yield return c;
+				}
+				else yield return c;
+			}
+		}
+
 		public IEnumerable<YearData> EnumerateYears ()
 		{
 			foreach (YearData y in this.years) {
@@ -311,6 +324,10 @@ namespace Ecosim.SceneData
 
 		public bool HasColumn (string column) {
 			return this.columns.Contains (column);
+		}
+
+		public void RegisterCurrentColumnsAsDefault () {
+			this.defaultColumns = new List<string> (this.columns);
 		}
 
 		public string ToCSV ()
@@ -498,6 +515,8 @@ namespace Ecosim.SceneData
 				ed.AddColumn ("succession");
 			}
 
+			ed.RegisterCurrentColumnsAsDefault ();
+
 			yield return new WaitForEndOfFrame ();
 
 			// Add all data names
@@ -654,6 +673,31 @@ namespace Ecosim.SceneData
 				//ThreadPool.QueueUserWorkItem (ProcessYearData, new YearExportSettings (settings, y.year));
 				yield return GameControl.self.StartCoroutine ( ProcessYearData (new YearExportSettings (settings, y.year)) );
 				yield return new WaitForSeconds (0.1f);
+			}
+
+			// Loop through all columns and convert the values
+			foreach (string c in ed.EnumerateColumns (true)) {
+				// TODO Check if we should convert it?
+				foreach (ExportData.YearData y in ed.EnumerateYears ()) {
+					foreach (ExportData.YearData.CoordinateData cd in y.EnumerateCoords ()) 
+					{
+						// Coords per frame
+						int totalCoordsProcessed = 0;
+
+						string val = cd [c];
+						int intVal = 0;
+						if (!string.IsNullOrEmpty (val) && int.TryParse (val, out intVal)) {
+							cd [c] = scene.progression.ConvertToFloat (c, intVal).ToString ();
+						}
+
+						// Check if we should wait a frame
+						totalCoordsProcessed++;
+						if (totalCoordsProcessed > COORDS_PER_FRAME) {
+							totalCoordsProcessed = 0;
+							yield return new WaitForEndOfFrame ();
+						}
+					}
+				}
 			}
 
 			// Cost

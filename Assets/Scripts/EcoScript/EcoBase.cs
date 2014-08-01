@@ -263,6 +263,10 @@ namespace Ecosim.EcoScript
 			return null;
 		}
 
+		public void ResearchConducted () {
+			scene.actions.ResearchConducted ();
+		}
+
 		/**
 		 * Enables/Disables action with given id, enable == true => enble action otherwise disable
 		 */
