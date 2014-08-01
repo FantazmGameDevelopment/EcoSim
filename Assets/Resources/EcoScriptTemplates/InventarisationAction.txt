@@ -56,8 +56,3 @@ void DoSuccession() {
 bool CanSelectTile (int x, int y, UserInteraction ui) {
 	return true;
 }
-
-// Save predefined variables
-//scene.progression.variables [Progression.PredefinedVariables.lastResearch.ToString()] = this.description;
-//scene.progression.variables [Progression.PredefinedVariables.lastResearchGroup.ToString()] = "Inventarisation";
-//scene.progression.variables [Progression.PredefinedVariables.lastResearchCount.ToString()] = selectedTilesCount;
