@@ -19,6 +19,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		private GUIStyle entrySelected;
 		private Progression.InventarisationResult selectedIR = null;
 		private string selectedInvName = null;
+		private int totalYearsSelected = 0;
 		private string name;
 		private Dictionary<Progression.InventarisationResult, InventarisationResultWindow> windows;
 
@@ -77,8 +78,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			int width = 6;
 
 			// Graph editor
-			ExportMgr.self.exportEnabled = true;
-			if (ExportMgr.self.exportEnabled) 
+			if (ExportMgr.self.graphExportEnabled) 
 			{
 				Rect graphRect = new Rect (x, y, graphEditorWidth, entryHeight);
 
@@ -103,7 +103,43 @@ namespace Ecosim.GameCtrl.GameButtons
 
 					y += entryHeight + 1;
 					Rect r = new Rect (x, y, graphBtnWidth, entryHeight);
-					
+
+					int totalCosts = 0;
+					bool enoughBudget = true;
+
+					// Costs
+					switch (ExportMgr.self.graphCostType)
+					{
+					case ExportMgr.GraphCostTypes.OnePrice :
+					{
+						// Price
+						Rect pr = new Rect (r);
+
+						// Cost header
+						pr.width = ((float)(colWidth + yearWidth) / 3f);
+						isOver |= SimpleGUI.Label (pr, "", header);
+						pr.x += pr.width + 1;
+						pr.width--;
+						isOver |= SimpleGUI.Label (pr, "Cost", entry);
+
+						// Set costs
+						totalCosts = ExportMgr.self.graphCosts;
+						enoughBudget = (GameControl.self.scene.progression.budget - GameControl.self.scene.progression.expenses >= totalCosts); 
+
+						// Actual costs
+						if (!enoughBudget) GUI.color = Color.red;
+						pr.x += pr.width + 1;
+						pr.width ++;
+						isOver |= SimpleGUI.Label (pr, ExportMgr.self.graphCosts.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB")), entry);
+						GUI.color = Color.white;
+
+						// Up the entry height
+						y += entryHeight + 1;
+						r.y += entryHeight + 1;
+					}
+					break;
+					}
+
 					// Select all
 					isOver |= SimpleGUI.CheckMouseOver (r);
 					if (SimpleGUI.Button (r, "Select all", entry, entrySelected)) { 
@@ -123,12 +159,23 @@ namespace Ecosim.GameCtrl.GameButtons
 							}
 						}
 					}
+
 					// Generate graph
+					GUI.enabled = enoughBudget && totalYearsSelected > 0;
 					r.x += r.width + 1;
 					isOver |= SimpleGUI.CheckMouseOver (r);
-					if (SimpleGUI.Button (r, "Generate", entry, entrySelected)) {
+					bool generateClicked = false;
+					if (GUI.enabled) generateClicked = SimpleGUI.Button (r, "Generate", entry, entrySelected);
+					if (!GUI.enabled) generateClicked = SimpleGUI.Button (r, "Generate", entry);
+					if (generateClicked)
+					{
+						// Subtract costs
+						GameControl.self.scene.progression.budget -= totalCosts;
+						GameControl.BudgetChanged ();
+
 						new Ecosim.GameCtrl.ExportGraphWindow ();
 					}
+					GUI.enabled = true;
 				}
 
 				y += entryHeight + 1;
@@ -143,6 +190,9 @@ namespace Ecosim.GameCtrl.GameButtons
 				selectedIR = null;
 				//selectedInvName = null;
 			}
+
+			// Reset total selected
+			totalYearsSelected = 0;
 
 			// Show sorted inventarisations
 			Progression.InventarisationResult newSelectedIR = null;
@@ -164,8 +214,10 @@ namespace Ecosim.GameCtrl.GameButtons
 						int total = inv.results.Count;
 						int selected = 0;
 						foreach (Progression.InventarisationResult ir in inv.results) {
-							if (ir.selected)
+							if (ir.selected) {
 								selected++;
+								totalYearsSelected++;
+							}
 						}
 						graphSuffix = string.Format (" ({0}/{1})", selected, total);
 					}

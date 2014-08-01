@@ -408,6 +408,12 @@ namespace Ecosim.SceneData
 			PricePerYear
 		}
 
+		public enum GraphCostTypes
+		{
+			None,
+			OnePrice
+		}
+
 		public const int COORDS_PER_FRAME = 100;
 
 		public static ExportMgr self { get; private set; }
@@ -420,6 +426,10 @@ namespace Ecosim.SceneData
 		public bool exportSuccessionTypes;
 		public CostTypes costType;
 		public int costs;
+
+		public bool graphExportEnabled;
+		public GraphCostTypes graphCostType;
+		public int graphCosts;
 
 		public List<int> targetAreas;
 		public List<string> parameters;
@@ -990,6 +1000,16 @@ namespace Ecosim.SceneData
 				this.costs = int.Parse (reader.GetAttribute ("costs"));
 			}
 
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("graphenabled"))) {
+				this.graphExportEnabled = bool.Parse (reader.GetAttribute ("graphenabled"));
+			} else this.graphExportEnabled = true;
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("graphcosttype"))) {
+				this.graphCostType = (GraphCostTypes)System.Enum.Parse (typeof (GraphCostTypes), reader.GetAttribute ("graphcosttype"));
+			}
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("graphcosts"))) {
+				this.graphCosts = int.Parse (reader.GetAttribute ("graphcosts"));
+			}
+
 			List<int> targetAreaList = new List<int>();
 			List<string> paramList = new List<string>();
 			List<string> animalList = new List<string>();
@@ -1032,8 +1052,10 @@ namespace Ecosim.SceneData
 		public void Save (string path)
 		{
 			XmlTextWriter writer = new XmlTextWriter (path + "exportsettings.xml", System.Text.Encoding.UTF8);
+
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement ("export");
+
 			writer.WriteAttributeString ("enabled", this.exportEnabled.ToString().ToLower());
 			writer.WriteAttributeString ("exportvegtypes", this.exportVegetationTypes.ToString().ToLower());
 			writer.WriteAttributeString ("exportsucctypes", this.exportSuccessionTypes.ToString().ToLower());
@@ -1041,6 +1063,11 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("datatype", this.dataType.ToString());
 			writer.WriteAttributeString ("costtype", this.costType.ToString());
 			writer.WriteAttributeString ("costs", this.costs.ToString ());
+
+			writer.WriteAttributeString ("graphenabled", this.graphExportEnabled.ToString ().ToLower ());
+			writer.WriteAttributeString ("graphcosttype", this.graphCostType.ToString ());
+			writer.WriteAttributeString ("graphcosts", this.graphCosts.ToString ());
+
 			foreach (string s in this.parameters) {
 				writer.WriteStartElement ("param");
 				writer.WriteAttributeString ("name", s);

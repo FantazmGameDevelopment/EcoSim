@@ -55,11 +55,14 @@ namespace Ecosim.SceneEditor
 				EcoGUI.Foldout ("Graph export", ref graphOpened);
 				if (graphOpened)
 				{
-					GUILayout.BeginVertical (ctrl.skin.box);
+					EcoGUI.Toggle ("Graph Export enabled", ref mgr.graphExportEnabled);
+					if (mgr.graphExportEnabled)
 					{
-
+						EcoGUI.EnumButton<ExportMgr.GraphCostTypes>("Cost type:", mgr.graphCostType, OnGraphCostTypeChanged, 80f, 150f);
+						if (mgr.graphCostType != ExportMgr.GraphCostTypes.None) {
+							EcoGUI.IntField ("Price:", ref mgr.graphCosts, 80f, 150f);
+						}
 					}
-					GUILayout.EndVertical ();
 				}
 			}
 			GUILayout.EndVertical ();
@@ -329,6 +332,11 @@ namespace Ecosim.SceneEditor
 				}
 			}
 			GUILayout.EndVertical ();
+		}
+
+		private void OnGraphCostTypeChanged (ExportMgr.GraphCostTypes newType)
+		{
+			scene.exporter.graphCostType = newType;
 		}
 
 		private void OnSelectionTypeChanged (ExportMgr.SelectionTypes newType)
