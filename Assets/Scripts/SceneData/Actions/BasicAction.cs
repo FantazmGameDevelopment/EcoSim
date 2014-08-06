@@ -11,17 +11,6 @@ using Ecosim.EcoScript;
 
 namespace Ecosim.SceneData.Action
 {
-	public class VariablePresentData	
-	{
-		public string name;
-		public string category;
-	}
-
-	public class FormulaPresentData : VariablePresentData
-	{
-		public string formula;
-	}
-
 	/**
 	 * Actions can be a lot, it can be a measure taken in the field, like starting mowing, or it can be some research
 	 * like placing a pijlbuis or counting species
@@ -476,7 +465,7 @@ namespace Ecosim.SceneData.Action
 			}
 		}
 
-		public virtual List<VariablePresentData> GetVariablePresentationsData ()
+		/*public virtual List<VariablePresentData> GetVariablePresentationsData ()
 		{
 			if (getVariablePresentationDataMI != null) {
 				try {
@@ -504,7 +493,7 @@ namespace Ecosim.SceneData.Action
 
 			List<FormulaPresentData> list = new List<FormulaPresentData> ();
 			return list;
-		}
+		}*/
 		
 		public abstract void Save (XmlTextWriter writer);
 		

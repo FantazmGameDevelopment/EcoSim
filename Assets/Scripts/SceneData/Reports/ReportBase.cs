@@ -27,7 +27,7 @@ namespace Ecosim.SceneData
 		public ReportBase ()
 		{
 			this.introduction = "Intro";
-			this.conclusion = "Conclusion";
+			this.conclusion = "Final Remark";
 		}
 
 		public void LoadBase (XmlTextReader reader, Scene scene)

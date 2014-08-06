@@ -92,6 +92,7 @@ namespace Ecosim.SceneData
 		{
 			this.paragraphs = new List<ReportParagraph>();
 			this.name = "New report";
+			this.paragraphsOpened = true;
 		}
 
 		public static Report Load (XmlTextReader reader, Scene scene)

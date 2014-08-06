@@ -113,6 +113,11 @@ namespace Ecosim.SceneEditor
 		public bool Render (int mx, int my)
 		{
 			scrollPos = GUILayout.BeginScrollView (scrollPos, false, false);
+
+			// Settings
+			EcoGUI.FloatField ("Import scale", ref scene.assets.importScale, 2, 80f, 80f);
+			GUILayout.Space (5f);
+
 			GUILayout.BeginVertical ();
 			if (scene.assets.hasIconsTexture) {
 				GUILayout.Label ("icons from icons<i>number</i>.png files");

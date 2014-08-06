@@ -44,6 +44,7 @@ namespace Ecosim.SceneData
 		public const string PURCHASABLE_ID = "_purchasable";
 
 		public long budget = 0; // budget left
+		public int yearBudget = 0; // budget added per year
 		public long expenses = 0; // only used for get purposes
 		public int year = 0; // year of this progression
 		public int startYear = 2013; // not really progression, but for determining first progression data
@@ -72,7 +73,16 @@ namespace Ecosim.SceneData
 		public BitMap1 successionArea;
 		public BitMap1 managedArea;
 		public BitMap8 purchasableArea;
-		
+
+		/**
+		 * Stores the extra budget that a user gets at year x
+		 */ 
+		public class VariableYearBudget
+		{
+			public int year;
+			public int budget;
+		}
+
 		/**
 		 * Stores 2-dimensional data, like pH, heightmap, ...
 		 */
@@ -358,12 +368,42 @@ namespace Ecosim.SceneData
 		 */ 
 		public class VariableData
 		{
+			public bool enabled;
+			public string variable;
 			public string name;
 			public string category;
 
-			public VariableData (string name, string category)
+			public VariableData (string variable, string name, string category)
+			{
+				this.enabled = true;
+				this.variable = variable;
+				this.name = name;
+				this.category = category;
+			}
+		}
+
+		/**
+		 * Formula the data of a variable.
+		 */ 
+		public class FormulaData
+		{
+			public string name;
+			public string body;
+			public string category;
+
+			private string[] _bodyLines;
+			public string[] bodyLines {
+				get {
+					if (_bodyLines == null)
+						_bodyLines = body.Split ('\n');
+					return _bodyLines;
+				}
+			}
+			
+			public FormulaData (string name, string category, string body)
 			{
 				this.name = name;
+				this.body = body;
 				this.category = category;
 			}
 		}
@@ -381,9 +421,12 @@ namespace Ecosim.SceneData
 		public List<Inventarisation> activeInventarisations;
 		public List<InventarisationResult> inventarisations;
 		public List<ResearchPoint> researchPoints;
-		public Dictionary<string, object> variables;
+		public ManagedDictionary<string, object> variables;
 		public Dictionary<string, VariableData> variablesData;
+		public List<FormulaData> formulasData;
+		public bool showVariablesInGame;
 		public List<ActionTaken> actionsTaken;
+		public List<VariableYearBudget> variableYearBudgets;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
 
@@ -509,12 +552,14 @@ namespace Ecosim.SceneData
 		{
 			this.scene = scene;
 			dataDict = new Dictionary<string, DataInfo> ();
-			variables = new Dictionary<string, object> ();
+			variables = new ManagedDictionary<string, object> ();
 			variablesData = new Dictionary<string, VariableData> ();
+			formulasData = new List<FormulaData> ();
 			actionStates = new List<ActionState> ();
 			questionnaireStates = new List<QuestionnaireState>();
 			reportStates = new List<ReportState>();
 			actionsTaken = new List<ActionTaken>();
+			variableYearBudgets = new List<VariableYearBudget> ();
 			messages = new List<Message> ();
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
@@ -921,6 +966,12 @@ namespace Ecosim.SceneData
 			dataDict = new Dictionary<string, DataInfo> ();
 			startYear = int.Parse (reader.GetAttribute ("startyear"));
 			budget = long.Parse (reader.GetAttribute ("budget"));
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("yearbudget"))) {
+				yearBudget = int.Parse (reader.GetAttribute ("yearbudget"));
+			}
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("showvarsingame"))) {
+				showVariablesInGame = bool.Parse (reader.GetAttribute ("showvarsingame"));
+			}
 			if (reader.GetAttribute ("allowresearch") == "false")
 				allowResearch = false;
 			if (reader.GetAttribute ("allowmeasures") == "false")
@@ -992,6 +1043,14 @@ namespace Ecosim.SceneData
 						this.actionsTaken.Add (at);
 						IOUtil.ReadUntilEndElement (reader, "invresults");
 					}
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "varyearbudget"))
+					{
+						VariableYearBudget yb = new VariableYearBudget ();
+						yb.year = int.Parse (reader.GetAttribute ("y"));
+						yb.budget = int.Parse (reader.GetAttribute ("b"));
+						this.variableYearBudgets.Add (yb);
+						IOUtil.ReadUntilEndElement (reader, "varyearbudget");
+					}
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "data")) {
 						DataInfo info = new DataInfo ();
 						info.name = reader.GetAttribute ("name");
@@ -1001,20 +1060,26 @@ namespace Ecosim.SceneData
 						info.year = year;
 						dataDict.Add (info.name, info);
 						IOUtil.ReadUntilEndElement (reader, "data");
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "variable")) {
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "variable")) {
 						string name = reader.GetAttribute ("name");
 						string type = reader.GetAttribute ("type");
 						object var = ReadType (reader, type);
 
 						if (!variables.ContainsKey (name)) {
 							variables.Add (name, var);
-						}
-						variables[name] = var;
-					} else if ((nType == XmlNodeType.Entity) && (reader.Name.ToLower () == "variabledata")) {
+						} else variables[name] = var;
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "variabledata")) {
 						string var = reader.GetAttribute ("var");
 						string name = reader.GetAttribute ("name");
 						string category = reader.GetAttribute ("cat");
-						VariableData vd = new VariableData (name, category);
+
+						VariableData vd = new VariableData (var, name, category);
+						if (!string.IsNullOrEmpty (reader.GetAttribute ("enabled"))) {
+							vd.enabled = bool.Parse (reader.GetAttribute ("enabled"));
+						}
+
 						if (!variablesData.ContainsKey (var)) {
 							variablesData.Add (var, vd);
 						}
@@ -1228,11 +1293,13 @@ namespace Ecosim.SceneData
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement ("progress");
 			writer.WriteAttributeString ("budget", budget.ToString ());
+			writer.WriteAttributeString ("yearbudget", yearBudget.ToString ());
 			writer.WriteAttributeString ("startyear", startYear.ToString ());
 			writer.WriteAttributeString ("allowresearch", allowResearch ? "true" : "false");
 			writer.WriteAttributeString ("allowmeasures", allowMeasures ? "true" : "false");
 			writer.WriteAttributeString ("gameended", gameEnded ? "true" : "false");
 			writer.WriteAttributeString ("messageindex", messageUnreadIndex.ToString ());
+			writer.WriteAttributeString ("showvarsingame", showVariablesInGame.ToString ().ToLower ());
 			writer.WriteAttributeString ("targetareas", targetAreas.ToString());
 
 			// We write out the data dictionary, the data itself is saved seperately
@@ -1318,6 +1385,7 @@ namespace Ecosim.SceneData
 				writer.WriteAttributeString ("var", kv.Key);
 				writer.WriteAttributeString ("name", kv.Value.name);
 				writer.WriteAttributeString ("cat", kv.Value.category);
+				writer.WriteAttributeString ("enabled", kv.Value.enabled.ToString ().ToLower ());
 				writer.WriteEndElement ();			
 			}
 			
@@ -1437,6 +1505,14 @@ namespace Ecosim.SceneData
 			// Research points
 			foreach (ResearchPoint rp in researchPoints) {
 				rp.Save (writer, scene);
+			}
+
+			// Variable year budgets
+			foreach (VariableYearBudget yb in this.variableYearBudgets) {
+				writer.WriteStartElement ("varyearbudget");
+				writer.WriteAttributeString ("y", yb.year.ToString());
+				writer.WriteAttributeString ("b", yb.budget.ToString());
+				writer.WriteEndElement ();
 			}
 
 			writer.WriteEndElement ();

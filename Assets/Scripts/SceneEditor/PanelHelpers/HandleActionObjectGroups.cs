@@ -100,7 +100,7 @@ namespace Ecosim.SceneEditor.Helpers
 
 		public override void Update ()
 		{
-			if (editMode == null || editMode == EditMode.InfluenceMap) return;
+			if (editMode == EditMode.InfluenceMap) return;
 
 			base.Update ();
 		}

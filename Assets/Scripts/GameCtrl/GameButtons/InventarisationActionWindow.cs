@@ -62,7 +62,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			}
 
 			//SimpleGUI.Label (new Rect (xOffset, yOffset + 33, winWidth, textHeight), ui.description, formatted);
-			SimpleGUI.Label (new Rect(xOffset + 65,  yOffset, winWidth - 65, 32), "New inventarisation", title);
+			SimpleGUI.Label (new Rect(xOffset + 65,  yOffset, winWidth - 65, 32), "New survey", title);
 			SimpleGUI.Label (new Rect(xOffset, 	 	 yOffset + 33, 70, 32), "Name", entry); 
 			inventarisationName = SimpleGUI.TextField (new Rect (xOffset + 71, yOffset + 33, winWidth - 71, textHeight), inventarisationName, 50, header);
 

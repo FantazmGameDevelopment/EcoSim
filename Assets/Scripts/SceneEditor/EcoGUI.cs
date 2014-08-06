@@ -32,7 +32,13 @@ namespace Ecosim.SceneEditor
 			IntField (name, ref val, null, null);
 		}
 
-		public static int IntField (string name, int val, float nameWidth, float valWidth = 0f)
+		public static int IntField (string name, int val, float nameWidth)
+		{
+			IntField (name, ref val, nameWidth, 0f);
+			return val;
+		}
+
+		public static int IntField (string name, int val, float nameWidth, float valWidth)
 		{
 			IntField (name, ref val, nameWidth, valWidth);
 			return val;

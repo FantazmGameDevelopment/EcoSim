@@ -493,7 +493,7 @@ namespace Ecosim.SceneData.Action
 			}*/
 
 			// Formula : (min range + ((max range - min range) * (1 - (available food / required food)))).
-			if (starvation.maxStarveRange > 0f) 
+			if (starvation.maxStarveRange > 0f && starvation.foodRequiredPerAnimal > 0) 
 			{
 				// Get the amount of available food for the animal.
 				int requiredFood = starvation.foodRequiredPerAnimal;

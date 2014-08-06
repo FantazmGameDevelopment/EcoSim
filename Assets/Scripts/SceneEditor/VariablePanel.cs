@@ -24,8 +24,6 @@ namespace Ecosim.SceneEditor
 		string newVarError = "";
 		
 		public List<string> keys;
-		public Dictionary<string, string> keyNames;
-		public Dictionary<string, string> keyCategories;
 
 		private bool showPresentValues;
 		
@@ -34,8 +32,6 @@ namespace Ecosim.SceneEditor
 			this.ctrl = ctrl;
 			this.scene = scene;
 			keys = new List<string> ();
-			keyNames = new Dictionary<string, string> ();
-			keyCategories = new Dictionary<string, string> ();
 //			tabNormal = ctrl.listItem;
 //			tabSelected = ctrl.listItemSelected;
 			if (scene == null)
@@ -178,26 +174,39 @@ namespace Ecosim.SceneEditor
 		public bool Render (int mx, int my)
 		{
 			// Show present(ation) values, name etc.
-			if (GUILayout.Button ("Toggle present values", GUILayout.Width (150))) {
-				showPresentValues = !showPresentValues;
+			GUILayout.BeginHorizontal ();//ctrl.skin.box);
+			{
+				if (EcoGUI.Toggle ("Show variables in-game", ref scene.progression.showVariablesInGame, 200f))
+				{
+					if (GUILayout.Button ("Toggle names etc.", GUILayout.Width (150))) {
+						showPresentValues = !showPresentValues;
+					}
+				}
+				else showPresentValues = false;
 			}
+			GUILayout.EndVertical ();
+			GUILayout.Space (5f);
+
 			if (showPresentValues) {
 				GUILayout.BeginHorizontal ();
 				{
 					GUILayout.Label ("<b> variable</b>", GUILayout.Width (150));
 					GUILayout.Label ("<b> name</b>", GUILayout.Width (100));
 					GUILayout.Label ("<b> category</b>", GUILayout.Width (100));
+					GUILayout.Label ("<b> show</b>", GUILayout.Width (30));
 				}
 				GUILayout.EndHorizontal ();
 			}
 
-			Dictionary<string, object> variables = scene.progression.variables;
+			ManagedDictionary<string, object> variables = scene.progression.variables;
 			scrollPos = GUILayout.BeginScrollView (scrollPos, false, false);
 			GUILayout.BeginVertical ();
 			
 //			List<string> keys = new List<string> (variables.Keys);
-			foreach (string key in keys) {
+			foreach (string key in keys) 
+			{
 				GUILayout.BeginHorizontal ();
+
 				GUILayout.Label (key, GUILayout.Width (150));
 				object val = variables [key];
 				if (!showPresentValues) {
@@ -241,18 +250,22 @@ namespace Ecosim.SceneEditor
 					}
 				} else {
 
-					// Name
-					if (!keyNames.ContainsKey (key)) {
-						keyNames.Add (key, "");
-					}
-					string name = keyNames [key];
-					keyNames [key] = GUILayout.TextField (name, GUILayout.Width (100));
-					// Categorie
-					if (!keyCategories.ContainsKey (key)) {
-						keyCategories.Add (key, "");
-					}
-					string category = keyCategories [key];
-					keyCategories [key] = GUILayout.TextField (category, GUILayout.Width (100));
+					Progression.VariableData vd = null;
+					if (!scene.progression.variablesData.ContainsKey (key)) {
+						vd = new Progression.VariableData (key, key, "");
+						scene.progression.variablesData.Add (key, vd);
+					} else vd = scene.progression.variablesData [key];
+
+					GUI.enabled = vd.enabled;
+
+					// Name and category
+					vd.name = GUILayout.TextField (vd.name, GUILayout.Width (100));
+					vd.category = GUILayout.TextField (vd.category, GUILayout.Width (100));
+
+					GUI.enabled = true;
+
+					// Enabled
+					EcoGUI.Toggle ("", ref vd.enabled);
 
 					GUILayout.FlexibleSpace ();
 					GUILayout.EndHorizontal ();

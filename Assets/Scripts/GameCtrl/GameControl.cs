@@ -224,6 +224,18 @@ public class GameControl : MonoBehaviour
 		}
 		
 		if (scene == null) return;
+
+		if (scene.progression.gameEnded) {
+			// GAME OVER!!!!
+			int sWidth = Screen.width;
+			int xOffset = 0;
+			if (EditorCtrl.self.isOpen) {
+				xOffset = 400;
+				sWidth -= 400;
+			}
+			GUI.Label (new Rect((sWidth - gameOver.width) / 2 + xOffset, (Screen.height - gameOver.height) / 2, gameOver.width, gameOver.height),
+			           gameOver, GUIStyle.none);
+		}
 		
 		SimpleGUI.Label (budgetIconR, budgetIcon, icon50Style);
 		SimpleGUI.Label (expenseIconR, expenseIcon, icon50Style);
@@ -263,17 +275,6 @@ public class GameControl : MonoBehaviour
 		if (extraHelpTimeout > timeSinceLevelLoad) {
 			GUI.Label (extraHelpRect, extraHelp, extraHelpStyle);
 		}
-		if (scene.progression.gameEnded) {
-			// GAME OVER!!!!
-			int sWidth = Screen.width;
-			int xOffset = 0;
-			if (EditorCtrl.self.isOpen) {
-				xOffset = 400;
-				sWidth -= 400;
-			}
-			GUI.Label (new Rect((sWidth - gameOver.width) / 2 + xOffset, (Screen.height - gameOver.height) / 2, gameOver.width, gameOver.height),
-				gameOver, GUIStyle.none);
-		}
 	}
 	
 	private volatile bool isWorking = false;
@@ -295,7 +296,22 @@ public class GameControl : MonoBehaviour
 		}
 		scene.actions.FinalizeSuccession ();
 
+		HandleYearBudgets ();
+
 		isWorking = false;
+	}
+
+	void HandleYearBudgets ()
+	{
+		// Add year budget
+		scene.progression.budget += scene.progression.yearBudget;
+		// Add variable year budgets
+		foreach (Progression.VariableYearBudget yb in scene.progression.variableYearBudgets) {
+			if (yb.year == scene.progression.year + 1) {
+				scene.progression.budget += yb.budget;
+			}
+		}
+		BudgetChanged ();
 	}
 	
 	IEnumerator CODoSuccession ()

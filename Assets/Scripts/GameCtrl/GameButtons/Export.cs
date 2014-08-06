@@ -19,6 +19,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			private Dictionary<string, bool> toggleStates = new Dictionary<string, bool>();
 
 			private bool isExporting;
+			private int totalExportCosts;
 
 			private Vector2 scrollPos;
 			private EditData edit;
@@ -150,7 +151,7 @@ namespace Ecosim.GameCtrl.GameButtons
 				lists.Add ("Animals", animals);
 				lists.Add ("Plants", plants);
 				lists.Add ("Parameters", parameters);
-				lists.Add ("Inventarisations", inventarisations);
+				lists.Add ("Surveys", inventarisations);
 				lists.Add ("Research points", researchPoints);
 				lists.Add ("Measures", measures);
 			}
@@ -270,12 +271,9 @@ namespace Ecosim.GameCtrl.GameButtons
 
 						// Check if we have enough budget
 						GUI.enabled = enoughBudget;
-						if (GUILayout.Button ("Save...", entry, GUILayout.Width (saveBtnWidth))) 
+						if (GUILayout.Button ("Export and save...", entry, GUILayout.Width (saveBtnWidth))) 
 						{
-							// Update budget
-							scene.progression.budget -= totalCosts;
-							GameControl.BudgetChanged ();
-
+							totalExportCosts = totalCosts;
 							DoExport ();
 						}
 						GUI.enabled = true;
@@ -396,8 +394,18 @@ namespace Ecosim.GameCtrl.GameButtons
 				
 				// Do export and save
 				ExportSettings settings = new ExportSettings (GetAreaSelection (), years, dataNames);
-				ExportMgr.self.ExportData (settings, delegate { 
+				ExportMgr.self.ExportData (settings, delegate 
+				{ 
 					isExporting = false; 
+					SetupEditData ();
+
+					// Update budget
+					scene.progression.budget -= totalExportCosts;
+					GameControl.BudgetChanged ();
+				}, 
+				delegate() 
+				{
+					isExporting = false;
 					SetupEditData ();
 				});
 			}

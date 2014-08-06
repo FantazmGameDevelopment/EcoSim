@@ -30,6 +30,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			entry = GameControl.self.skin.FindStyle ("Arial16-75");
 			entrySelected = GameControl.self.skin.FindStyle ("Arial16-W");
 			formatted = GameControl.self.skin.FindStyle ("Arial16-50-formatted");
+			textField = GameControl.self.skin.FindStyle ("Arial16-50");
 			closeIcon = Resources.Load ("Icons/cross_w") as Texture2D;
 			closeIconH = Resources.Load ("Icons/cross_zw") as Texture2D;
 		}
@@ -53,6 +54,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		protected static GUIStyle entry;
 		protected static GUIStyle entrySelected;
 		protected static GUIStyle formatted;
+		protected static GUIStyle textField;
 		
 		protected readonly Texture2D icon;
 		protected int xOffset;

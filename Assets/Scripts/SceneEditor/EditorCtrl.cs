@@ -8,7 +8,6 @@ using Ecosim.SceneEditor;
 
 public class EditorCtrl : MonoBehaviour
 {
-	
 	[System.Serializable]
 	public class Tool
 	{
@@ -392,8 +391,7 @@ public class EditorCtrl : MonoBehaviour
 		Vector3 mousePos = Input.mousePosition;
 		Vector3 screenMousePos = new Vector3 (mousePos.x, Screen.height - mousePos.y, 0f);
 		GUI.skin = skin;
-		
-		
+
 		if (infoWinIsOpen) {
 			infoWinR = GUI.Window (0x10010, infoWinR, HandleInfoWin, "Info");
 		}
@@ -409,9 +407,9 @@ public class EditorCtrl : MonoBehaviour
 
 		int oldActiveToolIndex = activeToolIndex;
 
-#if !UNITY_EDITOR
+//#if !UNITY_EDITOR
 		try {
-#endif
+//#endif
 			GUILayout.BeginArea (winAreaR, skin.FindStyle ("BG"));
 			GUILayout.BeginVertical ();
 			GUILayout.BeginHorizontal ();
@@ -454,7 +452,7 @@ public class EditorCtrl : MonoBehaviour
 				GUILayout.EndVertical ();
 				GUILayout.EndArea ();
 			}
-#if !UNITY_EDITOR
+//#if !UNITY_EDITOR
 		} catch (System.Exception e) {
 			if (!e.StackTrace.Contains ("UnityEngine.GUILayout")) {
 				StartOkDialog (e.Message, null);
@@ -462,7 +460,7 @@ public class EditorCtrl : MonoBehaviour
 			Debug.LogWarning ("TRACE :'" + e.StackTrace + "'");
 			Debug.LogException (e);
 		}
-#endif
+//#endif
 		
 		if (iconBoxCurrentSelected >= 0) {
 			listBoxRect = GUI.Window (0x10001, listBoxRect, HandleIconBox, GUIContent.none);
@@ -490,6 +488,21 @@ public class EditorCtrl : MonoBehaviour
 			int height = imageToShow.height;
 			Rect rect = new Rect ((Screen.width - 400 - width) / 2 + 400, (Screen.height - height) / 2, width, height); 
 			GUI.DrawTexture (rect, imageToShow);
+		}
+
+		// Tool tip (always on top)
+		if (GUI.tooltip.Length > 0) 
+		{
+			int offset = 15;
+			GUILayout.BeginArea (new Rect (Input.mousePosition.x + offset, Screen.height - Input.mousePosition.y + offset, 200, Screen.height));
+			{
+				GUILayout.BeginVertical (skin.box);
+				{
+					GUILayout.Label ("<size=11>" + GUI.tooltip + "</size>");
+				}
+				GUILayout.EndVertical ();
+			}
+			GUILayout.EndArea ();
 		}
 	}
 	

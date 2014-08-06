@@ -87,7 +87,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 			if (this.message == null)
 			{
 				this.message = questionnaire.conclusion;
-				this.messageTitle = "Conclusion";
+				this.messageTitle = "Final Remark";
 				this.messageLines = this.message.Split (new string[] { "&#xA;" }, System.StringSplitOptions.RemoveEmptyEntries).Length;
 				this.messageTitleLines = 1;
 				this.onMessageContinueClick = delegate (Answer arg1, bool arg2) 

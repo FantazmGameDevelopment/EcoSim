@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using Ecosim;
 using Ecosim.SceneData;
 using Ecosim.SceneData.AnimalPopulationModel;
@@ -294,5 +295,123 @@ namespace Ecosim.EcoScript
 		public bool ActionAcceptableForVegetation (int x, int y, UserInteraction ui) {
 			return progression.vegetation.GetVegetationType (x, y).IsAcceptableAction (ui);
 		}
+
+		#region Variable and formula representation
+
+		public void AddVarData (string variable, string name, string category) {
+			AddVarRepresentation (variable, name, category);
+		}
+
+		public void AddVarRepresentation (string variable, string name, string category) {
+			AddVariableRepresentation (variable, name, category);
+		}
+
+		public void AddVariableRepresentation (string variable, string name, string category) 
+		{
+			if (scene.progression.variablesData.ContainsKey (variable)) 
+			{
+				LogDebug (string.Format ("Variable '{0}'s data already exists. Updating with new data.\nName:{1}, Category:{2}", variable, name, category));
+				Progression.VariableData vd = scene.progression.variablesData [variable];
+				vd.category = category;
+				vd.name = name;
+				return;
+			} 
+
+			scene.progression.variablesData.Add (variable, new Progression.VariableData (variable, name, category));
+		}
+
+		public void AddFormulaData (string name, string category, string body) {
+			AddFormulaRepr (name, category, body);
+		}
+
+		public void AddFormulaRepr (string name, string category, string body) {
+			AddFormulaRepresentation (name, category, body);
+		}
+
+		public void AddFormulaRepresentation (string name, string category, string body) {
+			scene.progression.formulasData.Add (new Progression.FormulaData (name, category, body));
+		}
+
+		#endregion Variable and formula representation
+
+		#region Variable Links
+
+		private class VariableLinkData
+		{
+			public string variable;
+			public object obj;
+			public FieldInfo fieldInfo;
+			public MethodInfo getMethodInfo;
+			public MethodInfo setMethodInfo;
+			
+			public VariableLinkData (string variable, object obj, string field)
+			{
+				this.variable = variable;
+				this.obj = obj;
+				
+				System.Type type = obj.GetType ();
+				fieldInfo = type.GetField (field);
+				if (fieldInfo == null) {
+					PropertyInfo pi = type.GetProperty (field);
+					setMethodInfo = pi.GetSetMethod ();
+					getMethodInfo = pi.GetGetMethod ();
+				}
+			}
+			
+			public void Set (object value)
+			{
+				if (fieldInfo != null)
+					fieldInfo.SetValue (obj, value);
+				else if (setMethodInfo != null)
+					setMethodInfo.Invoke (obj, new object [] { value });
+			}
+			
+			public object Get ()
+			{
+				if (fieldInfo != null)
+					return fieldInfo.GetValue (obj);
+				else if (getMethodInfo != null)
+					return getMethodInfo.Invoke (obj, null);
+				return null;
+			}
+		}
+		
+		private static List<VariableLinkData> variableLinks;
+		
+		private static void UpdateVariable (string key, object value) {
+			for (int i = 0; i < variableLinks.Count; i++) {
+				if (variableLinks [i].variable == key) {
+					variableLinks [i].Set (value);
+				}
+			}
+		}
+
+		public void LinkVar (object obj, string field, string variable) {
+			SetupVariableLink (obj, field, variable);
+		}
+
+		public void SetupVarLink (object obj, string field, string variable) {
+			SetupVariableLink (obj, field, variable);
+		}
+
+		public void SetupVariableLink (object obj, string field, string variable) 
+		{
+			VariableLinkData ld = new VariableLinkData (variable, obj, field);
+			
+			// Add the variable if it doesn't exist already
+			if (scene.progression.variables.ContainsKey (variable) == false) {
+				scene.progression.variables.Add (variable, ld.Get ());
+			}
+			
+			// Add update callback
+			scene.progression.variables.AddUpdateCallback (variable, UpdateVariable);
+			
+			// Check if we have a list
+			if (variableLinks == null)
+				variableLinks = new List<VariableLinkData> ();
+			variableLinks.Add (ld);
+		}
+
+		#endregion Variable Links
 	}
 }

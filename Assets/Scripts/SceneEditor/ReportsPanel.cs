@@ -276,11 +276,24 @@ namespace Ecosim.SceneEditor
 								if (GUILayout.Button ("Multiple choice", GUILayout.Width (100)))
 								{
 									MPCQuestion newQ = new MPCQuestion ();
+									newQ.opened = true;
+									newQ.answersOpened = true;
+									foreach (MPCQuestion.MPCAnswer a in newQ.answers) {
+										a.opened = true;
+										a.feedbackOpened = true;
+									}
 									q.questions.Add (newQ);
 								}
 								if (GUILayout.Button ("Open question", GUILayout.Width (100)))
 								{
 									OpenQuestion newQ = new OpenQuestion ();
+									newQ.opened = true;
+									newQ.answersOpened = true;
+									foreach (OpenQuestion.OpenAnswer a in newQ.answers) {
+										a.opened = true;
+										a.feedbackOpened = true;
+										a.reportIndicesOpened = true;
+									}
 									q.questions.Add (newQ);
 								}
 							}
@@ -302,6 +315,15 @@ namespace Ecosim.SceneEditor
 				Questionnaire q = new Questionnaire ();
 				q.opened = true;
 				q.enabled = true;
+				q.budgetFeedbackOpened = true;
+				q.budgetOpened = true;
+				q.conclusionOpened = true;
+				q.failedFeedbackOpened = true;
+				q.introOpened = true;
+				q.passedFeedbackOpened = true;
+				q.questionsOpened = true;
+				q.reqScoreFeedbackOpened = true;
+				q.reqScoreOpened = true;
 				if (scene.reports.questionnaires.Count > 0)
 					q.id = scene.reports.questionnaires [scene.reports.questionnaires.Count - 1].id + 1;
 				else q.id = 1;
@@ -342,7 +364,10 @@ namespace Ecosim.SceneEditor
 
 						if (GUILayout.Button ("+", GUILayout.Width (20)))
 						{
-							question.answers.Add (new MPCQuestion.MPCAnswer ());
+							MPCQuestion.MPCAnswer mpcA = new MPCQuestion.MPCAnswer ();
+							mpcA.opened = true;
+							mpcA.feedbackOpened = true;
+							question.answers.Add (mpcA);
 						}
 					}
 					GUILayout.EndHorizontal ();
@@ -606,6 +631,8 @@ namespace Ecosim.SceneEditor
 						EcoGUI.Foldout ("Paragraphs", ref r.paragraphsOpened);
 						if (r.paragraphsOpened)
 						{
+							GUILayout.Space (2);
+
 							// Paragraphs
 							for (int i = 0; i < r.paragraphs.Count; i++)
 							{
@@ -613,11 +640,15 @@ namespace Ecosim.SceneEditor
 								RenderParagraph (r, p, i);
 							}
 
+							GUILayout.Space (3);
+
 							// Add button
-							if (GUILayout.Button ("+", GUILayout.Width (20)))
+							if (GUILayout.Button ("Add paragraph", GUILayout.Width (120)))
 							{
 								ReportParagraph p = new ReportParagraph ();
 								p.opened = true;
+								p.descriptionOpened = true;
+								p.titleOpened = true;
 								r.paragraphs.Add (p);
 							}
 						}
@@ -637,6 +668,9 @@ namespace Ecosim.SceneEditor
 			{
 				Report r = new Report ();
 				r.opened = true;
+				r.conclusionOpened = true;
+				r.introOpened = true;
+				r.paragraphsOpened = true;
 				r.enabled = true;
 				if (scene.reports.reports.Count > 0)
 					r.id = scene.reports.reports [scene.reports.reports.Count - 1].id + 1;
@@ -712,9 +746,10 @@ namespace Ecosim.SceneEditor
 			{
 				// Foldout header
 				EcoGUI.skipHorizontal = true;
-				EcoGUI.FoldoutEditableName (ref p.title, ref p.opened, GUILayout.MaxWidth (280));
+				EcoGUI.FoldoutEditableName (ref p.title, ref p.opened, GUILayout.MaxWidth (250));
 				EcoGUI.skipHorizontal = false;
-				
+				GUILayout.FlexibleSpace ();
+
 				// Up
 				GUI.enabled = (index > 0);
 				if (GUILayout.Button ("\u02C4", GUILayout.Width (20))) {
@@ -731,7 +766,7 @@ namespace Ecosim.SceneEditor
 				GUI.enabled = true;
 				
 				// Remove
-				GUILayout.Space (5);
+				GUILayout.FlexibleSpace ();
 				if (GUILayout.Button ("-", GUILayout.Width (20)))
 				{
 					ReportParagraph tmp = p;
@@ -754,7 +789,7 @@ namespace Ecosim.SceneEditor
 				if (r.enabled) 
 				{
 					EcoGUI.skipHorizontal = true;
-					EcoGUI.FoldoutEditableName (ref r.name, ref r.opened);
+					EcoGUI.FoldoutEditableName (ref r.name, ref r.opened, GUILayout.MaxWidth (225));
 					EcoGUI.skipHorizontal = false;
 				} else {
 					r.opened = false;
@@ -825,12 +860,12 @@ namespace Ecosim.SceneEditor
 					if (r.useConclusion) 
 					{
 						EcoGUI.skipHorizontal = true;
-						EcoGUI.Foldout ("Conclusion", ref r.conclusionOpened);
+						EcoGUI.Foldout ("Final Remark", ref r.conclusionOpened);
 						EcoGUI.skipHorizontal = false;
 					}
 					else 
 					{
-						GUILayout.Label ("Conclusion");
+						GUILayout.Label ("Final Remark");
 						r.conclusionOpened = false;
 					}
 				}

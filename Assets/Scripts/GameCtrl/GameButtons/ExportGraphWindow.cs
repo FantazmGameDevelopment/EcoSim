@@ -179,6 +179,7 @@ namespace Ecosim.GameCtrl
 						if (ok) {
 							// We mark "save" as true so the OnPostRender can handle the save
 							saveGraph = true;
+							savePath = url;
 							instance.StartCoroutine ( RenderAndSaveGraph () );
 						}
 					}));

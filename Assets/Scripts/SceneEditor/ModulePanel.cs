@@ -59,7 +59,9 @@ namespace Ecosim.SceneEditor
 			// matter as we don't look at it.
 			yield return true;
 			yield return true;
-			scene = Scene.LoadForEditing (sceneName);
+			scene = Scene.LoadForEditing (sceneName, delegate(string obj) {
+				EditorCtrl.self.StartOkDialog (obj, null);
+			});
 			Log.LogWarning ("Scene is loaded: " + scene.sceneName);
 			yield return true;
 			TerrainMgr.self.SetupTerrain (scene);
@@ -148,14 +150,8 @@ namespace Ecosim.SceneEditor
 					yearStr = scene.progression.startYear.ToString ();
 				}
 				GUILayout.EndHorizontal ();
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Start budget", GUILayout.Width (100));
-				budgetStr = GUILayout.TextField (budgetStr, GUILayout.Width (80));
-				if (long.TryParse (budgetStr, out outNr)) {
-					scene.progression.budget = outNr;
-					budgetStr = scene.progression.budget.ToString ();
-				}
-				GUILayout.EndHorizontal ();
+
+				RenderBudget ();
 				
 				GUILayout.Space (8);
 				RenderUIGroup ("Research", scene.actions.uiGroups [UserInteractionGroup.CATEGORY_RESEARCH], mx, my);
@@ -165,6 +161,58 @@ namespace Ecosim.SceneEditor
 			}
 			
 			return false;
+		}
+
+		bool variableBudgetsOpened = true;
+
+		void RenderBudget ()
+		{
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.Space (2);
+
+				int budget = (int)scene.progression.budget;
+				EcoGUI.IntField ("Start budget", ref budget, 120, 80);
+				scene.progression.budget = budget;
+				EcoGUI.IntField ("Extra budget per year", ref scene.progression.yearBudget, 120, 80);
+
+				if (EcoGUI.Foldout ("Variable year budgets", ref variableBudgetsOpened))
+				{
+					GUILayout.Space (5);
+
+					foreach (Progression.VariableYearBudget yb in scene.progression.variableYearBudgets)
+					{
+						GUILayout.BeginHorizontal ();
+						{
+							EcoGUI.skipHorizontal = true;
+							EcoGUI.IntField ("\tYear:", ref yb.year, 50, 80);
+							EcoGUI.IntField ("Extra budget:", ref yb.budget, 80, 80);
+							EcoGUI.skipHorizontal = false;
+						}
+						GUILayout.EndHorizontal ();
+					}
+
+					GUILayout.Space (3);
+					GUILayout.BeginHorizontal ();
+					{
+						GUILayout.Space (16);
+						if (GUILayout.Button ("Add year", GUILayout.Width (100))) 
+						{
+							Progression.VariableYearBudget yb = new Progression.VariableYearBudget ();
+							yb.year = scene.progression.startYear;
+							yb.budget = scene.progression.yearBudget;
+							if (scene.progression.variableYearBudgets.Count > 0) {
+								Progression.VariableYearBudget last = scene.progression.variableYearBudgets [scene.progression.variableYearBudgets.Count - 1];
+								yb.year = last.year + 1;
+								yb.budget = last.budget;
+							}
+							scene.progression.variableYearBudgets.Add (yb);
+						}
+					}
+					GUILayout.EndHorizontal ();
+				}
+			}
+			GUILayout.EndHorizontal ();
 		}
 		
 		private Dictionary<string, UserInteractionGroup.GroupData> selectedGrpDict = new Dictionary<string, UserInteractionGroup.GroupData> ();

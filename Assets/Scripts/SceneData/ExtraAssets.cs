@@ -30,6 +30,7 @@ namespace Ecosim.SceneData
 		public Texture2D[] icons;
 		public Texture2D[] iconsHighlighted;
 		public bool hasIconsTexture = false;
+		public float importScale = 0.01f; // So it matches the default Unity mesh import settings
 		
 		public delegate Color32 ProcessColor32 (Color32 col);
 				
@@ -247,7 +248,7 @@ namespace Ecosim.SceneData
 			}
 			try {
 				string objectPath = path + "Assets" + Path.DirectorySeparatorChar + name + ".obj";
-				mesh = ObjImporter.ImportFile (objectPath, Vector3.one * 0.01f); // So it matches the default Unity mesh import settings
+				mesh = ObjImporter.ImportFile (objectPath, Vector3.one * importScale);
 				if (mesh != null) {
 					meshes.Add (name, mesh);
 				}
@@ -372,9 +373,15 @@ namespace Ecosim.SceneData
 				return ea;
 			}
 			XmlTextReader reader = new XmlTextReader (new StreamReader (path + "assets.xml"));
+
 			while (reader.Read()) {
 				XmlNodeType nType = reader.NodeType;
-				if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "object")) {
+				if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "assets")) {
+					if (!string.IsNullOrEmpty (reader.GetAttribute ("importscale"))) {
+						ea.importScale = float.Parse (reader.GetAttribute ("importscale"));
+					}
+				}
+				else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "object")) {
 					ea.LoadObject (reader, path);	
 				}
 			}
@@ -391,6 +398,7 @@ namespace Ecosim.SceneData
 			XmlTextWriter writer = new XmlTextWriter (path + "assets.xml", System.Text.Encoding.UTF8);
 			writer.WriteStartDocument (true);
 			writer.WriteStartElement ("assets");
+			writer.WriteAttributeString ("importscale", importScale.ToString ());
 			foreach (AssetObjDef obj in objects.Values) {
 				writer.WriteStartElement ("object");
 				writer.WriteAttributeString ("name", obj.name);

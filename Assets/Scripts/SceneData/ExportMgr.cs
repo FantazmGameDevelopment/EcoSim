@@ -901,10 +901,18 @@ namespace Ecosim.SceneData
 			return true;
 		}
 
-		public void ExportData (ExportSettings settings, System.Action onComplete)
+		public void ExportData (ExportSettings settings, System.Action onComplete, System.Action onCanceled)
 		{
 			GameControl.self.StartCoroutine (SaveFileDialog.Show ("export", "csv files (*.csv)|*.csv", delegate(bool ok, string url)
 			{
+				// Check if cancelled
+				if (!ok)
+				{
+					if (onCanceled != null)
+						onCanceled ();
+					return;
+				}
+
 				// Get the export data
 				GameControl.self.StartCoroutine (COExportData (settings, url, onComplete));
 			}));

@@ -40,7 +40,6 @@ namespace Ecosim.EcoScript
 				Assembly assembly = Assembly.LoadFrom (assemblyPath);
 				if (assembly != null) {
 					return LinkAssembly (scene, assembly);
-					
 				}
 			}
 			return false;
@@ -73,8 +72,13 @@ namespace Ecosim.EcoScript
 						if (action.ClassName () == className) {
 							ConstructorInfo cinf = t.GetConstructor (new[] { typeof(Scene), action.GetType () });
 							if (cinf != null) {
-								EcoBase instance = cinf.Invoke (new object[] { scene, action }) as EcoBase;
-								action.SetEcoScriptInstance (instance);
+								try {
+									EcoBase instance = cinf.Invoke (new object[] { scene, action }) as EcoBase;
+									action.SetEcoScriptInstance (instance);
+								} catch (System.Exception ex) {
+									UnityEngine.Debug.LogError (ex);
+									return false;
+								}
 							}
 						}
 					}
@@ -420,7 +424,7 @@ public EcoScript{0} (Scene scene, {1} action) : base (scene, action) {{
 		
 		public static string GenerateCode (Scene scene, BasicAction action, string code, Dictionary<string, string> constantsDict)
 		{
-			Dictionary <string, object> variables = scene.progression.variables;
+			ManagedDictionary <string, object> variables = scene.progression.variables;
 			StringBuilder classCode = new StringBuilder (20000);
 			StringBuilder listInitializers = new StringBuilder (10000);
 			StringBuilder constants = new StringBuilder (10000);

@@ -24,6 +24,85 @@ namespace Ecosim.SceneData
 			SetupModels ();
 		}
 
+		/************************************/
+
+		// Default large animal action script
+
+		/*void LoadProgress(bool initScene) 
+		{
+			foreach (AnimalType at in scene.animalTypes)
+			{
+				if (at is LargeAnimalType)
+				{
+					LargeAnimalType lg = at as LargeAnimalType;
+					GetVariablesData (lg);
+					GetFormulasData (lg);
+				}
+			}
+		}
+		
+		void GetVariablesData (LargeAnimalType a)
+		{
+			AnimalPopulationDecreaseModel dm = a.decreaseModel;
+			AnimalPopulationDecreaseModel.SpecifiedNumber dsn = dm.specifiedNumber;
+			if (dsn.use) {
+				// Starvation
+				if (dsn.starvation.use)
+				{
+					string cat = a.name + " Starvation";
+					AddVarData ("starvemin", "Min Starve Range", cat);  
+					LinkVar (dsn.starvation, "minStarveRange", "starvemin");
+
+					AddVarData ("starvemax", "Max Starve Range", cat);  
+					LinkVar (dsn.starvation, "maxStarveRange", "starvemax");
+				}
+			}
+		}
+		
+		void GetFormulasData (LargeAnimalType a)
+		{
+			// Get all formulas that are used for this animal
+			string name = a.name;
+			string cat = "Unknown";
+
+			// Growth category, first check if the animal
+			// actually uses the model(s)
+			cat = "Growth";
+			if (a.growthModel.fixedNumber.use) 
+			{
+				string body = 
+@"M = current amount of males
+F = current amounf of femals
+L = Littersize of the animal
+New population = M + F + (M / M * F * L)";
+				AddFormulaRepresentation (name, cat, body);
+			}
+
+			// Decrease category, first check if the animal
+			// actually uses the model(s)
+			cat = "Decrease";
+			if (a.decreaseModel.fixedNumber.use)
+			{
+				string body =
+@"The absolute number is the amount of deaths across all nests.
+This amount is randomly divided across all nests.";
+				AddFormulaRepresentation (name, cat, body);
+			}
+		}
+
+		// Copy some eco base methods to be able to auto complete them
+		public void LinkVar (object obj, string field, string variable) { }
+
+		public void AddVarData (string variable, string name, string category) { }
+
+		public void SetupVariableLink (object obj, string field, string variable) { }
+
+		public void AddVariableRepresentation (string variable, string name, string category) { }
+		
+		public void AddFormulaRepresentation (string name, string category, string body) { }*/
+
+		/************************************/
+
 		public LargeAnimalType (Scene scene, string name) : base (scene, name)
 		{
 			SetupModels ();

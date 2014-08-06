@@ -166,7 +166,7 @@ namespace Ecosim.SceneData
 		/**
 		 * Loads in scene 'name' for editing purposes, no player info will be defined and slotnr = -1
 		 */
-		public static Scene LoadForEditing (string name)
+		public static Scene LoadForEditing (string name, System.Action<string> onError)
 		{
 			Scene scene = Load (name);
 			scene.progression = Progression.Load (scene, 0); // loads initial progression data
@@ -174,7 +174,10 @@ namespace Ecosim.SceneData
 			scene.UpdateReferences ();
 			bool success = EcoScript.Compiler.LoadAssemblyFromDisk (scene);
 			if (!success) {
-				Log.LogError ("Failed to load EcoScript assembly");
+				string err = "Failed to load EcoScript assembly";
+				Log.LogError (err);
+				if (onError != null)
+					onError (err);
 			}
 			scene.progression.InitActions (true);
 			return scene;

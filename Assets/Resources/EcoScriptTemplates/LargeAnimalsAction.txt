@@ -1,0 +1,48 @@
+void LoadProgress(bool initScene) 
+{
+	foreach (AnimalType at in scene.animalTypes)
+	{
+		if (at is LargeAnimalType)
+		{
+			LargeAnimalType lg = at as LargeAnimalType;
+			GetVariablesData (lg);
+			GetFormulasData (lg);
+		}
+	}
+}
+
+void GetVariablesData (LargeAnimalType a)
+{
+	
+}
+
+void GetFormulasData (LargeAnimalType a)
+{
+	// Get all formulas that are used for this animal
+	string name = a.name;
+	string cat = "Unknown";
+
+	// Growth category, first check if the animal
+	// actually uses the model(s)
+	cat = "Growth";
+	if (a.growthModel.fixedNumber.use) 
+	{
+		string body = 
+@"M = current amount of males
+F = current amounf of femals
+L = Littersize of the animal
+New population = M + F + (M / M * F * L)";
+		AddFormulaRepresentation (name, cat, body);
+	}
+
+	// Decrease category, first check if the animal
+	// actually uses the model(s)
+	cat = "Decrease";
+	if (a.decreaseModel.fixedNumber.use)
+	{
+		string body =
+@"The absolute number is the amount of deaths across all nests.
+This amount is randomly divided across all nests.";
+		AddFormulaRepresentation (name, cat, body);
+	}
+}

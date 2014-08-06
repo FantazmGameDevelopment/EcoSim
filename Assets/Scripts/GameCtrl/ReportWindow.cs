@@ -154,7 +154,7 @@ public class ReportWindow : ReportBaseWindow
 		// Conclusion
 		if (this.report.useConclusion)
 		{
-			GUILayout.Label ("Conclusion:", headerDark, GUILayout.Width (width), defaultOption);
+			GUILayout.Label ("Final Remark:", headerDark, GUILayout.Width (width), defaultOption);
 			GUILayout.Label (this.report.conclusion, headerLight, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 		}
@@ -240,7 +240,7 @@ public class ReportWindow : ReportBaseWindow
 
 			if (this.report.useConclusion)
 			{
-				sb.AppendFormat ("Conclusion:\n");
+				sb.AppendFormat ("Final Remark:\n");
 				sb.AppendFormat ("{0}\n", this.report.conclusion);
 				sb.AppendLine ();
 			}
