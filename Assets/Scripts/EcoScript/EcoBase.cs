@@ -317,7 +317,9 @@ namespace Ecosim.EcoScript
 				return;
 			} 
 
-			scene.progression.variablesData.Add (variable, new Progression.VariableData (variable, name, category));
+			Progression.VariableData newvd = new Progression.VariableData (variable, name, category);
+			//newvd.doSave = false;
+			scene.progression.variablesData.Add (variable, newvd);
 		}
 
 		public void AddFormulaData (string name, string category, string body) {
@@ -329,7 +331,9 @@ namespace Ecosim.EcoScript
 		}
 
 		public void AddFormulaRepresentation (string name, string category, string body) {
-			scene.progression.formulasData.Add (new Progression.FormulaData (name, category, body));
+			Progression.FormulaData fd = new Progression.FormulaData (name, category, body);
+			//fd.doSave = false;
+			scene.progression.formulasData.Add (fd);
 		}
 
 		#endregion Variable and formula representation

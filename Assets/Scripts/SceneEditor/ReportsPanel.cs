@@ -19,7 +19,9 @@ namespace Ecosim.SceneEditor
 		
 		public Scene scene;
 		public EditorCtrl ctrl;
-		
+
+		bool questionnaireYearsOpened = true;
+
 		public void Setup (EditorCtrl ctrl, Scene scene)
 		{
 			this.ctrl = ctrl;
@@ -96,6 +98,13 @@ namespace Ecosim.SceneEditor
 					// Body
 					if (q.opened)
 					{
+						// Show name
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+							EcoGUI.Toggle ("Show header", ref q.showHeader);
+						}
+						GUILayout.EndVertical ();
+
 						// Intro
 						RenderReportBaseIntro (q);
 
@@ -249,6 +258,13 @@ namespace Ecosim.SceneEditor
 						}
 						GUILayout.EndVertical (); // ~Budget
 
+						// Results
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+							EcoGUI.Toggle ("Results page", ref q.useResultsPage);
+						}
+						GUILayout.EndVertical (); // ~Results
+
 						// Questions
 						EcoGUI.Foldout ("Questions", ref q.questionsOpened);
 						if (q.questionsOpened)
@@ -329,23 +345,33 @@ namespace Ecosim.SceneEditor
 				else q.id = 1;
 				scene.reports.questionnaires.Add (q);
 			}
-			
-			GUILayout.BeginHorizontal ();
+
+			GUILayout.BeginVertical (ctrl.skin.box);
 			{
-				scene.reports.useShowQuestionnaireAtStart = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtStart, "Show questionnaire at game start", GUILayout.Width (200));
-				if (scene.reports.useShowQuestionnaireAtStart) {
-					EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtStartId, 20, 50);
+				GUILayout.BeginHorizontal ();
+				{
+					scene.reports.useShowQuestionnaireAtStart = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtStart, "Show questionnaire at game start", GUILayout.Width (200));
+					if (scene.reports.useShowQuestionnaireAtStart) {
+						EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtStartId, 20, 50);
+					}
 				}
-			}
-			GUILayout.EndHorizontal ();
-			/*GUILayout.BeginHorizontal ();
-			{
-				scene.reports.useShowQuestionnaireAtEnd = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtEnd, "Show questionnaire at game end", GUILayout.Width (200));
-				if (scene.reports.useShowQuestionnaireAtEnd) {
-					EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtEndId, 20, 50);
+				GUILayout.EndHorizontal ();
+				/*GUILayout.BeginHorizontal ();
+				{
+					scene.reports.useShowQuestionnaireAtEnd = GUILayout.Toggle (scene.reports.useShowQuestionnaireAtEnd, "Show questionnaire at game end", GUILayout.Width (200));
+					if (scene.reports.useShowQuestionnaireAtEnd) {
+						EcoGUI.IntField ("ID:", ref scene.reports.showQuestionnaireAtEndId, 20, 50);
+					}
 				}
+				GUILayout.EndHorizontal ();*/
+
+				GUILayout.Space (5);
+
+				// Show questionnaires at years
+				RenderShowQuestionnairesAtYears ();
 			}
-			GUILayout.EndHorizontal ();*/
+			GUILayout.EndVertical ();
+
 			GUILayout.Space (5);
 		}
 		private void RenderMPCQuestion (Questionnaire q, MPCQuestion question, int index)
@@ -609,6 +635,51 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndHorizontal ();
 			return true;
 		}
+		private void RenderShowQuestionnairesAtYears ()
+		{
+			if (EcoGUI.Foldout ("Show questionnaire at year", ref questionnaireYearsOpened))
+			{
+				GUILayout.Space (5);
+				
+				foreach (ReportsMgr.QuestionnaireYearData qy in ReportsMgr.self.questionnaireYears)
+				{
+					GUILayout.BeginHorizontal ();
+					{
+						EcoGUI.skipHorizontal = true;
+						EcoGUI.IntField ("\tYear:", ref qy.year, 50, 50);
+						EcoGUI.IntField ("ID:", ref qy.id, 30, 50);
+						EcoGUI.skipHorizontal = false;
+
+						GUILayout.Space (10);
+						if (GUILayout.Button ("-", GUILayout.Width (20))) {
+							ReportsMgr.self.questionnaireYears.Remove (qy);
+							GUILayout.EndHorizontal ();
+							break;
+						}
+					}
+					GUILayout.EndHorizontal ();
+				}
+				
+				GUILayout.Space (3);
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Space (16);
+					if (GUILayout.Button ("Add year", GUILayout.Width (100))) 
+					{
+						ReportsMgr.QuestionnaireYearData qy = new ReportsMgr.QuestionnaireYearData();
+						qy.year = scene.progression.startYear + 1;
+						qy.id = 1;
+						if (ReportsMgr.self.questionnaireYears.Count > 0) {
+							ReportsMgr.QuestionnaireYearData last = ReportsMgr.self.questionnaireYears [ReportsMgr.self.questionnaireYears.Count - 1];
+							qy.year = last.year + 1;
+							qy.id = last.id + 1;
+						}
+						ReportsMgr.self.questionnaireYears.Add (qy);
+					}
+				}
+				GUILayout.EndHorizontal ();
+			}
+		}
 
 		private void RenderReports (int mx, int my)
 		{
@@ -828,6 +899,7 @@ namespace Ecosim.SceneEditor
 			{
 				GUILayout.BeginHorizontal ();
 				{
+					GUILayout.Space (1);
 					r.useIntroduction = GUILayout.Toggle (r.useIntroduction, "", GUILayout.Width (20));
 					if (r.useIntroduction) 
 					{
@@ -856,16 +928,17 @@ namespace Ecosim.SceneEditor
 			{
 				GUILayout.BeginHorizontal ();
 				{
+					GUILayout.Space (1);
 					r.useConclusion = GUILayout.Toggle (r.useConclusion, "", GUILayout.Width (20));
 					if (r.useConclusion) 
 					{
 						EcoGUI.skipHorizontal = true;
-						EcoGUI.Foldout ("Final Remark", ref r.conclusionOpened);
+						EcoGUI.Foldout ("Conclusion", ref r.conclusionOpened);
 						EcoGUI.skipHorizontal = false;
 					}
 					else 
 					{
-						GUILayout.Label ("Final Remark");
+						GUILayout.Label ("Conclusion");
 						r.conclusionOpened = false;
 					}
 				}

@@ -13,6 +13,7 @@ namespace Ecosim.SceneData
 		public int id;
 		public string name;
 		public bool enabled;
+		public bool showHeader;
 		public bool useIntroduction;
 		public string introduction;
 		public bool useConclusion;
@@ -27,7 +28,7 @@ namespace Ecosim.SceneData
 		public ReportBase ()
 		{
 			this.introduction = "Intro";
-			this.conclusion = "Final Remark";
+			this.conclusion = "Conclusion";
 		}
 
 		public void LoadBase (XmlTextReader reader, Scene scene)
@@ -39,6 +40,9 @@ namespace Ecosim.SceneData
 			introduction = reader.GetAttribute ("intro");
 			useConclusion = bool.Parse (reader.GetAttribute ("useconcl"));
 			conclusion = reader.GetAttribute ("concl");
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("showheader"))) {
+				showHeader = bool.Parse (reader.GetAttribute ("showheader"));
+			}
 		}
 
 		public void SaveBase (XmlTextWriter writer, Scene scene)
@@ -50,6 +54,7 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("intro", introduction);
 			writer.WriteAttributeString ("useconcl", useConclusion.ToString().ToLower());
 			writer.WriteAttributeString ("concl", conclusion);
+			writer.WriteAttributeString ("showheader", showHeader.ToString ().ToLower ());
 		}
 		
 		public virtual void UpdateReferences (Scene scene)

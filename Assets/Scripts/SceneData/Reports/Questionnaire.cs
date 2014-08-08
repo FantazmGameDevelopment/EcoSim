@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Reflection;
 
 namespace Ecosim.SceneData
 {
@@ -323,6 +324,7 @@ namespace Ecosim.SceneData
 		public bool useBudget;
 		public bool useBudgetFeedback;
 		public string budgetFeedback;
+		public bool useResultsPage;
 
 		public bool questionsOpened;
 		public bool reqScoreOpened;
@@ -344,6 +346,28 @@ namespace Ecosim.SceneData
 			this.budgetFeedback = "Explanation";
 			this.reqScoreFeedback = "Explanation";
 			this.currentQuestionIndex = 0;
+			this.useResultsPage = true;
+			this.showHeader = true;
+		}
+
+		public Questionnaire Copy ()
+		{
+			Questionnaire copy = new Questionnaire ();
+			FieldInfo[] fields = this.GetType ().GetFields (BindingFlags.Public |
+			                                                BindingFlags.DeclaredOnly |
+			                                                BindingFlags.Instance);
+			foreach (FieldInfo fi in fields) {
+				fi.SetValue (copy, fi.GetValue (this));
+			}
+
+			FieldInfo[] baseFields = typeof (ReportBase).GetFields (BindingFlags.Public |
+			                                                      BindingFlags.DeclaredOnly |
+			                                                      BindingFlags.Instance);
+
+			foreach (FieldInfo fi in baseFields) {
+				fi.SetValue (copy, fi.GetValue (this));
+			}
+			return copy;
 		}
 
 		public static Questionnaire Load (XmlTextReader reader, Scene scene)
@@ -362,6 +386,9 @@ namespace Ecosim.SceneData
 			q.useBudget = bool.Parse (reader.GetAttribute ("usebudget"));
 			q.useBudgetFeedback = bool.Parse (reader.GetAttribute ("usebudgetfb"));
 			q.budgetFeedback = reader.GetAttribute ("budgetfb");
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("useresultspg"))) {
+				q.useResultsPage = bool.Parse (reader.GetAttribute ("useresultspg"));
+			}
 
 			if (!reader.IsEmptyElement)
 			{
@@ -414,6 +441,7 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("usebudget", useBudget.ToString().ToLower());
 			writer.WriteAttributeString ("usebudgetfb", useBudgetFeedback.ToString().ToLower());
 			writer.WriteAttributeString ("budgetfb", budgetFeedback.ToString());
+			writer.WriteAttributeString ("useresultspg", useResultsPage.ToString().ToLower ());
 			foreach (Question q in this.questions) {
 				q.Save (writer, scene);
 			}

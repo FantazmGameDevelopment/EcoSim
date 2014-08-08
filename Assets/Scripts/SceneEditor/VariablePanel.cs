@@ -26,6 +26,7 @@ namespace Ecosim.SceneEditor
 		public List<string> keys;
 
 		private bool showPresentValues;
+		private bool formulasOpened = true;
 		
 		public void Setup (EditorCtrl ctrl, Scene scene)
 		{
@@ -176,9 +177,9 @@ namespace Ecosim.SceneEditor
 			// Show present(ation) values, name etc.
 			GUILayout.BeginHorizontal ();//ctrl.skin.box);
 			{
-				if (EcoGUI.Toggle ("Show variables in-game", ref scene.progression.showVariablesInGame, 200f))
+				if (EcoGUI.Toggle ("Show variables and formulas in-game", ref scene.progression.showVariablesInGame))
 				{
-					if (GUILayout.Button ("Toggle names etc.", GUILayout.Width (150))) {
+					if (GUILayout.Button (((showPresentValues)?"Hide":"Show") + " data", GUILayout.Width (100))) {
 						showPresentValues = !showPresentValues;
 					}
 				}
@@ -187,13 +188,14 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndVertical ();
 			GUILayout.Space (5f);
 
+			// Variables
 			if (showPresentValues) {
 				GUILayout.BeginHorizontal ();
 				{
-					GUILayout.Label ("<b> variable</b>", GUILayout.Width (150));
+					GUILayout.Label ("<b> variable</b>", GUILayout.MinWidth (100), GUILayout.MaxWidth (150));
 					GUILayout.Label ("<b> name</b>", GUILayout.Width (100));
 					GUILayout.Label ("<b> category</b>", GUILayout.Width (100));
-					GUILayout.Label ("<b> show</b>", GUILayout.Width (30));
+					GUILayout.Label ("<b> show</b>", GUILayout.Width (35));
 				}
 				GUILayout.EndHorizontal ();
 			}
@@ -201,13 +203,12 @@ namespace Ecosim.SceneEditor
 			ManagedDictionary<string, object> variables = scene.progression.variables;
 			scrollPos = GUILayout.BeginScrollView (scrollPos, false, false);
 			GUILayout.BeginVertical ();
-			
-//			List<string> keys = new List<string> (variables.Keys);
+
 			foreach (string key in keys) 
 			{
 				GUILayout.BeginHorizontal ();
 
-				GUILayout.Label (key, GUILayout.Width (150));
+				GUILayout.Label (key, GUILayout.MinWidth (100), GUILayout.MaxWidth (150));
 				object val = variables [key];
 				if (!showPresentValues) {
 					GUILayout.Label ("<b>" + DisplayType (val) + "</b>", GUILayout.Width (40));
@@ -271,7 +272,10 @@ namespace Ecosim.SceneEditor
 					GUILayout.EndHorizontal ();
 				}
 			}
+
 			GUILayout.Space (8);
+
+			// New variable
 			GUILayout.BeginHorizontal ();
 			newVarName = GUILayout.TextField (newVarName, GUILayout.Width (100));
 			newVarName = newVarName.Replace (" ", "");
@@ -333,9 +337,96 @@ namespace Ecosim.SceneEditor
 			GUILayout.FlexibleSpace ();
 			GUILayout.EndHorizontal ();
 			GUILayout.Space (8);
-			GUILayout.Label (newVarError);
-			GUILayout.FlexibleSpace ();
+			if (!string.IsNullOrEmpty (newVarError)) {
+				GUILayout.Label (newVarError);
+				//GUILayout.FlexibleSpace ();
+				GUILayout.Space (10);
+			}
 			GUILayout.EndVertical ();
+
+			// Formulas
+			if (showPresentValues) 
+			{
+				GUILayout.BeginVertical (ctrl.skin.box);
+				{
+					EcoGUI.Foldout ("Formulas", ref formulasOpened);
+					GUILayout.Space (2);
+
+					if (formulasOpened)
+					{
+						if (scene.progression.formulasData.Count > 0)
+						{
+							GUILayout.BeginHorizontal ();
+							{
+								GUILayout.Space (20);
+								GUILayout.Label ("<b> name</b>", GUILayout.Width (125));
+								GUILayout.Label ("<b>category</b>", GUILayout.Width (125));
+								GUILayout.FlexibleSpace ();
+								GUILayout.Label ("<b>show</b>", GUILayout.Width (30));
+								GUILayout.Space (40);
+							}
+							GUILayout.EndHorizontal ();
+							GUILayout.Space (2);
+
+							for (int i = 0; i < scene.progression.formulasData.Count; i++)
+							{
+								Progression.FormulaData fd = scene.progression.formulasData [i];
+								GUILayout.BeginVertical (ctrl.skin.box);
+								{
+									GUILayout.BeginHorizontal ();
+									{
+										GUI.enabled = fd.enabled;
+
+										EcoGUI.skipHorizontal = true;
+										EcoGUI.Foldout ("", ref fd.opened, GUILayout.Width (20));
+										EcoGUI.skipHorizontal = false;
+
+										fd.name = GUILayout.TextField (fd.name, GUILayout.Width (125));
+										fd.category = GUILayout.TextField (fd.category, GUILayout.Width (125));
+
+										GUI.enabled = true;
+										GUILayout.FlexibleSpace ();
+										EcoGUI.Toggle ("", ref fd.enabled, 20);
+
+										// Up
+										GUI.enabled = (i > 0);
+										if (GUILayout.Button ("\u02C4", GUILayout.Width (20))) {
+											scene.progression.formulasData.Remove (fd);
+											scene.progression.formulasData.Insert (i - 1, fd);
+										}
+										GUI.enabled = true;
+
+										if (GUILayout.Button ("-", GUILayout.Width (20))) {
+											Progression.FormulaData tmp = fd;
+											ctrl.StartDialog (string.Format ("Are you sure you want to delete formula '{0}'", tmp.name), delegate {
+												scene.progression.formulasData.Remove (tmp);
+											}, null);	 
+										}
+									}
+									GUILayout.EndHorizontal ();
+									GUILayout.Space (3);
+
+									if (fd.enabled && fd.opened) 
+									{
+										fd.body = GUILayout.TextArea (fd.body);
+										GUILayout.Space (2);
+									}
+								}
+								GUILayout.EndVertical ();
+							}
+						}
+						GUILayout.Space (5);
+						if (GUILayout.Button ("New formula", GUILayout.Width (100)))
+						{
+							Progression.FormulaData fd = new Progression.FormulaData ("Formula name", "Formula Category", "Formula Body");
+							fd.opened = true;
+							scene.progression.formulasData.Add (fd);
+						}
+					}
+				}
+				GUILayout.EndVertical ();
+			}
+
 			GUILayout.EndScrollView ();
 			return true;
 		}

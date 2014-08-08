@@ -157,6 +157,7 @@ namespace Ecosim.SceneEditor
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
+				GUILayout.Space (2);
 				if (GUILayout.Button (opened ? EditorCtrl.self.foldedOpenSmall : EditorCtrl.self.foldedCloseSmall, EditorCtrl.self.icon12x12))
 				{
 					opened = !opened;

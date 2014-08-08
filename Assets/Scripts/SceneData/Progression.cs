@@ -369,6 +369,7 @@ namespace Ecosim.SceneData
 		public class VariableData
 		{
 			public bool enabled;
+			public bool doSave;
 			public string variable;
 			public string name;
 			public string category;
@@ -376,6 +377,7 @@ namespace Ecosim.SceneData
 			public VariableData (string variable, string name, string category)
 			{
 				this.enabled = true;
+				this.doSave = true;
 				this.variable = variable;
 				this.name = name;
 				this.category = category;
@@ -387,24 +389,45 @@ namespace Ecosim.SceneData
 		 */ 
 		public class FormulaData
 		{
+			public bool enabled;
+			public bool doSave;
+
 			public string name;
 			public string body;
 			public string category;
 
-			private string[] _bodyLines;
+			/*private string[] _bodyLines = null;
 			public string[] bodyLines {
 				get {
-					if (_bodyLines == null)
-						_bodyLines = body.Split ('\n');
+					if (_bodyLines == null) {
+						if (body.IndexOf ('\n') >= 0) {
+							_bodyLines = body.Split ('\n');
+						} else {
+							_bodyLines = new string[] { body };
+						}
+					}
 					return _bodyLines;
 				}
-			}
+			}*/
+
+			public bool opened = false;
 			
 			public FormulaData (string name, string category, string body)
 			{
+				this.enabled = true;
+				this.doSave = true;
 				this.name = name;
 				this.body = body;
 				this.category = category;
+			}
+
+			public FormulaData Copy ()
+			{
+				FormulaData copy = new FormulaData (name, category, body);
+				copy.enabled = enabled;
+				copy.doSave = doSave;
+				copy.opened = opened;
+				return copy;
 			}
 		}
 		
@@ -1070,7 +1093,8 @@ namespace Ecosim.SceneData
 							variables.Add (name, var);
 						} else variables[name] = var;
 					} 
-					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "variabledata")) {
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "variabledata")) 
+					{
 						string var = reader.GetAttribute ("var");
 						string name = reader.GetAttribute ("name");
 						string category = reader.GetAttribute ("cat");
@@ -1085,7 +1109,18 @@ namespace Ecosim.SceneData
 						}
 						variablesData [var] = vd;
 
-					} else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
+					}
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "formuladata")) 
+					{
+						string name = reader.GetAttribute ("name");
+						string cat = reader.GetAttribute ("cat");
+						string body = reader.GetAttribute ("body");
+						bool enabled = bool.Parse (reader.GetAttribute ("enabled"));
+						FormulaData fd = new FormulaData (name, cat, body);
+						fd.enabled = enabled;
+						formulasData.Add (fd);
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
 					} 
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == QuestionnaireState.XML_ELEMENT)) {
@@ -1380,13 +1415,27 @@ namespace Ecosim.SceneData
 			}
 
 			// Write variables data
-			foreach (KeyValuePair <string, VariableData> kv in variablesData) {
+			foreach (KeyValuePair <string, VariableData> kv in variablesData) 
+			{
+				if (!kv.Value.doSave) continue;
 				writer.WriteStartElement ("variabledata");
 				writer.WriteAttributeString ("var", kv.Key);
 				writer.WriteAttributeString ("name", kv.Value.name);
 				writer.WriteAttributeString ("cat", kv.Value.category);
 				writer.WriteAttributeString ("enabled", kv.Value.enabled.ToString ().ToLower ());
 				writer.WriteEndElement ();			
+			}
+
+			// Write formulas data
+			foreach (FormulaData fd in formulasData) 
+			{
+				if (!fd.doSave) continue;
+				writer.WriteStartElement ("formuladata");
+				writer.WriteAttributeString ("name", fd.name);
+				writer.WriteAttributeString ("cat", fd.category);
+				writer.WriteAttributeString ("body", fd.body);
+				writer.WriteAttributeString ("enabled", fd.enabled.ToString ().ToLower ());
+				writer.WriteEndElement ();	
 			}
 			
 			// write action states

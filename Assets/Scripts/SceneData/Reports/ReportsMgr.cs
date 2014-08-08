@@ -7,6 +7,19 @@ namespace Ecosim.SceneData
 {
 	public class ReportsMgr
 	{
+		public class QuestionnaireYearData
+		{
+			public int id;
+			public int year;
+
+			public QuestionnaireYearData () { }
+			public QuestionnaireYearData (int id, int year)
+			{
+				this.id = id;
+				this.year = year;
+			}
+		}
+
 		public const string XML_ELEMENT = "reports";
 		public static ReportsMgr self;
 		private readonly Scene scene;
@@ -21,6 +34,7 @@ namespace Ecosim.SceneData
 
 		public List<Questionnaire> questionnaires;
 		public List<Report> reports;
+		public List<QuestionnaireYearData> questionnaireYears;
 
 		private int queueIndex;
 		public List<ReportBase> queue;
@@ -32,6 +46,7 @@ namespace Ecosim.SceneData
 			this.scene = scene;
 			this.scene.onGameEnd += OnGameEnd;
 			this.questionnaires = new List<Questionnaire>();
+			this.questionnaireYears = new List<QuestionnaireYearData> ();
 			this.reports = new List<Report> ();
 			this.queue = new List<ReportBase> ();
 			this.queueIndex = 0;
@@ -50,9 +65,33 @@ namespace Ecosim.SceneData
 					if (q.id == this.showQuestionnaireAtStartId && q.enabled) {
 						// Check if this questionnaire was already finished
 						if (scene.progression.GetQuestionnaireState (q.id, false) == null) {
-							queue.Add (q);
+							queue.Add (q.Copy ());
 							break;
 						}
+					}
+				}
+			}
+
+			if (this.queue.Count > 0) {
+				ShowReports.NotifyQueueChange ();
+			}
+		}
+
+		public void FinalizeSuccession ()
+		{
+			// We don't show these questionnaires when game over
+			// because it could mean we show a questionnaire after the report
+			if (scene.progression.gameEnded) return;
+
+			int year = scene.progression.year + 1;
+			foreach (QuestionnaireYearData qy in this.questionnaireYears) 
+			{
+				if (qy.year == year)
+				{
+					// Find the questionnaire with id
+					Questionnaire q = this.questionnaires.Find (x => x.id == qy.id);
+					if (q != null) {
+						queue.Add (q.Copy ());
 					}
 				}
 			}
@@ -122,6 +161,12 @@ namespace Ecosim.SceneData
 					case Report.XML_ELEMENT :
 						this.reports.Add (Report.Load (reader, scene));
 						break;
+
+					case "qyear" :
+						int id = int.Parse (reader.GetAttribute ("id"));
+						int year = int.Parse (reader.GetAttribute ("year"));
+						this.questionnaireYears.Add (new QuestionnaireYearData (id, year));
+						break;
 					}
 				} 
 				else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
@@ -165,6 +210,12 @@ namespace Ecosim.SceneData
 			}
 			foreach (Report r in reports) {
 				r.Save (writer, scene);
+			}
+			foreach (QuestionnaireYearData qy in questionnaireYears) {
+				writer.WriteStartElement ("qyear");
+				writer.WriteAttributeString ("year", qy.year.ToString());
+				writer.WriteAttributeString ("id", qy.id.ToString ());
+				writer.WriteEndElement ();
 			}
 			writer.WriteEndElement ();
 			writer.WriteEndDocument ();

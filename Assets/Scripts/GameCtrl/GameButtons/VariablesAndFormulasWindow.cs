@@ -59,7 +59,9 @@ namespace Ecosim.GameCtrl.GameButtons
 				}
 
 				// Add the formula to the list
-				formulas [fd.category].Add (fd);
+				Progression.FormulaData copy = fd.Copy ();
+				FormatFormulaBody (copy);
+				formulas [fd.category].Add (copy);
 			}
 
 			// Categories
@@ -159,30 +161,71 @@ namespace Ecosim.GameCtrl.GameButtons
 			base.Render ();
 		}
 
+		void FormatFormulaBody (Progression.FormulaData fd)
+		{
+			string s = fd.body;
+			List<string> names = new List<string> ();
+
+			char splitchar = '"';
+			int firstIndex = s.IndexOf (splitchar);
+			while (true) 
+			{
+				try {
+					int secondIndex = s.IndexOf (splitchar, firstIndex + 1);
+					if (secondIndex >= 0) {
+						names.Add (s.Substring (firstIndex, (secondIndex - firstIndex)+1));
+						firstIndex = s.IndexOf (splitchar, secondIndex + 1);
+					} else {
+						break;
+					}
+				} catch {
+					break;
+				}
+			}
+
+			// Replace found names with variable data's name
+			foreach (string name in names) {
+				string trimmedName = name.Trim (splitchar);
+				Progression.VariableData vd;
+				if (scene.progression.variablesData.TryGetValue (trimmedName, out vd)) {
+					// Replace
+					fd.body = fd.body.Replace (name, vd.name);
+				}
+			}
+		}
+
 		void RenderFormula (Progression.FormulaData fd)
 		{
+			if (!fd.enabled) return;
+
 			GUILayout.Label (fd.name, header, GUILayout.MinHeight (32), GUILayout.MaxWidth (1500));
-			GUILayout.Space (1);
-			foreach (string line in fd.bodyLines) {
-				GUILayout.Label (line, textField, GUILayout.MaxWidth (1500));
+			GUILayout.BeginVertical ();
+			{
+				GUILayout.Label (fd.body, textField, GUILayout.MaxWidth (1500));        
+				GUILayout.Label ("", textField, GUILayout.MaxWidth (1500), GUILayout.Height (7));
 			}
+			GUILayout.EndVertical ();
 		}
 
 		void RenderVariable (Progression.VariableData vd)
 		{
+			if (!vd.enabled) return;
+
 			// Check for list
 			object val = scene.progression.variables [vd.variable];
 			if (val is IList)
 			{
 				// List
 				IList list = (IList)val;
-				GUILayout.Label (vd.name, header, GUILayout.MinHeight (32), GUILayout.MaxWidth (1500));
-				GUILayout.Space (1);
+				//GUILayout.Label (vd.name, header, GUILayout.MinHeight (32), GUILayout.MaxWidth (1500));
+				//GUILayout.Space (1);
 
 				bool listIsUpdated = false;
-				for (int i = 0; i < list.Count; i++) {
+				int count = list.Count;
+				for (int i = 0; i < count; i++) 
+				{
 					// Render and update
-					GUILayout.BeginHorizontal ();
+					/*GUILayout.BeginHorizontal ();
 					{
 						GUI.enabled = false;
 						GUILayout.Label ("", textField, GUILayout.MinHeight (32), GUILayout.Width (100));
@@ -198,7 +241,18 @@ namespace Ecosim.GameCtrl.GameButtons
 						}
 					}
 					GUILayout.EndHorizontal ();
-					GUILayout.Space (1);
+					GUILayout.Space (1);*/
+
+					// Render and update
+					bool isUpdated;
+					object prevVal = list [i];
+					object newVal = RenderField (vd.name + " " + (i+1), prevVal, out isUpdated);
+					if (isUpdated) {
+						list [i] = newVal;
+						listIsUpdated = true;
+					}
+					if (i < count - 1)
+						GUILayout.Space (1);
 				}
 
 				if (listIsUpdated) {

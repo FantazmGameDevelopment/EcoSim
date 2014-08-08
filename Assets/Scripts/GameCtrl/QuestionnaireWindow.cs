@@ -94,6 +94,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 				{
 					this.message = null;
 					this.questionnaire.conclusionShown = true;
+
+					// Check if we can go to the results page
+					CheckForResultsPage ();
 				};
 			}
 
@@ -101,9 +104,11 @@ public class QuestionnaireWindow : ReportBaseWindow
 			return;
 		}
 
-		// Then the results
 		try {
-			RenderResults ();
+			if (this.questionnaire.useResultsPage) {
+				// Then the results
+				RenderResults ();
+			}
 		} catch { }
 	}
 
@@ -169,7 +174,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 		{
 			// Create question state
 			Question q = this.questionnaire.questions [this.questionnaire.currentQuestionIndex];
-			Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (this.questionnaire.id);
+			//Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (this.questionnaire.id);
+			Progression.QuestionnaireState qs = new Progression.QuestionnaireState (this.questionnaire.id);
+			EditorCtrl.self.scene.progression.questionnaireStates.Add (qs);
 
 			Progression.QuestionnaireState.QuestionState questionState = qs.GetQuestionState (this.questionnaire.currentQuestionIndex);
 			questionState.questionName = q.body;
@@ -184,8 +191,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 				questionState.score = a.score;
 			}
 
-			// Nest question
-			this.questionnaire.currentQuestionIndex++;
+			// Next question
+			NextQuestion ();
 		}
 
 		this.selectedAnswer = null;
@@ -271,7 +278,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 		questionState.questionAnswer = a.body;
 
 		// Next question
-		this.questionnaire.currentQuestionIndex++;
+		NextQuestion ();
 
 		this.selectedAnswer = null;
 		this.message = null;
@@ -286,19 +293,52 @@ public class QuestionnaireWindow : ReportBaseWindow
 		scrollPosition = GUILayout.BeginScrollView (scrollPosition);
 
 		// Header
-		GUILayout.BeginHorizontal ();
+		if (q.showHeader)
 		{
-			GUILayout.Label ("Questionnaire: " + q.name, headerDark, GUILayout.Width (width - 40), defaultOption);
-			GUILayout.Space (1);
-			GUILayout.Label (string.Format ("{0}/{1}", (q.currentQuestionIndex + 1), q.questions.Count), headerDark, GUILayout.Width (39), defaultOption);
+			GUILayout.BeginHorizontal ();
+			{
+				GUILayout.Label ("Questionnaire: " + q.name, headerDark, GUILayout.Width (width - 40), defaultOption);
+				GUILayout.Space (1);
+				GUILayout.Label (string.Format ("{0}/{1}", (q.currentQuestionIndex + 1), q.questions.Count), headerDark, GUILayout.Width (39), defaultOption);
+			}
+			GUILayout.EndHorizontal ();
 		}
-		GUILayout.EndHorizontal ();
 		//GUILayout.Space (1);
 	}
 	private void RenderQuestionEnd (Question question)
 	{
 		GUILayout.EndScrollView ();
 		GUILayout.EndArea ();	
+	}
+
+	private void NextQuestion ()
+	{
+		// Up the current index
+		this.questionnaire.currentQuestionIndex++;
+
+		// Check if we can go to the results page
+		CheckForResultsPage ();
+	}
+
+	private void CheckForResultsPage ()
+	{
+		// Exception: if we don't show the results page and we've
+		// answered our last question we fire the onFinished event
+		// for some reason we can do it instead of RenderResultsPage...
+		if (this.questionnaire.currentQuestionIndex >= this.questionnaire.questions.Count) 
+		{
+			// Check if we have a conclusion and if it's shown already
+			if (this.questionnaire.useConclusion && !this.questionnaire.conclusionShown)
+				return;
+			
+			// Check if we have a results page
+			if (this.questionnaire.useResultsPage)
+				return;
+			
+			// Fire onFinished event
+			if (this.onFinished != null)
+				onFinished ();
+		}
 	}
 
 	#endregion
@@ -322,7 +362,6 @@ public class QuestionnaireWindow : ReportBaseWindow
 				passed = (qs.totalScore >= q.requiredScore);
 			}
 			
-			// Header
 			GUILayout.Label ("Questionnaire results:\n" + q.name, headerDark, GUILayout.Width (width), defaultOption);
 			GUILayout.Space (5);
 			
@@ -384,10 +423,14 @@ public class QuestionnaireWindow : ReportBaseWindow
 					GUILayout.Space (1);
 					RenderSaveButton (qs, passed);
 					GUILayout.Space (1);
+					Debug.Log (Event.current);
 					if (GUILayout.Button ("Continue", button, GUILayout.Width (80), defaultOption)) 
 					{
-						if (onFinished != null)
+						Debug.Log (Event.current);
+						if (onFinished != null) {
 							onFinished ();
+							onFinished = null;
+						}
 					}
 				}
 				GUILayout.EndHorizontal ();
@@ -416,8 +459,10 @@ public class QuestionnaireWindow : ReportBaseWindow
 						} 
 						else 
 						{
-							if (onFinished != null)
+							if (onFinished != null) {
 								onFinished ();
+								onFinished = null;
+							}
 						}
 					}
 				}
@@ -443,7 +488,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 				sb.AppendFormat ("Name: {0} {1}\n", scene.playerInfo.firstName, scene.playerInfo.familyName);
 				sb.AppendFormat ("Date: {0}\n", System.DateTime.Today.ToString ("dd\\/MM\\/yyyy"));
 				sb.AppendLine ();
-				
+
 				sb.AppendFormat ("Results Questionnaire {0}:\n", this.questionnaire.id);
 				sb.AppendFormat ("{0}\n", this.questionnaire.name);
 				sb.AppendLine ();

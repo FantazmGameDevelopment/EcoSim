@@ -298,6 +298,9 @@ public class GameControl : MonoBehaviour
 
 		HandleYearBudgets ();
 
+		// Make the reportsMgr check if we should show reports or questionnaires
+		scene.reports.FinalizeSuccession ();
+
 		isWorking = false;
 	}
 

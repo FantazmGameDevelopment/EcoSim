@@ -185,9 +185,16 @@ namespace Ecosim.SceneEditor
 						GUILayout.BeginHorizontal ();
 						{
 							EcoGUI.skipHorizontal = true;
-							EcoGUI.IntField ("\tYear:", ref yb.year, 50, 80);
+							EcoGUI.IntField ("\tYear:", ref yb.year, 50, 50);
 							EcoGUI.IntField ("Extra budget:", ref yb.budget, 80, 80);
 							EcoGUI.skipHorizontal = false;
+
+							GUILayout.Space (10);
+							if (GUILayout.Button ("-", GUILayout.Width (20))) {
+								scene.progression.variableYearBudgets.Remove (yb);
+								GUILayout.EndHorizontal ();
+								break;
+							}
 						}
 						GUILayout.EndHorizontal ();
 					}

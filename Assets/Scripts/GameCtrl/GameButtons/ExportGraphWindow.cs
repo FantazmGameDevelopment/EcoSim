@@ -12,8 +12,15 @@ namespace Ecosim.GameCtrl
 	{
 		// Make sure the width and height don't exceed the screen width/height
 		// because otherwise we won't be able to render the png properly (using ReadPixels)
-		public static int windowWidth { get { return Mathf.Min (800, Screen.width); } }
-		public static int windowHeight { get { return Mathf.Min (400, Screen.height); }	}
+		public static int windowWidth = 800;
+		public static int WindowWidth {
+			get { return Mathf.Min (windowWidth, (int)((float)Screen.width * 0.9f)); } 
+		}
+		public static int windowHeight = 400;
+		public static int WindowHeight { 
+			get { return Mathf.Min (windowHeight, Screen.height - ((titleHeight + 1) * 2)); }	
+		}
+
 		public const int windowWidthMargin = 32;
 		public const int windowHeightMargin = 32;
 		public const int titleHeight = 32;
@@ -53,8 +60,19 @@ namespace Ecosim.GameCtrl
 		private bool saveGraph = false;
 		private string savePath = "";
 
-		public ExportGraphWindow () : base (-1, -1, windowWidth, null)
+		private string newLowestValue;
+		private string newHighestValue;
+
+		//private string newWindowWidth;
+		//private string newWindowHeight;
+
+		public ExportGraphWindow () : base (-1, -1, WindowWidth, null)
 		{
+			// Reset sizes
+			//windowWidth = 800;
+			//windowHeight = 400;
+			//width = windowWidth;
+
 			// Get the inventarisation data
 			invData = ExportMgr.self.GetInventarisationsData ();
 			// Calculate the minimum and maximum values
@@ -65,6 +83,11 @@ namespace Ecosim.GameCtrl
 				minValue = minValue * 0.8f;
 			}
 			maxValue = invData.GetHighestValue () * 1.2f;
+
+			// Round up and down to x
+			int roundTo = 10;
+			maxValue = (roundTo - (maxValue % roundTo)) + maxValue;
+			minValue = minValue - (minValue % roundTo);
 
 			// Check if we have decimals
 			bool hasDecimals = false;
@@ -120,33 +143,25 @@ namespace Ecosim.GameCtrl
 
 		public override void Render ()
 		{
-			float graphHeight = windowHeight - (windowHeightMargin * 2f);
-			float graphWidth = windowWidth - (windowWidthMargin * 2f);
+			float graphHeight = WindowHeight - (windowHeightMargin * 2f);
+			float graphWidth = WindowWidth - (windowWidthMargin * 2f);
 			float legendWidth = (legendWidthOffset + legendLineWidth + legendLabelWidth + legendLineSpace);
 			Vector2 start, end;
 			hoverLabel = "";
 
 			// Graph Rect
-			Rect graphRect = new Rect (xOffset + (titleHeight + 1), yOffset, windowWidth - (titleHeight + 1), titleHeight);
+			Rect graphRect = new Rect (xOffset + (titleHeight + 1), yOffset, WindowWidth - (titleHeight + 1), titleHeight);
 
 			// Title
 			Rect titleRect = graphRect;
-			titleRect.width -= (120f + 1f) * 2f;
+			titleRect.width -= (120f + 1f) * 1f;
 			GUI.Label (titleRect, "Graph", title);
-
-			// Toggle values button
-			Rect toggleRect = titleRect;
-			toggleRect.x += titleRect.width + 1;
-			toggleRect.width = 120f;
-			if (SimpleGUI.Button (toggleRect, ((showLabels)?"Hide Values":"Show Values"), entry, entrySelected)) {
-				showLabels = !showLabels;
-			}
 
 			// Save Button
 			bool doSave = false;
-			Rect saveRect = toggleRect;
-			saveRect.x += saveRect.width + 1f;
-			//saveRect.width = 80f;
+			Rect saveRect = titleRect;
+			saveRect.x += saveRect.width + 1;
+			saveRect.width = 120f;
 			if (SimpleGUI.Button (saveRect, "Save...", entry, entrySelected)) 
 			{
 				if (saveGraph == false)
@@ -162,11 +177,11 @@ namespace Ecosim.GameCtrl
 						yOffset = 0;
 					}
 					
-					int edgeX = (xOffset + windowWidth);
+					int edgeX = (xOffset + WindowWidth);
 					if (edgeX > Screen.width) {
 						xOffset -= edgeX % Screen.width;
 					}
-					int edgeY = (yOffset + windowHeight + (titleHeight + 1));
+					int edgeY = (yOffset + WindowHeight + ((titleHeight + 1) * 2));
 					if (edgeY > Screen.height) {
 						yOffset -= edgeY % Screen.height;
 					}
@@ -186,11 +201,56 @@ namespace Ecosim.GameCtrl
 				}
 			}
 
+			// Adjustable settings
+			Rect settingsRect = graphRect;
+			settingsRect.width = WindowWidth;
+			settingsRect.x -= titleHeight + 1f;
+			settingsRect.y += graphRect.height + 1f;
+			GUILayout.BeginArea (settingsRect);
+			{
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Label ("", header, GUILayout.MaxWidth (WindowWidth), GUILayout.MaxHeight (50));
+					GUILayout.FlexibleSpace ();
+					GUILayout.Space (1);
+
+					// Adjustable window size
+					/*GUILayout.Label ("Window size", header, GUILayout.Width (100), GUILayout.MaxHeight (50));
+					GUILayout.Space (1);
+					RenderAdjustableFloatField (windowWidth, ref newWindowWidth, UpdateWindowWidth);
+					GUILayout.Space (1);
+					GUILayout.Label ("x", header, GUILayout.Width (20), GUILayout.MaxHeight (50));
+					GUILayout.Space (1);
+					RenderAdjustableFloatField (windowHeight, ref newWindowHeight, UpdateWindowHeight);
+					GUILayout.Space (1);*/
+
+					// Adjustable lowest value
+					GUILayout.Label ("Value Range", header, GUILayout.Width (110), GUILayout.MaxHeight (50));
+					GUILayout.Space (1);
+					RenderAdjustableFloatField (minValue, ref newLowestValue, UpdateMinValue);
+					GUILayout.Space (1);
+
+					// Adjustable highest value
+					GUILayout.Label ("-", header, GUILayout.Width (20), GUILayout.MaxHeight (50));
+					GUILayout.Space (1);
+					RenderAdjustableFloatField (maxValue, ref newHighestValue, UpdateMaxValue);
+					GUILayout.Space (1);
+
+					// Toggle values
+					if (GUILayout.Button (((showLabels)?"Hide Values":"Show Values"), entry, GUILayout.Width (120), GUILayout.MaxHeight (50))) {
+						showLabels = !showLabels;
+					}
+				}
+				GUILayout.EndHorizontal ();
+			}
+			GUILayout.EndArea ();
+
 			// Background
-			graphRect.width = windowWidth;
+			graphRect.width = WindowWidth;
 			graphRect.x -= 33f; // X button
 			graphRect.y += graphRect.height + 1f;
-			graphRect.height = windowHeight;
+			graphRect.y += settingsRect.height + 1f;
+			graphRect.height = WindowHeight;
 			GUI.Label (graphRect, "", white);
 
 			// Setup graph rect
@@ -238,7 +298,8 @@ namespace Ecosim.GameCtrl
 
 				// Draw label
 				yr.x -= gridLineIndent;
-				GUI.Label (yr, (maxValue - (yStep * i)).ToString (numberFormat), rightAlign);
+				if (i == 0 || i == yAxisSteps - 1)
+					GUI.Label (yr, (maxValue - (yStep * i)).ToString (numberFormat), rightAlign);
 			}
 
 			// X Axis
@@ -442,6 +503,63 @@ namespace Ecosim.GameCtrl
 			base.Render ();
 		}
 
+		/*void UpdateWindowWidth (float newValue)
+		{
+			if (newValue < 400)
+				newValue = 400;
+			windowWidth = (int)newValue;
+			windowWidth = WindowWidth;
+			width = WindowWidth;
+		}
+
+		void UpdateWindowHeight (float newValue)
+		{
+			if (newValue < 200)
+				newValue = 200;
+			windowHeight = (int)newValue;
+			windowHeight = WindowHeight;
+			height = WindowHeight;
+		}*/
+
+		void UpdateMinValue (float newValue)
+		{
+			minValue = newValue;
+			// Check if the minimum does not exceed the lowest value of all points
+			float lowestValue = invData.GetLowestValue ();
+			if (minValue > lowestValue)
+				minValue = lowestValue;
+		}
+
+		void UpdateMaxValue (float newValue)
+		{
+			maxValue = newValue;
+			// Check if the max does not exceed the highest value of all points
+			float highestValue = invData.GetHighestValue ();
+			if (maxValue < highestValue)
+				maxValue = highestValue;
+		}
+
+		void RenderAdjustableFloatField (float value, ref string newValue, System.Action<float> onValueUpdated)
+		{
+			// Check if we have initial value
+			newValue = newValue ?? value.ToString ();
+			
+			// Check if the value is different, we do this before (in the frame after)
+			// to be able to adjust the color of the textfield. Red means incorrect format.
+			if (newValue != value.ToString ()) {
+				GUI.color = Color.white;
+				float outValue;
+				if (float.TryParse (newValue, out outValue)) {
+					onValueUpdated (outValue);
+					newValue = value.ToString ();
+				} else {
+					GUI.color = Color.red;
+				}
+			}
+			newValue = GUILayout.TextField (newValue, textField, GUILayout.Width (80), GUILayout.MaxHeight (50));
+			GUI.color = Color.white;
+		}
+
 		private IEnumerator RenderAndSaveGraph ()
 		{
 			if (!saveGraph) yield break;
@@ -453,10 +571,10 @@ namespace Ecosim.GameCtrl
 			yield return new WaitForEndOfFrame ();
 
 			// Create new texture
-			Texture2D tex = new Texture2D (windowWidth, windowHeight, TextureFormat.RGB24, false);
+			Texture2D tex = new Texture2D (WindowWidth, WindowHeight, TextureFormat.RGB24, false);
 			int x = xOffset;
-			int y = Screen.height - (yOffset + (titleHeight + 1)) - windowHeight;
-			tex.ReadPixels (new Rect (x, y, windowWidth, windowHeight), 0, 0, false);
+			int y = Screen.height - (yOffset + ((titleHeight + 1) * 2)) - WindowHeight;
+			tex.ReadPixels (new Rect (x, y, WindowWidth, WindowHeight), 0, 0, false);
 			tex.Apply ();
 
 			// Save the texture

@@ -59,7 +59,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		protected readonly Texture2D icon;
 		protected int xOffset;
 		protected int yOffset;
-		protected readonly int width;
+		protected /*readonly*/ int width;
 		protected int height;
 		private bool isDragging;
 		private Vector2 mouseDrag;
