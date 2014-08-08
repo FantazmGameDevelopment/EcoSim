@@ -370,6 +370,16 @@ namespace Ecosim.SceneEditor
 						if ((uiListCount > action.GetMinUICount ()) && GUILayout.Button ("-", GUILayout.Width (20))) {
 							action.uiList.Remove (ui);
 							actions.UpdateReferences ();
+
+							// Exception time
+							if (action is InventarisationAction)
+							{
+								// Remove distortion range of the ui
+								InventarisationAction invAction = (InventarisationAction)action;
+								InventarisationAction.Range range = invAction.GetDistortionRange (ui.index);
+								if (range != null)
+									invAction.distortionRanges.Remove (range);
+							}
 							break;
 						}
 						GUILayout.EndHorizontal ();
@@ -388,7 +398,22 @@ namespace Ecosim.SceneEditor
 						GUILayout.EndHorizontal ();
 						GUILayout.EndVertical ();
 						GUILayout.EndHorizontal (); // ~1
+
+						// Exception time
+						if (action is InventarisationAction) 
+						{
+							InventarisationAction.Range range = ((InventarisationAction)action).GetDistortionRange (ui.index);
+							EcoGUI.RangeSliders ("Distortion", 
+							                     ref range.min,
+							                     ref range.max,
+							                     0f, 1f, 
+							                     GUILayout.Width (80), 
+							                     GUILayout.Width (80));
+						}
+
+						GUILayout.Space (5);
 					} // foreach uiAction
+
 					if (uiListCount < action.GetMaxUICount ()) {
 						GUILayout.BeginHorizontal ();
 						GUILayout.Label ("UI Interaction", GUILayout.Width (80));

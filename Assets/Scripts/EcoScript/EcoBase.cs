@@ -9,6 +9,8 @@ namespace Ecosim.EcoScript
 {
 	public abstract class EcoBase
 	{
+		private static System.Random random;
+
 		public readonly Scene scene;
 		public readonly BasicAction basicAction;
 		public readonly int actionId;
@@ -115,7 +117,7 @@ namespace Ecosim.EcoScript
 			return AddInventarisation (name, area, area);
 		}
 
-		public Progression.InventarisationResult AddInventarisation(string name, Data area, Data data) 
+		public Progression.InventarisationResult AddInventarisation (string name, Data area, Data data) 
 		{
 			Progression.InventarisationResult ir = new Progression.InventarisationResult (year, name, area, data, basicAction.id);
 			scene.progression.inventarisations.Add (ir);
@@ -125,21 +127,23 @@ namespace Ecosim.EcoScript
 		/**
 		 * Container class that contains data needed for the custom scripts.
 		 */
-		public class Inventaristation 
+		public class Inventarisation 
 		{
 			public readonly string Name;
 			public readonly Data SelectionMap;
 			public readonly int Cost;
+			public readonly int UIIndex;
 
-			public Inventaristation (string name, Data selection, int cost)
+			public Inventarisation (string name, Data selection, int uiIndex, int cost)
 			{
 				this.Name = name;
 				this.SelectionMap = selection;
 				this.Cost = cost;
+				this.UIIndex = uiIndex;
 			}
 		}
 
-		public IEnumerable<Inventaristation> EnumerateActiveInventarisations (string areaName)
+		public IEnumerable<Inventarisation> EnumerateActiveInventarisations (string areaName)
 		{
 			foreach (Progression.Inventarisation inv in scene.progression.activeInventarisations) {
 				// Check if year is still valid, if the lastYear is the same year as the current year + 1
@@ -148,9 +152,10 @@ namespace Ecosim.EcoScript
 				if ((inv.lastYear >= scene.progression.year + 1) && inv.ActionAreaName == areaName) 
 				{
 					bool firstTime = (inv.startYear == scene.progression.year);
-					Inventaristation i = new Inventaristation (
+					Inventarisation i = new Inventarisation (
 						inv.name,
 						scene.progression.GetData (inv.areaName),
+						inv.uiIndex,
 						// We only calculate the costs the first time
 						(firstTime) ? inv.cost : 0
 					);
@@ -273,6 +278,13 @@ namespace Ecosim.EcoScript
 		 */
 		public void EnableAction (int id, bool enable) {
 			scene.actions.GetAction (id).isActive = enable;
+		}
+
+		public float GetRandomNumber ()
+		{
+			if (random == null)
+				random = new System.Random ((int)System.DateTime.Now.Ticks);
+			return (float)random.NextDouble ();
 		}
 		
 		public void LogDebug(string str) {

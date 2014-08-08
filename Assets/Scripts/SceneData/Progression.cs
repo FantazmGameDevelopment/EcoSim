@@ -127,7 +127,7 @@ namespace Ecosim.SceneData
  			 * Constructor can only be used when game is running. It creates a new
 			 * inventarisation result using a given year, name, area data set, actionid.
 			 */
-			public Inventarisation (Scene scene, int startYear, int lastYear, string name, string areaName, int actionId, int cost)
+			public Inventarisation (Scene scene, int startYear, int lastYear, string name, string areaName, int actionId, int uiIndex, int cost)
 			{
 				this.scene = scene;
 				this.startYear = startYear;
@@ -135,6 +135,7 @@ namespace Ecosim.SceneData
 				this.name = name;
 				this.areaName = areaName;
 				this.actionId = actionId;
+				this.uiIndex = uiIndex;
 				this.cost = cost;
 			}
 
@@ -144,6 +145,7 @@ namespace Ecosim.SceneData
 			public readonly string name;
 			public readonly string areaName;
 			public readonly int actionId;
+			public readonly int uiIndex;
 			public readonly int cost;
 
 			private string actionAreaName = null;
@@ -163,12 +165,17 @@ namespace Ecosim.SceneData
 				w.WriteAttributeString ("name", name);
 				w.WriteAttributeString ("areaname", areaName);
 				w.WriteAttributeString ("actionid", actionId.ToString ());
+				w.WriteAttributeString ("uiIndex", uiIndex.ToString ());
 				w.WriteAttributeString ("cost", cost.ToString());
 				w.WriteEndElement ();
 			}
 
 			public static Inventarisation Load (XmlTextReader reader, Scene scene)
 			{
+				int uiIndex = -1;
+				if (!string.IsNullOrEmpty (reader.GetAttribute ("uiindex"))) {
+					uiIndex = int.Parse (reader.GetAttribute ("uiindex"));
+				}
 				Inventarisation i = new Inventarisation (
 					scene,
 					int.Parse (reader.GetAttribute ("start")),
@@ -176,6 +183,7 @@ namespace Ecosim.SceneData
 					reader.GetAttribute ("name"),
 					reader.GetAttribute ("areaname"),
 					int.Parse (reader.GetAttribute ("actionid")),
+					uiIndex,
 					int.Parse (reader.GetAttribute ("cost"))
 				);
 				IOUtil.ReadUntilEndElement (reader, XML_ELEMENT);

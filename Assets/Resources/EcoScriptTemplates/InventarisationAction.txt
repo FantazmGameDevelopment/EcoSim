@@ -2,7 +2,7 @@ void DoSuccession() {
 	// AREA will be defined to the name of the selection area
 	// for this inventarisation. If data is set we are doing
 	// an inventarisation...
-	foreach (Inventaristation inv in 
+	foreach (Inventarisation inv in 
 		EnumerateActiveInventarisations (AREA))
 	{
 		// The selection of the inventarisation
@@ -23,7 +23,7 @@ void DoSuccession() {
 		foreach (Coordinate vc in selection.EnumerateNotZero ()) 
 		{
 			tileCount ++;
-			int value = analyse.Get (vc);
+			int value = Distort (analyse.Get (vc));
 			
 			// somehow map the values of the data we analyse
 			// to the icons set...
@@ -55,4 +55,21 @@ void DoSuccession() {
 
 bool CanSelectTile (int x, int y, UserInteraction ui) {
 	return true;
+}
+
+int DistortValue (int uiIndex, int value) {
+	// Find the distortion range
+	if (uiIndex < basicAction.uiList.Count) {
+		InventarisationAction invAction = (InventarisationAction)basicAction;
+		// Check if we have a distortion range
+		if (uiIndex < invAction.distortionRanges.Count) {
+			// Return the distorted value using a random number
+			float rnd = GetRandomNumber ();
+			float min = invAction.distortionRanges [uiIndex].min;
+			float max = invAction.distortionRanges [uiIndex].max;
+			return (int)((rnd * (max - min)) + min);
+		}
+		return value;
+	}
+	return value;
 }

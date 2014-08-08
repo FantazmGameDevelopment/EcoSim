@@ -227,13 +227,13 @@ namespace Ecosim.GameCtrl
 					// Adjustable lowest value
 					GUILayout.Label ("Value Range", header, GUILayout.Width (110), GUILayout.MaxHeight (50));
 					GUILayout.Space (1);
-					RenderAdjustableFloatField (minValue, ref newLowestValue, UpdateMinValue);
+					RenderAdjustableFloatField (ref minValue, ref newLowestValue, UpdateMinValue);
 					GUILayout.Space (1);
 
 					// Adjustable highest value
 					GUILayout.Label ("-", header, GUILayout.Width (20), GUILayout.MaxHeight (50));
 					GUILayout.Space (1);
-					RenderAdjustableFloatField (maxValue, ref newHighestValue, UpdateMaxValue);
+					RenderAdjustableFloatField (ref maxValue, ref newHighestValue, UpdateMaxValue);
 					GUILayout.Space (1);
 
 					// Toggle values
@@ -539,7 +539,7 @@ namespace Ecosim.GameCtrl
 				maxValue = highestValue;
 		}
 
-		void RenderAdjustableFloatField (float value, ref string newValue, System.Action<float> onValueUpdated)
+		void RenderAdjustableFloatField (ref float value, ref string newValue, System.Action<float> onValueUpdated)
 		{
 			// Check if we have initial value
 			newValue = newValue ?? value.ToString ();

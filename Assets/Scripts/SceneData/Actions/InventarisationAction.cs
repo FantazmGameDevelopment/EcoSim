@@ -11,11 +11,26 @@ namespace Ecosim.SceneData.Action
 {
 	public class InventarisationAction : BasicAction
 	{
+		public class Range
+		{
+			public float min;
+			public float max;
+
+			public Range () { }
+			public Range (float min, float max)
+			{
+				this.min = min;
+				this.max = max;
+			}
+		}
+
 		public const string XML_ELEMENT = "inventarisation";
 		public string areaName;
 		public string invAreaName;
 		public int gridIconId;
 		public int invalidTileIconId;
+		public List<Range> distortionRanges;
+
 		private Data selectedArea;
 		private EditData edit;
 		private GridTextureSettings areaGrid = null;
@@ -41,6 +56,7 @@ namespace Ecosim.SceneData.Action
 		public InventarisationAction (Scene scene, int id) : base (scene, id)
 		{
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
+			distortionRanges = new List<Range>();
 		}
 
 		public InventarisationAction (Scene scene) : base(scene, scene.actions.lastId)
@@ -50,6 +66,7 @@ namespace Ecosim.SceneData.Action
 			invAreaName = "";
 			UserInteraction ui = new UserInteraction (this);
 			uiList.Add (ui);
+			distortionRanges = new List<Range>() { new Range () };
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
 			valueTypes [0] = new InventarisationValue ();
 			valueTypes [0].name = "Result1";
@@ -184,7 +201,18 @@ namespace Ecosim.SceneData.Action
 		{
 			return 15;
 		}
-		
+
+		public Range GetDistortionRange (int index)
+		{
+			if (index < distortionRanges.Count)
+				return distortionRanges [index];
+
+			while (index >= distortionRanges.Count) {
+				distortionRanges.Add (new Range (0f, 1f));
+			}
+			return distortionRanges [index];
+		}
+
 		public bool CanSelectTile (int x, int y, UserInteraction ui)
 		{
 			if (canSelectTileMI != null) {
@@ -359,7 +387,15 @@ namespace Ecosim.SceneData.Action
 						iv.name = name;
 						action.valueTypes [index] = iv;
 						IOUtil.ReadUntilEndElement (reader, "valuetype");
-					} else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
+					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "distortionrange")) 
+					{
+						float min = float.Parse (reader.GetAttribute ("min"));
+						float max = float.Parse (reader.GetAttribute ("max"));
+						action.distortionRanges.Add (new Range (min, max));
+						IOUtil.ReadUntilEndElement (reader, "distortionrange");
+					}
+					else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
 						break;
 					}
 				}
@@ -377,6 +413,12 @@ namespace Ecosim.SceneData.Action
 			writer.WriteAttributeString ("invalidicon", invalidTileIconId.ToString ());
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
+			}
+			foreach (Range r in distortionRanges) {
+				writer.WriteStartElement ("distortionrange");
+				writer.WriteAttributeString ("min", r.min.ToString());
+				writer.WriteAttributeString ("max", r.max.ToString());
+				writer.WriteEndElement ();
 			}
 			for (int i = 0; i < valueTypes.Length; i++) {
 				if (valueTypes [i] != null) {

@@ -117,7 +117,7 @@ namespace Ecosim.GameCtrl.GameButtons
 				string name = inventarisationName;
 				string areaName = action.invAreaName;
 				int actionId = action.id;
-				Progression.Inventarisation inv = new Progression.Inventarisation (scene, startYear, lastYear, name, areaName, actionId, (int)totalCost);
+				Progression.Inventarisation inv = new Progression.Inventarisation (scene, startYear, lastYear, name, areaName, actionId, ui.index, (int)totalCost);
 				scene.progression.activeInventarisations.Add (inv);
 
 				// Add the newly made costs to the 'total'
