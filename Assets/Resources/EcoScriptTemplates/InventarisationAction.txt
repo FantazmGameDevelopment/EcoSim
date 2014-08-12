@@ -23,7 +23,7 @@ void DoSuccession() {
 		foreach (Coordinate vc in selection.EnumerateNotZero ()) 
 		{
 			tileCount ++;
-			int value = Distort (analyse.Get (vc));
+			int value = Distort (inv.UIIndex, analyse.Get (vc));
 			
 			// somehow map the values of the data we analyse
 			// to the icons set...
