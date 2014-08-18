@@ -113,15 +113,6 @@ namespace Ecosim.EcoScript
 			scene.progression.AddReport (text);
 		}
 
-		public void EnableGameButton (string name, bool value)
-		{
-			// TODO: 
-			/*foreach (GameButton gb in GameControl.self.buttons) {
-				if (gb.name == name)
-					gb.isVisible = value;
-			}*/
-		}
-
 		public Progression.InventarisationResult AddInventarisation(string name, Data area) 
 		{
 			return AddInventarisation (name, area, area);
