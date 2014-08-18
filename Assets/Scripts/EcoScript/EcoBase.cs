@@ -4,6 +4,7 @@ using Ecosim;
 using Ecosim.SceneData;
 using Ecosim.SceneData.AnimalPopulationModel;
 using Ecosim.SceneData.Action;
+using Ecosim.GameCtrl.GameButtons;
 
 namespace Ecosim.EcoScript
 {
@@ -110,6 +111,15 @@ namespace Ecosim.EcoScript
 
 		public void MakeReport (string text) {
 			scene.progression.AddReport (text);
+		}
+
+		public void EnableGameButton (string name, bool value)
+		{
+			// TODO: 
+			/*foreach (GameButton gb in GameControl.self.buttons) {
+				if (gb.name == name)
+					gb.isVisible = value;
+			}*/
 		}
 
 		public Progression.InventarisationResult AddInventarisation(string name, Data area) 

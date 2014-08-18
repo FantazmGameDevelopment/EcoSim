@@ -66,6 +66,33 @@ namespace Ecosim.SceneData.Action
 			return "Cheats";
 		}
 
+		public bool HandleCheat (string cheat)
+		{
+			bool cheatFound = false;
+			int idx = 0;
+			foreach (Cheat c in this.cheats) {
+				idx++;
+				if (c.body == cheat) {
+					cheatFound = true;
+
+					// Try to fire a method for the cheat in the action
+					if (ecoBase != null) {
+						MethodInfo cheatMI = ecoBase.GetType ().GetMethod ("ProcessCheat" + (idx).ToString (),
+						BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] {}, null);
+						if (cheatMI != null) {
+							try {
+								cheatMI.Invoke (ecoBase, null);
+							} catch (Exception e) {
+								Log.LogException (e);
+							}
+						}
+
+					}
+				}
+			}
+			return cheatFound;
+		}
+
 		public override void Save (XmlTextWriter writer)
 		{
 			// TODO: Save more data if necessary
