@@ -30,6 +30,7 @@ public class GameControl : MonoBehaviour
 	private GUIStyle extraHelpStyle;
 	public GameButton[] buttons;
 	public bool hideToolBar = false; // hide tools when true
+	//public bool hideMeasures = false; // hide tools when true
 	public bool hideSuccessionButton = false; // hide succession button when true
 	public bool isProcessing = false; // hide complete UI when true
 	private string budgetText = "";

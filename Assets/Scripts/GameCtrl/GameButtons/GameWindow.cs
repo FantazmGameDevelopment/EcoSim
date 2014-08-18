@@ -86,7 +86,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			
 			windows.Insert (0, this);
 			UpdateDepth ();
-			GameObject go = new GameObject ("window");
+			GameObject go = new GameObject ("window [" + GetType ().Name + "]");
 			instance = go.AddComponent <GameWindowInstance>();
 			instance.window = this;
 		}

@@ -163,6 +163,32 @@ namespace Ecosim.EcoScript
 				}
 			}
 		}
+
+		public int ProcessBias (int value, BasicAction action, int uiIndex)
+		{
+			// Get the inventarisation action
+			InventarisationAction invAction = (InventarisationAction)action;
+			if (invAction != null)
+			{
+				// Find the distortion range in the ui list
+				if (uiIndex < invAction.uiList.Count) 
+				{
+					// Check if we have a bias
+					if (uiIndex < invAction.biasses.Count)
+					{
+						// Return the processed value using a random number
+						float rnd = GetRandomNumber ();
+						float min = invAction.GetBias (uiIndex).min;
+						float max = invAction.GetBias (uiIndex).max;
+						float prc = (rnd * (max - min)) + min;
+						return (int)(value * prc);
+					}
+					return value;
+				}
+				return value;
+			}
+			return value;
+		}
 		
 		public void AddGameMarkers (string dataName, string[] models, RenderGameMarkersMgr.ClickHandler fn) {
 			RenderGameMarkersMgr.AddGameMarkers (dataName, models, fn);

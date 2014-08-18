@@ -140,13 +140,20 @@ namespace Ecosim.SceneEditor
 			{
 				RenderName (name, nameLayout);
 
-				GUILayout.Label (minRange.ToString("0.00"), GUILayout.Width (25));
+				bool prevSkipHorizontal = skipHorizontal;
+				skipHorizontal = true;
+
+				EcoGUI.FloatField (null, ref minRange, 2, null, GUILayout.Width (40));
+				//GUILayout.Label (minRange.ToString("0.00"), GUILayout.Width (25));
 				if (valLayout != null) 	minRange = GUILayout.HorizontalSlider (minRange, min, max, valLayout);
 				else 					minRange = GUILayout.HorizontalSlider (minRange, min, max);
 
 				if (valLayout != null) 	maxRange = GUILayout.HorizontalSlider (maxRange, min, max, valLayout);
 				else 					maxRange = GUILayout.HorizontalSlider (maxRange, min, max);
-				GUILayout.Label (maxRange.ToString("0.00"), GUILayout.Width (25));
+				//GUILayout.Label (maxRange.ToString("0.00"), GUILayout.Width (25));
+				EcoGUI.FloatField (null, ref maxRange, 2, null, GUILayout.Width (40));
+
+				skipHorizontal = prevSkipHorizontal;
 
 				if (maxRange < minRange) maxRange = minRange;
 			}

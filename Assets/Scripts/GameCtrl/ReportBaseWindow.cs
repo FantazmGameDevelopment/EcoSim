@@ -57,6 +57,8 @@ public class ReportBaseWindow : GameWindow
 		left = this.xOffset;// ((Screen.width - width) * 0.5f) + editorWidth;
 		top = this.yOffset;//(Screen.height - height) * 0.5f;
 		defaultOption = GUILayout.MinWidth (0);//GUILayout.MinHeight (28f);//GUILayout.ExpandHeight (true);
+
+		base.Render ();
 	}
 
 	public virtual void Dispose ()

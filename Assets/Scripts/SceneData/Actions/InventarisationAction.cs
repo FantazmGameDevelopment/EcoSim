@@ -29,7 +29,7 @@ namespace Ecosim.SceneData.Action
 		public string invAreaName;
 		public int gridIconId;
 		public int invalidTileIconId;
-		public List<Range> distortionRanges;
+		public List<Range> biasses;
 
 		private Data selectedArea;
 		private EditData edit;
@@ -56,7 +56,7 @@ namespace Ecosim.SceneData.Action
 		public InventarisationAction (Scene scene, int id) : base (scene, id)
 		{
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
-			distortionRanges = new List<Range>();
+			biasses = new List<Range>();
 		}
 
 		public InventarisationAction (Scene scene) : base(scene, scene.actions.lastId)
@@ -66,7 +66,7 @@ namespace Ecosim.SceneData.Action
 			invAreaName = "";
 			UserInteraction ui = new UserInteraction (this);
 			uiList.Add (ui);
-			distortionRanges = new List<Range>() { new Range () };
+			biasses = new List<Range>() { new Range () };
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
 			valueTypes [0] = new InventarisationValue ();
 			valueTypes [0].name = "Result1";
@@ -202,15 +202,15 @@ namespace Ecosim.SceneData.Action
 			return 15;
 		}
 
-		public Range GetDistortionRange (int index)
+		public Range GetBias (int index)
 		{
-			if (index < distortionRanges.Count)
-				return distortionRanges [index];
+			if (index < biasses.Count)
+				return biasses [index];
 
-			while (index >= distortionRanges.Count) {
-				distortionRanges.Add (new Range (0f, 1f));
+			while (index >= biasses.Count) {
+				biasses.Add (new Range (1f, 1f));
 			}
-			return distortionRanges [index];
+			return biasses [index];
 		}
 
 		public bool CanSelectTile (int x, int y, UserInteraction ui)
@@ -388,12 +388,12 @@ namespace Ecosim.SceneData.Action
 						action.valueTypes [index] = iv;
 						IOUtil.ReadUntilEndElement (reader, "valuetype");
 					} 
-					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "distortionrange")) 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "bias")) 
 					{
 						float min = float.Parse (reader.GetAttribute ("min"));
 						float max = float.Parse (reader.GetAttribute ("max"));
-						action.distortionRanges.Add (new Range (min, max));
-						IOUtil.ReadUntilEndElement (reader, "distortionrange");
+						action.biasses.Add (new Range (min, max));
+						IOUtil.ReadUntilEndElement (reader, "bias");
 					}
 					else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
 						break;
@@ -414,8 +414,8 @@ namespace Ecosim.SceneData.Action
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
 			}
-			foreach (Range r in distortionRanges) {
-				writer.WriteStartElement ("distortionrange");
+			foreach (Range r in biasses) {
+				writer.WriteStartElement ("bias");
 				writer.WriteAttributeString ("min", r.min.ToString());
 				writer.WriteAttributeString ("max", r.max.ToString());
 				writer.WriteEndElement ();

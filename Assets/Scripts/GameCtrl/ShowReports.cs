@@ -39,7 +39,7 @@ public class ShowReports : MonoBehaviour
 			}
 
 			isShowing = true;
-			ctrl.hideToolBar = true;
+			//ctrl.hideToolBar = true;
 			ctrl.hideSuccessionButton = true;
 
 			object inQueue = scene.reports.CurrentInQueue ();
@@ -56,8 +56,8 @@ public class ShowReports : MonoBehaviour
 		}
 		else if (isShowing)
 		{
-			GUI.depth = 100;
-			CameraControl.MouseOverGUI = true;
+			//GUI.depth = 100;
+			//CameraControl.MouseOverGUI = true;
 
 			if (this.currentQuestionnaire != null) 
 			{
@@ -70,7 +70,7 @@ public class ShowReports : MonoBehaviour
 			else 
 			{
 				isShowing = false;
-				ctrl.hideToolBar = false;
+				//ctrl.hideToolBar = false;
 				ctrl.hideSuccessionButton = false;
 
 				hasQueue = scene.reports.ToNextInQueue ();
@@ -95,6 +95,8 @@ public class ShowReports : MonoBehaviour
 				this.questionnaireWindow = null;
 			});
 		}
+
+		GUI.depth = this.questionnaireWindow.depth + 1;
 		this.questionnaireWindow.Render ();
 	}
 
@@ -109,6 +111,8 @@ public class ShowReports : MonoBehaviour
 				this.reportWindow = null;
 			});
 		}
+
+		GUI.depth = this.questionnaireWindow.depth + 1;
 		this.reportWindow.Render ();
 	}
 

@@ -258,13 +258,6 @@ namespace Ecosim.SceneEditor
 						}
 						GUILayout.EndVertical (); // ~Budget
 
-						// Results
-						GUILayout.BeginVertical (ctrl.skin.box);
-						{
-							EcoGUI.Toggle ("Results page", ref q.useResultsPage);
-						}
-						GUILayout.EndVertical (); // ~Results
-
 						// Questions
 						EcoGUI.Foldout ("Questions", ref q.questionsOpened);
 						if (q.questionsOpened)
@@ -315,9 +308,17 @@ namespace Ecosim.SceneEditor
 							}
 							GUILayout.EndHorizontal (); // ~Add buttons
 						} // ~Questions
+						GUILayout.Space (3);
 
 						// Conclusion
 						RenderReportBaseConclusion (q);
+
+						// Results
+						GUILayout.BeginVertical (ctrl.skin.box);
+						{
+							EcoGUI.Toggle ("Results page", ref q.useResultsPage);
+						}
+						GUILayout.EndVertical (); // ~Results
 					}
 					GUILayout.Space (3);
 				}
@@ -928,17 +929,21 @@ namespace Ecosim.SceneEditor
 			{
 				GUILayout.BeginHorizontal ();
 				{
+					string name = "Conclusion";
+					if (r is Questionnaire)
+						name = "Final Remark";
+
 					GUILayout.Space (1);
 					r.useConclusion = GUILayout.Toggle (r.useConclusion, "", GUILayout.Width (20));
 					if (r.useConclusion) 
 					{
 						EcoGUI.skipHorizontal = true;
-						EcoGUI.Foldout ("Conclusion", ref r.conclusionOpened);
+						EcoGUI.Foldout (name, ref r.conclusionOpened);
 						EcoGUI.skipHorizontal = false;
 					}
 					else 
 					{
-						GUILayout.Label ("Conclusion");
+						GUILayout.Label (name);
 						r.conclusionOpened = false;
 					}
 				}

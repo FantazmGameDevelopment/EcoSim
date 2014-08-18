@@ -17,12 +17,12 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 	private string messageTitle;
 	private string message;
-	//private int messageXOffset;
-	//private int messageYOffset;
+	private int messageXOffset;
+	private int messageYOffset;
 	private int messageLines;
 	private int messageTitleLines;
-	//private bool messageIsDragging;
-	//private Vector2 messageMouseDragPosition;
+	private bool messageIsDragging;
+	private Vector2 messageMouseDragPosition;
 
 	public QuestionnaireWindow (Questionnaire questionnaire, System.Action onFinished) : base (onFinished)
 	{
@@ -545,22 +545,28 @@ public class QuestionnaireWindow : ReportBaseWindow
 		height = Mathf.Clamp (height, 0f, Screen.height * 0.75f);
 
 		// Check x y offsets
-		/*if (messageXOffset == -1) {
+		if (messageXOffset == -1) {
 			messageXOffset = (int)(((Screen.width - width) * 0.5f) + editorWidth);
 		}
 		if (messageYOffset == -1) {
 			messageYOffset = (int)((Screen.height * 0.5f) - (height * 0.5f));
-		}*/
+		}
 
-		left = ((Screen.width - width) * 0.5f) + editorWidth;
-		top = (Screen.height * 0.5f) - (height * 0.5f);
+		//left = ((Screen.width - width) * 0.5f) + editorWidth;
+		//top = (Screen.height * 0.5f) - (height * 0.5f);
+
+		left = messageXOffset;
+		top = messageYOffset;
 
 		GUILayout.BeginArea (new Rect (left, top, width, height));
 		{
 			GUILayout.Label (messageTitle ?? "", headerDark, GUILayout.Width (width), defaultOption);
 
+			Vector2 mousePos = Input.mousePosition;
+			Vector2 guiMousePos = new Vector2 (mousePos.x, Screen.height - mousePos.y);
+
 			// Check for drag
-			/*if (Event.current.type == EventType.MouseUp) 
+			if (Event.current.type == EventType.MouseUp) 
 			{
 				// Cancel drag
 				messageIsDragging = false;
@@ -568,21 +574,22 @@ public class QuestionnaireWindow : ReportBaseWindow
 			else if (messageIsDragging) 
 			{
 				// Do drag
-				Vector2 guiMousePos = Event.current.mousePosition;
 				messageXOffset += (int)(guiMousePos.x - messageMouseDragPosition.x);
 				messageYOffset += (int)(guiMousePos.y - messageMouseDragPosition.y);
 				messageMouseDragPosition = guiMousePos;
 			}
-			if (Event.current.type == EventType.MouseDown)
+			else if (Event.current.type == EventType.MouseDown)
 			{
 				// Start drag
 				if (GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)) 
 				{
 					messageIsDragging = true;
-					messageMouseDragPosition = Event.current.mousePosition;
+					messageMouseDragPosition = guiMousePos;
 					Event.current.Use ();
+
+					this.SetWindowOnTop ();
 				}
-			}*/ 
+			}
 			GUILayout.Space (1);
 			this.messageScrollPos = GUILayout.BeginScrollView (this.messageScrollPos);
 			{
@@ -590,6 +597,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 				GUILayout.Space (1);
 			}
 			GUILayout.EndScrollView ();
+			GUILayout.Space (1);
 			GUILayout.BeginHorizontal ();
 			{
 				GUILayout.Label ("", headerLight, GUILayout.Width (width - 90), defaultOption);

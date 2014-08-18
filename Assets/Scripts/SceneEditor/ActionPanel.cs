@@ -376,16 +376,16 @@ namespace Ecosim.SceneEditor
 							{
 								// Remove distortion range of the ui
 								InventarisationAction invAction = (InventarisationAction)action;
-								InventarisationAction.Range range = invAction.GetDistortionRange (ui.index);
+								InventarisationAction.Range range = invAction.GetBias (ui.index);
 								if (range != null)
-									invAction.distortionRanges.Remove (range);
+									invAction.biasses.Remove (range);
 							}
 							break;
 						}
 						GUILayout.EndHorizontal ();
 						GUILayout.BeginHorizontal ();
 						string costStr = ui.cost.ToString ();
-						GUILayout.Label ("price", GUILayout.Width (40));
+						GUILayout.Label ("Price", GUILayout.Width (40));
 						string newCostStr = GUILayout.TextField (costStr, GUILayout.Width (40));
 						if (costStr != newCostStr) {
 							long parseVal;
@@ -402,13 +402,13 @@ namespace Ecosim.SceneEditor
 						// Exception time
 						if (action is InventarisationAction) 
 						{
-							InventarisationAction.Range range = ((InventarisationAction)action).GetDistortionRange (ui.index);
-							EcoGUI.RangeSliders ("Distortion", 
+							InventarisationAction.Range range = ((InventarisationAction)action).GetBias (ui.index);
+							EcoGUI.RangeSliders ("\t\t   Bias", 
 							                     ref range.min,
 							                     ref range.max,
 							                     0f, 1f, 
 							                     GUILayout.Width (80), 
-							                     GUILayout.Width (80));
+							                     GUILayout.Width (70));
 						}
 
 						GUILayout.Space (5);

@@ -90,7 +90,7 @@ namespace Ecosim.SceneData
 				{
 					// Find the questionnaire with id
 					Questionnaire q = this.questionnaires.Find (x => x.id == qy.id);
-					if (q != null) {
+					if (q != null && q.enabled) {
 						queue.Add (q.Copy ());
 					}
 				}

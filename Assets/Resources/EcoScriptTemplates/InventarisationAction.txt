@@ -23,7 +23,7 @@ void DoSuccession() {
 		foreach (Coordinate vc in selection.EnumerateNotZero ()) 
 		{
 			tileCount ++;
-			int value = Distort (inv.UIIndex, analyse.Get (vc));
+			int value = ProcessBias (analyse.Get (vc), basicAction, inv.UIIndex);
 			
 			// somehow map the values of the data we analyse
 			// to the icons set...
@@ -55,21 +55,4 @@ void DoSuccession() {
 
 bool CanSelectTile (int x, int y, UserInteraction ui) {
 	return true;
-}
-
-int DistortValue (int uiIndex, int value) {
-	// Find the distortion range
-	if (uiIndex < basicAction.uiList.Count) {
-		InventarisationAction invAction = (InventarisationAction)basicAction;
-		// Check if we have a distortion range
-		if (uiIndex < invAction.distortionRanges.Count) {
-			// Return the distorted value using a random number
-			float rnd = GetRandomNumber ();
-			float min = invAction.distortionRanges [uiIndex].min;
-			float max = invAction.distortionRanges [uiIndex].max;
-			return (int)((rnd * (max - min)) + min);
-		}
-		return value;
-	}
-	return value;
 }
