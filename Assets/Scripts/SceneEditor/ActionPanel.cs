@@ -276,6 +276,59 @@ namespace Ecosim.SceneEditor
 			}
 			GUILayout.EndVertical ();
 		}
+
+		void HandleCheatsAction (CheatsAction action)
+		{
+			// Cheats list
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				GUILayout.Label ("Cheats");
+				GUILayout.Space (2);
+
+				int idx = 1;
+				foreach (CheatsAction.Cheat c in action.cheats)
+				{
+					GUILayout.BeginVertical (ctrl.skin.box);
+					{
+						GUILayout.BeginHorizontal ();
+						{
+							c.enabled = GUILayout.Toggle (c.enabled, "", GUILayout.Width (20));
+							GUI.enabled = c.enabled;
+
+							GUILayout.Label ("ID:" + (idx++), GUILayout.Width (30));
+
+							GUILayout.Label ("Name", GUILayout.Width (30));
+							c.name = GUILayout.TextField (c.name, GUILayout.MaxWidth (500));
+
+							if (GUILayout.Button ("-", GUILayout.Width (20)))
+							{
+								action.cheats.Remove (c);
+								break;
+							}
+						}
+						GUILayout.EndHorizontal ();
+						GUILayout.Space (3);
+						GUILayout.BeginHorizontal ();
+						{
+							GUILayout.Space (54);
+							GUILayout.Label ("Cheat", GUILayout.Width (30));
+							c.body = GUILayout.TextField (c.body, GUILayout.MaxWidth (500));
+						}
+						GUILayout.EndHorizontal ();
+
+						GUI.enabled = true;
+					}
+					GUILayout.EndVertical ();
+					GUILayout.Space (2);
+				}
+
+				if (GUILayout.Button ("New cheat", GUILayout.Width (80)))
+				{
+					action.cheats.Add ( new CheatsAction.Cheat ("New cheat", "cheatbody") );
+				}
+			}
+			GUILayout.EndVertical ();
+		}
 		
 		private string debugStr = "";
 		private CompilerErrorCollection errors = null;
@@ -445,6 +498,8 @@ namespace Ecosim.SceneEditor
 						HandleAnimalsAction ((AnimalsAction)action);
 					} else if (action is ActionObjectAction) {
 						HandleActionObjectAction ((ActionObjectAction)action);
+					} else if (action is CheatsAction) {
+						HandleCheatsAction ((CheatsAction)action);
 					}
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Script", GUILayout.Width (80));

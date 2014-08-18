@@ -13,6 +13,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		public Texture2D icon;
 		public Texture2D iconH;
 		public bool isVisible = true;
+		public bool isGameAction = false;
 		
 		[System.NonSerializedAttribute]
 		public Rect position;

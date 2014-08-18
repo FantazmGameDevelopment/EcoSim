@@ -40,7 +40,9 @@ public class ShowReports : MonoBehaviour
 
 			isShowing = true;
 			//ctrl.hideToolBar = true;
+			ctrl.hideGameActions = true;
 			ctrl.hideSuccessionButton = true;
+			GameControl.InterfaceChanged ();
 
 			object inQueue = scene.reports.CurrentInQueue ();
 			if (inQueue is Questionnaire) 
@@ -71,7 +73,9 @@ public class ShowReports : MonoBehaviour
 			{
 				isShowing = false;
 				//ctrl.hideToolBar = false;
+				ctrl.hideGameActions = false;
 				ctrl.hideSuccessionButton = false;
+				GameControl.InterfaceChanged ();
 
 				hasQueue = scene.reports.ToNextInQueue ();
 			}

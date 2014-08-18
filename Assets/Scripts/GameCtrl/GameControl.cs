@@ -30,7 +30,7 @@ public class GameControl : MonoBehaviour
 	private GUIStyle extraHelpStyle;
 	public GameButton[] buttons;
 	public bool hideToolBar = false; // hide tools when true
-	//public bool hideMeasures = false; // hide tools when true
+	public bool hideGameActions = false; // hide tools when true
 	public bool hideSuccessionButton = false; // hide succession button when true
 	public bool isProcessing = false; // hide complete UI when true
 	private string budgetText = "";
@@ -153,8 +153,10 @@ public class GameControl : MonoBehaviour
 				button.hdlr.UpdateState (button);
 			}
 			if (button.isVisible) {
-				button.position = new Rect (x, y, 32, 32);
-				y += 33;
+				if ((!button.isGameAction) || (button.isGameAction && !hideGameActions)) {
+					button.position = new Rect (x, y, 32, 32);
+					y += 33;
+				}
 			}
 		}
 		
@@ -186,20 +188,22 @@ public class GameControl : MonoBehaviour
 			GameButton newActiveButton = null;
 			foreach (GameButton button in buttons) {
 				if (button.isVisible) {
-					if (SimpleGUI.Label (button.position, (button == activeButton) ? (button.iconH) : (button.icon), (button == activeButton) ? whiteBgStyle : blackBgStyle)) {
-						if (Event.current.type == EventType.MouseDown) {
-							if (button.hdlr != null)
-								button.hdlr.OnClick ();
+					if (!button.isGameAction || (button.isGameAction && !hideGameActions)) {
+						if (SimpleGUI.Label (button.position, (button == activeButton) ? (button.iconH) : (button.icon), (button == activeButton) ? whiteBgStyle : blackBgStyle)) {
+							if (Event.current.type == EventType.MouseDown) {
+								if (button.hdlr != null)
+									button.hdlr.OnClick ();
+							}
+							newActiveButton = button;
 						}
-						newActiveButton = button;
-					}
-					if (showHelpTips) {
-						float x = button.position.x + 33;
-						float y = button.position.y;
-						
-						// don't want to catch mouse over
-						GUI.Label (new Rect (x, y, 32, 32), leftIcon, GUIStyle.none);
-						GUI.Label (new Rect (x + 32, y, 128, 32), button.description, helpTipStyle);
+						if (showHelpTips) {
+							float x = button.position.x + 33;
+							float y = button.position.y;
+							
+							// don't want to catch mouse over
+							GUI.Label (new Rect (x, y, 32, 32), leftIcon, GUIStyle.none);
+							GUI.Label (new Rect (x + 32, y, 128, 32), button.description, helpTipStyle);
+						}
 					}
 				}
 			}

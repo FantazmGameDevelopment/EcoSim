@@ -10,6 +10,7 @@ using Ecosim.SceneEditor;
 public class QuestionnaireWindow : ReportBaseWindow
 {
 	private Questionnaire questionnaire;
+	private Progression.QuestionnaireState questionnaireState;
 
 	private Vector2 messageScrollPos;
 	private Answer selectedAnswer;
@@ -28,9 +29,12 @@ public class QuestionnaireWindow : ReportBaseWindow
 	{
 		this.questionnaire = questionnaire;
 
-		//messageXOffset = -1;
-		//messageYOffset = -1;
-		//message = null;
+		questionnaireState = new Progression.QuestionnaireState (this.questionnaire.id);
+		EditorCtrl.self.scene.progression.questionnaireStates.Add (questionnaireState);
+
+		messageXOffset = -1;
+		messageYOffset = -1;
+		message = null;
 	}
 
 	public override void Render ()
@@ -165,6 +169,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 		{
 			// Start over
 			this.questionnaire.currentQuestionIndex = 0;
+			this.questionnaireState.Reset ();
 		}
 		else if (a.allowRetry)
 		{
@@ -174,11 +179,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 		{
 			// Create question state
 			Question q = this.questionnaire.questions [this.questionnaire.currentQuestionIndex];
-			//Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (this.questionnaire.id);
-			Progression.QuestionnaireState qs = new Progression.QuestionnaireState (this.questionnaire.id);
-			EditorCtrl.self.scene.progression.questionnaireStates.Add (qs);
 
-			Progression.QuestionnaireState.QuestionState questionState = qs.GetQuestionState (this.questionnaire.currentQuestionIndex);
+			Progression.QuestionnaireState.QuestionState questionState = questionnaireState.GetQuestionState (this.questionnaire.currentQuestionIndex);
 			questionState.questionName = q.body;
 			questionState.questionAnswer = a.body;
 
@@ -352,8 +354,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 	private void RenderResults ()
 	{
 		Questionnaire q = questionnaire;
-		Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (q.id);
-		
+		Progression.QuestionnaireState qs = questionnaireState;//EditorCtrl.self.scene.progression.GetQuestionnaireState (q.id);
+
 		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); 
 		{
 			// Check if we passed
@@ -423,10 +425,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 					GUILayout.Space (1);
 					RenderSaveButton (qs, passed);
 					GUILayout.Space (1);
-					Debug.Log (Event.current);
 					if (GUILayout.Button ("Continue", button, GUILayout.Width (80), defaultOption)) 
 					{
-						Debug.Log (Event.current);
 						if (onFinished != null) {
 							onFinished ();
 							onFinished = null;
@@ -456,6 +456,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 						if (q.startOverOnFailed) 
 						{
 							q.currentQuestionIndex = 0;
+							this.questionnaireState.Reset ();
 						} 
 						else 
 						{

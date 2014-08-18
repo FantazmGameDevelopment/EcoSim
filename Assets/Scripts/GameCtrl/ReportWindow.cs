@@ -51,10 +51,13 @@ public class ReportWindow : ReportBaseWindow
 						OpenQuestion.OpenAnswer oa = (OpenQuestion.OpenAnswer)oq.answers [i];
 						if (oa.copyToReport && oa.reportIndices.Contains (this.report.id)) 
 						{
-							// Find the question state
-							Progression.QuestionnaireState qs = EditorCtrl.self.scene.progression.GetQuestionnaireState (qn.id, false);
-							if (qs != null)
-								this.copyToReportQuestions.Add (qs.GetQuestionState (n));
+							// Find the question state(s)
+							Progression.QuestionnaireState[] qStates = EditorCtrl.self.scene.progression.GetQuestionnaireStates (qn.id);
+							if (qStates.Length > 0) {
+								foreach (Progression.QuestionnaireState qs in qStates) {
+									this.copyToReportQuestions.Add (qs.GetQuestionState (n));
+								}
+							}
 						}
 					}
 				}

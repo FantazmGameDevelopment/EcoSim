@@ -323,6 +323,11 @@ namespace Ecosim.SceneData
 				this.questionStates.Add (newQs);
 				return newQs;
 			}
+
+			public void Reset ()
+			{
+				this.questionStates = new List<QuestionState>();
+			}
 		}
 
 		public class ReportState
@@ -467,6 +472,16 @@ namespace Ecosim.SceneData
 		public QuestionnaireState GetQuestionnaireState (int id)
 		{
 			return GetQuestionnaireState (id, true);
+		}
+
+		public QuestionnaireState[] GetQuestionnaireStates (int id)
+		{
+			List<QuestionnaireState> list = new List<QuestionnaireState> ();
+			foreach (QuestionnaireState qs in this.questionnaireStates) {
+				if (qs.id == id)
+					list.Add (qs);
+			}
+			return list.ToArray ();
 		}
 
 		public QuestionnaireState GetQuestionnaireState (int id, bool createNewIfNull)

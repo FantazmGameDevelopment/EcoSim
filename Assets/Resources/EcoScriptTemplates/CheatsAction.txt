@@ -1,0 +1,36 @@
+void SaveProgress() {
+}
+
+void LoadProgress(bool initScene) {
+}
+
+void ProcessCheat0 () 
+
+	// Process cheat with ID 0
+}
+
+void ProcessCheat1 () 
+{
+	// Process cheat with ID 1
+}
+
+void ProcessCheat2 () 
+{
+	// Process cheat with ID 2
+}
+
+// If you have more cheats, just add a new method called
+// ProcessCheatX ()
+// { 
+// 		// Process cheat with ID X
+// } 
+// where X is the ID of your cheat.
+
+void PrepareSuccession() {
+}
+
+void DoSuccession() {
+}
+
+void FinalizeSuccession() {
+}
