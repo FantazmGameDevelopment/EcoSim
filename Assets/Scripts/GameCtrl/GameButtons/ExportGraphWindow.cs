@@ -132,12 +132,15 @@ namespace Ecosim.GameCtrl
 			// Get the point colors
 			pointColors = new Color[]
 			{
-				new Color (1f, 0f, 0f, 1f),
-				new Color (0f, 1f, 0f, 1f),
-				new Color (0f, 0f, 1f, 1f),
-				new Color (1f, 1f, 0f, 1f),
-				new Color (0f, 1f, 1f, 1f),
-				new Color (1f, 0f, 1f, 1f)
+				Color.red,
+				Color.green,
+				Color.blue,
+				Color.yellow,
+				Color.cyan,
+				new Color (255f / 255f, 127f / 255f, 000f / 255f, 1f), // Orange
+				new Color (183f / 255f, 000f / 255f, 000f / 000f, 1f), // Bordeaux
+				new Color (216f / 255f, 255f / 255f, 000f / 000f, 1f), // Lime
+				new Color (174f / 255f, 000f / 255f, 000f / 255f, 1f) // Purple
 			};
 		}
 
