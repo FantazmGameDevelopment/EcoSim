@@ -491,18 +491,33 @@ public class EditorCtrl : MonoBehaviour
 		}
 
 		// Tool tip (always on top)
-		if (GUI.tooltip.Length > 0) 
+		if (!string.IsNullOrEmpty (GUI.tooltip)) 
 		{
 			int offset = 15;
-			GUILayout.BeginArea (new Rect (Input.mousePosition.x + offset, Screen.height - Input.mousePosition.y + offset, 200, Screen.height));
+			GUIContent gc = new GUIContent ("<size=11>" + GUI.tooltip + "</size>");
+			Rect r = new Rect (Input.mousePosition.x + offset, Screen.height - Input.mousePosition.y + offset, 200, 50);
+
+			// Make it darker
+			GUI.Label (r, "", skin.box);
+			GUI.Label (r, "", skin.box);
+			GUI.Label (r, "", skin.box);
+
+			// "Offset" the text to make it more readable in the box
+			r.y += 5;
+			r.x += 5;
+			r.width -= 5;
+			r.height -= 5;
+			GUI.Label (r, gc.text);
+
+			/*GUILayout.BeginArea (r); <- Doesn't work?
 			{
-				GUILayout.BeginVertical (skin.box);
+				GUILayout.BeginVertical ();//skin.box);
 				{
 					GUILayout.Label ("<size=11>" + GUI.tooltip + "</size>");
 				}
 				GUILayout.EndVertical ();
 			}
-			GUILayout.EndArea ();
+			GUILayout.EndArea ();*/
 		}
 	}
 	

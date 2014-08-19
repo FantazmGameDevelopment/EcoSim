@@ -247,7 +247,22 @@ namespace Ecosim.SceneData.Action
 				scene.progression.AddData (areaName, selectedArea);
 			}*/
 
-			edit = EditData.CreateEditData ("action", selectedArea, scene.progression.managedArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
+			// Get the "selectable area"
+			Data selectableArea = scene.progression.managedArea;
+			if (ecoBase != null) {
+				MethodInfo getSelectableAreaMI = ecoBase.GetType ().GetMethod ("GetSelectableArea",
+				                                                               BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof (UserInteraction) }, null);
+				if (getSelectableAreaMI != null) {
+					try {
+						Data newSelectableArea = (Data)getSelectableAreaMI.Invoke (ecoBase, new object[] { ui });
+						if (newSelectableArea != null) {
+							selectableArea = newSelectableArea;
+						}
+					} catch (System.Exception ex) { }
+				}
+			}
+
+			edit = EditData.CreateEditData ("action", selectedArea, selectableArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
 				if (shift)
 					return 0;
 				return CanSelectTile (x, y, ui) ? (ui.index + 1) : invalidAreaIndex;

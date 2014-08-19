@@ -101,7 +101,8 @@ namespace Ecosim.SceneEditor
 						// Show name
 						GUILayout.BeginVertical (ctrl.skin.box);
 						{
-							EcoGUI.Toggle ("Show header", ref q.showHeader);
+							string tooltip = "Show the title and number of questions in the questionnaire";
+							EcoGUI.Toggle (new GUIContent("Show header", tooltip), ref q.showHeader);
 						}
 						GUILayout.EndVertical ();
 
@@ -113,17 +114,19 @@ namespace Ecosim.SceneEditor
 						{
 							GUILayout.BeginHorizontal ();
 							{
+								string tooltip = "Add score needed pass";
+
 								q.useRequiredScore = GUILayout.Toggle (q.useRequiredScore, "", GUILayout.Width (20));
 								if (q.useRequiredScore) 
 								{
 									EcoGUI.skipHorizontal = true;
-									EcoGUI.Foldout ("Required score", ref q.reqScoreOpened, GUILayout.Width (100));
+									EcoGUI.Foldout (new GUIContent ("Required score", tooltip), ref q.reqScoreOpened, GUILayout.Width (100));
 									EcoGUI.skipHorizontal = false;
 									EcoGUI.IntField ("", ref q.requiredScore, GUILayout.Width (1), GUILayout.Width (40));
 								}
 								else 
 								{
-									GUILayout.Label ("Required score");
+									GUILayout.Label (new GUIContent ("Required score", tooltip));
 									q.reqScoreOpened = false;
 								}
 							}
@@ -214,16 +217,19 @@ namespace Ecosim.SceneEditor
 						{
 							GUILayout.BeginHorizontal ();
 							{
+								string tooltip = "Add option to earn extra budget with correct answers";
+								GUIContent extraBudgetContent = new GUIContent ("Earn extra budget", tooltip);
+
 								q.useBudget = GUILayout.Toggle (q.useBudget, "", GUILayout.Width (20));
 								if (q.useBudget) 
 								{
 									EcoGUI.skipHorizontal = true;
-									EcoGUI.Foldout ("Earn extra budget", ref q.budgetOpened, GUILayout.Width (100));
+									EcoGUI.Foldout (extraBudgetContent, ref q.budgetOpened, GUILayout.Width (100));
 									EcoGUI.skipHorizontal = false;
 								}
 								else 
 								{
-									GUILayout.Label ("Earn extra budget");
+									GUILayout.Label (extraBudgetContent);
 									q.budgetOpened = false;
 								}
 							}
@@ -316,7 +322,8 @@ namespace Ecosim.SceneEditor
 						// Results
 						GUILayout.BeginVertical (ctrl.skin.box);
 						{
-							EcoGUI.Toggle ("Results page", ref q.useResultsPage);
+							string tooltip = "Produce result sheet at end of questionnaire";
+							EcoGUI.Toggle (new GUIContent ("Results page", tooltip), ref q.useResultsPage);
 						}
 						GUILayout.EndVertical (); // ~Results
 					}
@@ -411,12 +418,15 @@ namespace Ecosim.SceneEditor
 
 								if (a.opened)
 								{
-									a.startFromBeginning = GUILayout.Toggle (a.startFromBeginning, "Start from beginning");
+									string tooltip = "With this answer: player must start at beginning of questionnaire";
+									a.startFromBeginning = GUILayout.Toggle (a.startFromBeginning, new GUIContent ("Start from beginning", tooltip));
 									if (a.startFromBeginning) {
 										// We must use feedback if we startFromBeginning enabled
 										a.useFeedback = true;
 									}
-									a.allowRetry = GUILayout.Toggle (a.allowRetry, "Allow retry");
+
+									tooltip = "With this answer: player must try another answer";
+									a.allowRetry = GUILayout.Toggle (a.allowRetry, new GUIContent ("Allow retry", tooltip));
 									if (a.allowRetry) {
 										// We must use feedback if we have allowRetry enabled
 										a.useFeedback = true;
@@ -431,15 +441,20 @@ namespace Ecosim.SceneEditor
 
 										a.useFeedback = GUILayout.Toggle (a.useFeedback, "", GUILayout.Width (20));
 										GUI.enabled = true;
+
+
+										tooltip = "Write feedback for this answer";
+										GUIContent feedbackContent = new GUIContent ("Feedback", tooltip);
+
 										if (a.useFeedback)
 										{
 											EcoGUI.skipHorizontal = true;
-											EcoGUI.Foldout ("Feedback", ref a.feedbackOpened);
+											EcoGUI.Foldout (feedbackContent, ref a.feedbackOpened);
 											EcoGUI.skipHorizontal = false;
 										}
 										else 
 										{
-											GUILayout.Label ("Feedback");
+											GUILayout.Label (feedbackContent);
 											a.feedbackOpened = false;
 										}
 									}
@@ -863,7 +878,8 @@ namespace Ecosim.SceneEditor
 					EcoGUI.skipHorizontal = true;
 					EcoGUI.FoldoutEditableName (ref r.name, ref r.opened, GUILayout.MaxWidth (225));
 					EcoGUI.skipHorizontal = false;
-				} else {
+				} 
+				else {
 					r.opened = false;
 					GUILayout.Space (5f);
 					r.name = GUILayout.TextField (r.name);
@@ -900,17 +916,19 @@ namespace Ecosim.SceneEditor
 			{
 				GUILayout.BeginHorizontal ();
 				{
+					string tooltip = "Add introductory text to the questionnaire";
+
 					GUILayout.Space (1);
 					r.useIntroduction = GUILayout.Toggle (r.useIntroduction, "", GUILayout.Width (20));
 					if (r.useIntroduction) 
 					{
 						EcoGUI.skipHorizontal = true;
-						EcoGUI.Foldout ("Introduction", ref r.introOpened);
+						EcoGUI.Foldout (new GUIContent ("Introduction", tooltip), ref r.introOpened);
 						EcoGUI.skipHorizontal = false;
 					}
 					else 
 					{
-						GUILayout.Label ("Introduction");
+						GUILayout.Label (new GUIContent ("Introduction", tooltip));
 						r.introOpened = false;
 					}
 				}

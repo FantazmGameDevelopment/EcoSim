@@ -177,12 +177,17 @@ namespace Ecosim.EcoScript
 					// Check if we have a bias
 					if (uiIndex < invAction.biasses.Count)
 					{
-						// Return the processed value using a random number
-						float rnd = GetRandomNumber ();
-						float min = invAction.GetBias (uiIndex).min;
-						float max = invAction.GetBias (uiIndex).max;
-						float prc = (rnd * (max - min)) + min;
-						return (int)(value * prc);
+						try {
+							// Return the processed value using a random number
+							float rnd = GetRandomNumber ();
+							float min = invAction.GetBias (uiIndex).min;
+							float max = invAction.GetBias (uiIndex).max;
+							float prc = (rnd * (max - min)) + min;
+							return (int)(value * prc);
+						} catch (System.Exception ex) {
+							LogError ("ProcessBias Error: " + ex);
+							return value;
+						}
 					}
 					return value;
 				}

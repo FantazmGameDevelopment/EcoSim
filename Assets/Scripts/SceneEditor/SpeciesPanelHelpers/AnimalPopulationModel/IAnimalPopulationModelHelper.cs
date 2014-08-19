@@ -37,7 +37,7 @@ namespace Ecosim.SceneEditor.Helpers.AnimalPopulationModel
 						EcoGUI.Toggle ("", ref data.use, GUILayout.Width (20));
 						if (data.use) 
 						{
-							EcoGUI.Foldout (null, ref data.opened, GUILayout.Width (20));
+							EcoGUI.Foldout ("", ref data.opened, GUILayout.Width (20));
 							GUILayout.Space (5);
 						}
 						else GUILayout.Space (19);

@@ -162,6 +162,11 @@ namespace Ecosim.SceneEditor
 
 		public static bool Foldout (string name, ref bool opened, GUILayoutOption nameLayout = null)
 		{
+			return Foldout (new GUIContent (name, ""), ref opened, nameLayout);
+		}
+
+		public static bool Foldout (GUIContent content, ref bool opened, GUILayoutOption nameLayout = null)
+		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				GUILayout.Space (2);
@@ -169,7 +174,7 @@ namespace Ecosim.SceneEditor
 				{
 					opened = !opened;
 				}
-				RenderName (name, nameLayout);
+				RenderName (content, nameLayout);
 			}
 			if (!skipHorizontal) GUILayout.EndHorizontal ();
 			return opened;
@@ -199,19 +204,29 @@ namespace Ecosim.SceneEditor
 			return opened;
 		}
 
+		public static bool Toggle (GUIContent content, ref bool value, float nameWidth = 0f)
+		{
+			return Toggle (content, ref value, ((nameWidth > 0f) ? GUILayout.Width (nameWidth) : null));
+		}
+
 		public static bool Toggle (string name, ref bool value, float nameWidth = 0f)
 		{
-			return Toggle (name, ref value, ((nameWidth > 0f) ? GUILayout.Width (nameWidth) : null));
+			return Toggle (new GUIContent (name, ""), ref value, ((nameWidth > 0f) ? GUILayout.Width (nameWidth) : null));
 		}
 
 		public static bool Toggle (string name, ref bool value, GUILayoutOption nameLayout)
+		{
+			return Toggle (new GUIContent (name, ""), ref value, nameLayout);
+		}
+
+		public static bool Toggle (GUIContent content, ref bool value, GUILayoutOption nameLayout)
 		{
 			if (!skipHorizontal) GUILayout.BeginHorizontal ();
 			{
 				//RenderName (name, nameLayout);
 				GUILayout.Space (2);
-				if (nameLayout != null)  value = GUILayout.Toggle (value, name, nameLayout);
-				else 					 value = GUILayout.Toggle (value, name);
+				if (nameLayout != null)  value = GUILayout.Toggle (value, content, nameLayout);
+				else 					 value = GUILayout.Toggle (value, content);
 			}
 			if (!skipHorizontal) GUILayout.EndHorizontal ();
 			return value;
@@ -257,11 +272,16 @@ namespace Ecosim.SceneEditor
 
 		private static void RenderName (string name, GUILayoutOption nameLayout = null)
 		{
-			if (!string.IsNullOrEmpty (name)) 
+			RenderName (new GUIContent (name, ""), nameLayout);
+		}
+
+		private static void RenderName (GUIContent content, GUILayoutOption nameLayout = null)
+		{
+			if (!string.IsNullOrEmpty (content.text)) 
 			{
 				GUILayout.Space (2);
-				if (nameLayout != null) GUILayout.Label (name, nameLayout);
-				else 					GUILayout.Label (name);
+				if (nameLayout != null) GUILayout.Label (content, nameLayout);
+				else 					GUILayout.Label (content);
 			}
 		}
 	}
