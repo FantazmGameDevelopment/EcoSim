@@ -56,7 +56,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		{
 			if (totalCost != ui.estimatedTotalCostForYear * durationInYears) {
 				totalCost = ui.estimatedTotalCostForYear * durationInYears;
-				int nrTiles = (ui.cost == 0)?0:((int) (totalCost / ui.cost));
+				int nrTiles = (ui.cost == 0)?0:((int) (totalCost / ui.cost / durationInYears));
 				totalCostStr = totalCost.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 				totalTilesStr = nrTiles.ToString ("#,##0", CultureInfo.GetCultureInfo ("en-GB"));
 			}

@@ -39,7 +39,6 @@ namespace Ecosim.GameCtrl.GameButtons
 
 		// Graph editor
 		private bool graphEditorOpened = false;
-
 		
 		public Reports ()
 		{

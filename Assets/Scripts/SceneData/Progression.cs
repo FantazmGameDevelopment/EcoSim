@@ -165,7 +165,7 @@ namespace Ecosim.SceneData
 				w.WriteAttributeString ("name", name);
 				w.WriteAttributeString ("areaname", areaName);
 				w.WriteAttributeString ("actionid", actionId.ToString ());
-				w.WriteAttributeString ("uiIndex", uiIndex.ToString ());
+				w.WriteAttributeString ("uiindex", uiIndex.ToString ());
 				w.WriteAttributeString ("cost", cost.ToString());
 				w.WriteEndElement ();
 			}
@@ -1131,7 +1131,6 @@ namespace Ecosim.SceneData
 							variablesData.Add (var, vd);
 						}
 						variablesData [var] = vd;
-
 					}
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "formuladata")) 
 					{

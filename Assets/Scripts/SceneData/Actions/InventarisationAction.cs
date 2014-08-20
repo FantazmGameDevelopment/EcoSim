@@ -11,13 +11,21 @@ namespace Ecosim.SceneData.Action
 {
 	public class InventarisationAction : BasicAction
 	{
-		public class Range
+		public class BiasRange
 		{
+			public enum RoundTypes
+			{
+				RoundUp,
+				RoundDown,
+				RoundAutomatic
+			}
+
+			public RoundTypes roundType;
 			public float min;
 			public float max;
 
-			public Range () { }
-			public Range (float min, float max)
+			public BiasRange () { }
+			public BiasRange (float min, float max)
 			{
 				this.min = min;
 				this.max = max;
@@ -29,7 +37,7 @@ namespace Ecosim.SceneData.Action
 		public string invAreaName;
 		public int gridIconId;
 		public int invalidTileIconId;
-		public List<Range> biasses;
+		public List<BiasRange> biasses;
 
 		private Data selectedArea;
 		private EditData edit;
@@ -56,7 +64,7 @@ namespace Ecosim.SceneData.Action
 		public InventarisationAction (Scene scene, int id) : base (scene, id)
 		{
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
-			biasses = new List<Range>();
+			biasses = new List<BiasRange>();
 		}
 
 		public InventarisationAction (Scene scene) : base(scene, scene.actions.lastId)
@@ -66,7 +74,7 @@ namespace Ecosim.SceneData.Action
 			invAreaName = "";
 			UserInteraction ui = new UserInteraction (this);
 			uiList.Add (ui);
-			biasses = new List<Range>() { new Range () };
+			biasses = new List<BiasRange>() { new BiasRange () };
 			valueTypes = new InventarisationValue[MAX_VALUE_INDEX + 1];
 			valueTypes [0] = new InventarisationValue ();
 			valueTypes [0].name = "Result1";
@@ -202,13 +210,13 @@ namespace Ecosim.SceneData.Action
 			return 15;
 		}
 
-		public Range GetBias (int index)
+		public BiasRange GetBias (int index)
 		{
 			if (index < biasses.Count)
 				return biasses [index];
 
 			while (index >= biasses.Count) {
-				biasses.Add (new Range (1f, 1f));
+				biasses.Add (new BiasRange (1f, 1f));
 			}
 			return biasses [index];
 		}
@@ -407,7 +415,13 @@ namespace Ecosim.SceneData.Action
 					{
 						float min = float.Parse (reader.GetAttribute ("min"));
 						float max = float.Parse (reader.GetAttribute ("max"));
-						action.biasses.Add (new Range (min, max));
+
+						BiasRange newRange = new BiasRange (min, max);
+						if (!string.IsNullOrEmpty (reader.GetAttribute ("roundtype"))) {
+							newRange.roundType = (BiasRange.RoundTypes)System.Enum.Parse (typeof (BiasRange.RoundTypes), reader.GetAttribute ("roundtype"));
+						}
+						action.biasses.Add (newRange);
+
 						IOUtil.ReadUntilEndElement (reader, "bias");
 					}
 					else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == XML_ELEMENT)) {
@@ -429,10 +443,11 @@ namespace Ecosim.SceneData.Action
 			foreach (UserInteraction ui in uiList) {
 				ui.Save (writer);
 			}
-			foreach (Range r in biasses) {
+			foreach (BiasRange r in biasses) {
 				writer.WriteStartElement ("bias");
 				writer.WriteAttributeString ("min", r.min.ToString());
 				writer.WriteAttributeString ("max", r.max.ToString());
+				writer.WriteAttributeString ("roundtype", r.roundType.ToString());
 				writer.WriteEndElement ();
 			}
 			for (int i = 0; i < valueTypes.Length; i++) {

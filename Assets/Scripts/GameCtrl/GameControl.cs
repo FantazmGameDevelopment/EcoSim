@@ -184,6 +184,20 @@ public class GameControl : MonoBehaviour
 		bool showHelpTips = (this.showHelpTips) || (helpTimeout > timeSinceLevelLoad);
 		
 		GUI.depth = 100;
+
+		// Render Game Over beneath everything!
+		if (scene != null && scene.progression.gameEnded) {
+			// GAME OVER!!!!
+			int sWidth = Screen.width;
+			int xOffset = 0;
+			if (EditorCtrl.self.isOpen) {
+				xOffset = 400;
+				sWidth -= 400;
+			}
+			GUI.Label (new Rect((sWidth - gameOver.width) / 2 + xOffset, (Screen.height - gameOver.height) / 2, gameOver.width, gameOver.height),
+			           gameOver, GUIStyle.none);
+		}
+
 		if (!hideToolBar) {
 			GameButton newActiveButton = null;
 			foreach (GameButton button in buttons) {
@@ -229,18 +243,6 @@ public class GameControl : MonoBehaviour
 		}
 		
 		if (scene == null) return;
-
-		if (scene.progression.gameEnded) {
-			// GAME OVER!!!!
-			int sWidth = Screen.width;
-			int xOffset = 0;
-			if (EditorCtrl.self.isOpen) {
-				xOffset = 400;
-				sWidth -= 400;
-			}
-			GUI.Label (new Rect((sWidth - gameOver.width) / 2 + xOffset, (Screen.height - gameOver.height) / 2, gameOver.width, gameOver.height),
-			           gameOver, GUIStyle.none);
-		}
 		
 		SimpleGUI.Label (budgetIconR, budgetIcon, icon50Style);
 		SimpleGUI.Label (expenseIconR, expenseIcon, icon50Style);

@@ -948,8 +948,13 @@ namespace Ecosim.SceneEditor
 				GUILayout.BeginHorizontal ();
 				{
 					string name = "Conclusion";
-					if (r is Questionnaire)
+					string tooltip = "Add final remark after questionnaire and before results summary";
+					if (r is Questionnaire) {
 						name = "Final Remark";
+						tooltip = "";
+					}
+
+					GUIContent content = new GUIContent (name, tooltip);
 
 					GUILayout.Space (1);
 					r.useConclusion = GUILayout.Toggle (r.useConclusion, "", GUILayout.Width (20));

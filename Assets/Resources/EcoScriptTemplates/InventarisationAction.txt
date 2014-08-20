@@ -17,7 +17,7 @@ void DoSuccession() {
 		// The icons map is used for visualisation.
 		// The data map is used for recording the actual values.
 		SparseBitMap8 icons = new SparseBitMap8 (scene);
-		SparseBitMap8 data = new SparseBitMap8 (scene);
+		BitMap16 data = new BitMap16 (scene);
 		
 		int tileCount = 0; // we'll count the number of tiles selected
 		foreach (Coordinate vc in selection.EnumerateNotZero ()) 

@@ -180,10 +180,19 @@ namespace Ecosim.EcoScript
 						try {
 							// Return the processed value using a random number
 							float rnd = GetRandomNumber ();
-							float min = invAction.GetBias (uiIndex).min;
-							float max = invAction.GetBias (uiIndex).max;
-							float prc = (rnd * (max - min)) + min;
-							return (int)(value * prc);
+							InventarisationAction.BiasRange b = invAction.GetBias (uiIndex);
+							float prc = (rnd * (b.max - b.min)) + b.min;
+							float biasValue = (value * prc);
+
+							switch (b.roundType)
+							{
+							case InventarisationAction.BiasRange.RoundTypes.RoundUp :
+								return UnityEngine.Mathf.CeilToInt (biasValue);
+							case InventarisationAction.BiasRange.RoundTypes.RoundDown :
+								return UnityEngine.Mathf.FloorToInt (biasValue);
+							default :
+								return (int)biasValue;
+							}
 						} catch (System.Exception ex) {
 							LogError ("ProcessBias Error: " + ex);
 							return value;

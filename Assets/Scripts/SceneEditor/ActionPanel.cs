@@ -427,9 +427,9 @@ namespace Ecosim.SceneEditor
 							// Exception time
 							if (action is InventarisationAction)
 							{
-								// Remove distortion range of the ui
+								// Remove bias of the ui
 								InventarisationAction invAction = (InventarisationAction)action;
-								InventarisationAction.Range range = invAction.GetBias (ui.index);
+								InventarisationAction.BiasRange range = invAction.GetBias (ui.index);
 								if (range != null)
 									invAction.biasses.Remove (range);
 							}
@@ -455,13 +455,24 @@ namespace Ecosim.SceneEditor
 						// Exception time
 						if (action is InventarisationAction) 
 						{
-							InventarisationAction.Range range = ((InventarisationAction)action).GetBias (ui.index);
-							EcoGUI.RangeSliders ("\t\t   Bias", 
-							                     ref range.min,
-							                     ref range.max,
-							                     0f, 1f, 
-							                     GUILayout.Width (80), 
-							                     GUILayout.Width (70));
+							InventarisationAction.BiasRange range = ((InventarisationAction)action).GetBias (ui.index);
+							EcoGUI.skipHorizontal = true;
+							GUILayout.BeginHorizontal ();
+							{
+								EcoGUI.RangeSliders ("\t\t   Bias", 
+								                     ref range.min,
+								                     ref range.max,
+								                     0f, 1f, 
+								                     GUILayout.Width (80), 
+								                     GUILayout.Width (40));
+								GUILayout.Space (3);
+								EcoGUI.EnumButton<InventarisationAction.BiasRange.RoundTypes>
+									("", range.roundType, delegate (InventarisationAction.BiasRange.RoundTypes val) {
+										range.roundType = val;
+									}, null, null);
+							}
+							GUILayout.EndHorizontal ();
+							EcoGUI.skipHorizontal = false;
 						}
 
 						GUILayout.Space (5);
