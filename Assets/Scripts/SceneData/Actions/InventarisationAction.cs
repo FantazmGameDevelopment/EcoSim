@@ -24,7 +24,11 @@ namespace Ecosim.SceneData.Action
 			public float min;
 			public float max;
 
-			public BiasRange () { }
+			public BiasRange () 
+			{ 
+				this.min = 1f;
+				this.max = 1f;
+			}
 			public BiasRange (float min, float max)
 			{
 				this.min = min;
