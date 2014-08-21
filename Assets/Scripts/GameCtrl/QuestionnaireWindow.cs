@@ -291,8 +291,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 	private void RenderQuestionStart (Question question)
 	{
 		Questionnaire q = questionnaire;
-		GUILayout.BeginArea (new Rect (left, top, width + 20, height));
-		CameraControl.MouseOverGUI |= GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
+		Rect areaRect = new Rect (left, top, width + 20, height);
+		GUILayout.BeginArea (areaRect);
+		CameraControl.MouseOverGUI |= areaRect.Contains (Input.mousePosition);
 		scrollPosition = GUILayout.BeginScrollView (scrollPosition);
 
 		// Header
@@ -353,9 +354,10 @@ public class QuestionnaireWindow : ReportBaseWindow
 		Questionnaire q = questionnaire;
 		Progression.QuestionnaireState qs = questionnaireState;//EditorCtrl.self.scene.progression.GetQuestionnaireState (q.id);
 
-		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); 
+		Rect areaRect = new Rect (left, top, width + 20, height);
+		GUILayout.BeginArea (areaRect); 
 		{
-			CameraControl.MouseOverGUI |= GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
+			CameraControl.MouseOverGUI |= areaRect.Contains (Input.mousePosition);
 
 			// Check if we passed
 			bool passed = true;
@@ -558,9 +560,10 @@ public class QuestionnaireWindow : ReportBaseWindow
 		left = messageXOffset;
 		top = messageYOffset;
 
-		GUILayout.BeginArea (new Rect (left, top, width, height));
+		Rect areaRect = new Rect (left, top, width, height);
+		GUILayout.BeginArea (areaRect);
 		{
-			CameraControl.MouseOverGUI |= GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
+			CameraControl.MouseOverGUI |= areaRect.Contains (Input.mousePosition);
 			GUILayout.Label (messageTitle ?? "", headerDark, GUILayout.Width (width), defaultOption);
 
 			Vector2 mousePos = Input.mousePosition;

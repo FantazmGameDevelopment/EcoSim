@@ -72,9 +72,10 @@ public class ReportWindow : ReportBaseWindow
 		height = Screen.height * 0.85f;
 		top = (Screen.height - height) * 0.5f;
 
-		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); 
+		Rect areaRect = new Rect (left, top, width + 20, height);
+		GUILayout.BeginArea (areaRect); 
 		//{
-		CameraControl.MouseOverGUI |=  GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
+		CameraControl.MouseOverGUI |= areaRect.Contains (Input.mousePosition);
 
 		// Header
 		GUILayout.Label ("Report: " + this.report.name, headerDark, GUILayout.Width (width), defaultOption);
