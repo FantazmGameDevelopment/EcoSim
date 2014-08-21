@@ -292,6 +292,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 	{
 		Questionnaire q = questionnaire;
 		GUILayout.BeginArea (new Rect (left, top, width + 20, height));
+		CameraControl.MouseOverGUI |= GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
 		scrollPosition = GUILayout.BeginScrollView (scrollPosition);
 
 		// Header
@@ -345,10 +346,6 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 	#endregion
 
-	#region Reports
-
-	#endregion
-
 	#region Results
 
 	private void RenderResults ()
@@ -358,6 +355,8 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); 
 		{
+			CameraControl.MouseOverGUI |= GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
+
 			// Check if we passed
 			bool passed = true;
 			if (q.useRequiredScore) {
@@ -561,6 +560,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 
 		GUILayout.BeginArea (new Rect (left, top, width, height));
 		{
+			CameraControl.MouseOverGUI |= GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
 			GUILayout.Label (messageTitle ?? "", headerDark, GUILayout.Width (width), defaultOption);
 
 			Vector2 mousePos = Input.mousePosition;

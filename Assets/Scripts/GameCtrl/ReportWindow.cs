@@ -74,6 +74,7 @@ public class ReportWindow : ReportBaseWindow
 
 		GUILayout.BeginArea (new Rect (left, top, width + 20, height)); 
 		//{
+		CameraControl.MouseOverGUI |=  GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition);
 
 		// Header
 		GUILayout.Label ("Report: " + this.report.name, headerDark, GUILayout.Width (width), defaultOption);

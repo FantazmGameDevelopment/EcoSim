@@ -18,10 +18,12 @@ namespace Ecosim.GameCtrl.GameButtons
 		private GUIStyle entry;
 		private GUIStyle entrySelected;
 		private Progression.InventarisationResult selectedIR = null;
+		private Inventarisation selectedINV = null;
 		private string selectedInvName = null;
 		private int totalYearsSelected = 0;
 		private string name;
 		private Dictionary<Progression.InventarisationResult, InventarisationResultWindow> windows;
+		private Vector2 entriesScrollPos;
 
 		// Inventarisations
 		private class Inventarisation
@@ -65,7 +67,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			{
 				// Calculate the width of the entry name, with or without the graph editor count
 				int calcWidth = (int)entry.CalcSize (new GUIContent (inv.name + ((graphEditorOpened)?" (99/99)":""))).x;
-				calcWidth = ((calcWidth / (entryHeight + 1)) + 1) * (entryHeight + 1) - 1;
+				calcWidth = (((calcWidth / (entryHeight + 1)) + 1) * (entryHeight + 1) - 1) + 25;
 				if (calcWidth > colWidth) {
 					colWidth = calcWidth;
 				}
@@ -202,184 +204,151 @@ namespace Ecosim.GameCtrl.GameButtons
 			} 
 			else 
 			{
-				int r = 0;
-				foreach (Inventarisation inv in inventarisations) 
+				GUILayout.BeginArea (new Rect (x, y + (entryHeight), colWidth, Screen.height - (y + entryHeight)));
+				entriesScrollPos = GUILayout.BeginScrollView (entriesScrollPos);
 				{
-					// Get the graph suffix
-					string graphSuffix = "";
-					if (graphEditorOpened) 
+					GUILayout.Space (1);
+					foreach (Inventarisation inv in inventarisations) 
 					{
-						graphSuffix = " ";
-						int total = inv.results.Count;
-						int selected = 0;
-						foreach (Progression.InventarisationResult ir in inv.results) {
-							if (ir.selected) {
-								selected++;
-								totalYearsSelected++;
-							}
-						}
-						graphSuffix = string.Format (" ({0}/{1})", selected, total);
-					}
-
-					// TODO: Make sure the Groups don't go over the screen height
-
-					// Entry
-					bool hl = (inv.name == selectedInvName);
-					Rect invR = new Rect (x, y + (entryHeight + 1) * (r + 1), colWidth, entryHeight);
-					bool isOverGroup = false;
-					if (hl) isOverGroup = SimpleGUI.Label (invR, inv.name + graphSuffix, hl ? entrySelected : entry);
-					else isOverGroup = SimpleGUI.Label (invR, inv.name + graphSuffix, entry, entrySelected);
-					invR.x += invR.width + 1;
-
-					// Graph controls
-					if (graphEditorOpened)
-					{
-						/*Rect invBtnR = invR;
-						invBtnR.width = invGraphEditorBtnWidth;
-
-						// De/select all
-						isOverGroup |= SimpleGUI.CheckMouseOver (invBtnR);
-						if (SimpleGUI.Button (invBtnR, "De/select all", entry, entrySelected)) { 
-							// Check if we should deselect or select all
-							bool foundSelected = false;
-							foreach (Progression.InventarisationResult ir in inv.results) {
-								if (ir.selected) {
-									foundSelected = true;
-									break;
-								}
-							}
-							// Deselect all
-							foreach (Progression.InventarisationResult ir in inv.results) {
-								// If we found a selected, deselect, if we didn't find a selected, select it
-								ir.selected = !foundSelected;
-							}
-						}
-
-						invR.x += invBtnR.width + 1;*/
-
-						// Toggle when clicking on the entry
-						/*if (isOverGroup && Event.current.type == EventType.MouseDown) {
-							// Use the event
-							Event.current.Use ();
-
-							// Check if we should deselect or select all
-							bool foundSelected = false;
-							foreach (Progression.InventarisationResult ir in inv.results) {
-								if (ir.selected) {
-									foundSelected = true;
-									break;
-								}
-							}
-							// Deselect all
-							foreach (Progression.InventarisationResult ir in inv.results) {
-								// If we found a selected, deselect, if we didn't find a selected, select it
-								ir.selected = !foundSelected;
-							}
-						}*/
-					}
-
-					// Select the group when clicking on it
-					if (isOverGroup && Event.current.type == EventType.mouseDown) {
-						// Use the event
-						Event.current.Use ();
-						
-						// Select the inventarisation
-						selectedInvName = inv.name;
-					}
-
-					isOver |= isOverGroup;
-					r++;
-
-					// Show functions if selected and editor is opened
-					if (hl && graphEditorOpened)
-					{
-						int funcW = Mathf.Clamp ((int)(colWidth / 2f), 80, 300);
-						Rect funcR = new Rect (x, y + (entryHeight + 1) * (r + 1), funcW, entryHeight);
-
-						// Select all
-						isOver |= SimpleGUI.CheckMouseOver (funcR);
-						if (SimpleGUI.Button (funcR, "Select all", entry, entrySelected)) { 
-							foreach (Progression.InventarisationResult ir in inv.results) {
-								ir.selected = true;
-							}
-						}
-						// Clear selection
-						funcR.x += funcR.width + 1;
-						funcR.width--;
-						isOver |= SimpleGUI.CheckMouseOver (funcR);
-						if (SimpleGUI.Button (funcR, "Clear all", entry, entrySelected)) { 
-							foreach (Progression.InventarisationResult ir in inv.results) {
-								ir.selected = false;
-							}
-						}
-
-						// Up the r so the rest of the invs are positioned properly
-						r++;
-					}
-
-					// Don't show the years if not highlighted (selected)
-					if (!hl) continue;
-
-					// Show years seperately
-					int i = 0;
-					foreach (Progression.InventarisationResult ir in inv.results)
-					{
-						hl = (ir == selectedIR);
-						Rect yearR = new Rect (invR.x, y + ((entryHeight + 1) * (i + 1)), yearWidth, entryHeight);
-						bool isOverYear = SimpleGUI.Label (yearR, ir.year.ToString (), hl ? entrySelected : entry);
-						isOver |= isOverYear;
-
-						if (isOverYear && (Event.current.type == EventType.mouseDown))
-						{
-							InventarisationAction ia = (InventarisationAction)GameControl.self.scene.actions.GetAction (ir.actionId);
-							InventarisationResultWindow irw = new InventarisationResultWindow (this, ir, ia);
-							if (windows.ContainsKey (ir)) {
-								windows [ir].Close ();
-							}
-							// On request: close all open windows...
-							List<InventarisationResultWindow> tmpCopy = new List<InventarisationResultWindow> (windows.Values);
-							foreach (InventarisationResultWindow w in tmpCopy) {
-								w.Close ();
-							}
-							windows.Add (ir, irw);
-							Event.current.Use ();
-						}
-
-						if (isOverYear) {
-							newSelectedIR = ir;
-							selectedInvName = inv.name;
-						}
-
-						// Graph toggle button
+						// Get the graph suffix (X/X)
+						string graphSuffix = "";
 						if (graphEditorOpened) 
 						{
-							Rect toggleR = yearR;
-							toggleR.width = yearToggleBtnWidth;
-							toggleR.x += yearWidth + 1;
-							isOver |= SimpleGUI.CheckMouseOver (toggleR);
-
-							// Toggle button
-							if (ir.selected) {
-								if (SimpleGUI.Button (toggleR, "<b> X</b>", entry, entrySelected)) { 
-									ir.selected = false;
-								} 
-							} else {
-								if (SimpleGUI.Button (toggleR, null, null, entry, entrySelected)) {
-									ir.selected = true;
+							graphSuffix = " ";
+							int total = inv.results.Count;
+							int selected = 0;
+							foreach (Progression.InventarisationResult ir in inv.results) {
+								if (ir.selected) {
+									selected++;
+									totalYearsSelected++;
 								}
 							}
+							graphSuffix = string.Format (" ({0}/{1})", selected, total);
 						}
 
-						i++;
-						if ((y + (entryHeight + 1) * (i + 4)) > Screen.height) {
-							// prevent entries going past bottom of screen...
-							i = 0;
-							x += yearWidth + 1 + ((graphEditorOpened) ? yearToggleBtnWidth : 0);
+						// Check if this entry is selected/highlighted
+						bool isSelected = (inv.name == selectedInvName);
+						bool isOverGroup = false;
+						string label = inv.name + graphSuffix;
+
+						// We show a label if it's selected
+						if (isSelected) 
+						{
+							GUILayout.Label (label, entrySelected, GUILayout.MaxWidth (Mathf.Infinity), GUILayout.Height (entryHeight));
+							// Check for mouse over
+							isOverGroup = CheckGUILayoutMouseOver (colWidth);
+						}
+						// We make it a button if it's not selected
+						else 
+						{
+							if (GUILayout.Button (label, entry, GUILayout.MaxWidth (Mathf.Infinity), GUILayout.Height (entryHeight))) {
+								// Select the inventarisation
+								selectedInvName = inv.name;
+								selectedINV = inv;
+							}
+							// Check for mouse over
+							isOverGroup = CheckGUILayoutMouseOver (colWidth);
+						}
+						GUILayout.Space (1);
+
+						// Remember if we have an overall mouse over
+						isOver |= isOverGroup;
+
+						// Show functions if selected and editor is opened
+						if (isSelected && graphEditorOpened)
+						{
+							GUILayout.BeginHorizontal ();
+							{
+								// Select all
+								if (GUILayout.Button ("Select all", entry, GUILayout.MaxWidth (colWidth * 0.5f), GUILayout.Height (entryHeight))) {
+									foreach (Progression.InventarisationResult ir in inv.results) {
+										ir.selected = true;
+									}
+								}
+								// Check if we have a mouse over
+								isOver |= CheckGUILayoutMouseOver ();
+
+								GUILayout.Space (1f);
+
+								// Select all
+								if (GUILayout.Button ("Clear all", entry, GUILayout.MaxWidth (colWidth * 0.5f), GUILayout.Height (entryHeight))) {
+									foreach (Progression.InventarisationResult ir in inv.results) {
+										ir.selected = false;
+									}
+								}
+								// Check if we have a mouse over
+								isOver |= CheckGUILayoutMouseOver (colWidth * 0.5f);
+							}
+							GUILayout.EndHorizontal ();
+							GUILayout.Space (1);
 						}
 					}
+				}
+				GUILayout.EndScrollView ();
+				GUILayout.EndArea ();
 
-					//if (!isOver && selectedInvName == inv.Key)
-					//	selectedInvName = null;
+				// Show years seperately
+				if (selectedINV != null)
+				{
+					// Calculate the amount of columns
+					float yearsAreaHeight = Screen.height - (y + entryHeight);
+					int maxEntriesPerColumn = Mathf.FloorToInt (yearsAreaHeight / (entryHeight + 1));
+					int columns = Mathf.FloorToInt ((float)selectedINV.results.Count / maxEntriesPerColumn) + 1;
+
+					// Setup the layout area
+					float yearEntryWidth = yearWidth + ((graphEditorOpened)?yearToggleBtnWidth+1:0);
+					float yearsAreaWidth = columns * (yearEntryWidth + 1);
+					Rect yearsAreaRect = new Rect (x + colWidth + 1, y + (entryHeight), yearsAreaWidth, yearsAreaHeight);
+					GUILayout.BeginArea (yearsAreaRect);
+					GUILayout.Space (1);
+
+					GUILayout.BeginHorizontal(); // For use of columns
+
+					for (int i = 0; i < columns; i++) 
+					{
+						GUILayout.BeginVertical (); // Column
+						for (int n = 0; n < maxEntriesPerColumn; n++) 
+						{
+							int resultIndex = n + (maxEntriesPerColumn * i);
+							if (resultIndex < selectedINV.results.Count)
+							{
+								Progression.InventarisationResult ir = selectedINV.results [resultIndex];
+
+								if (graphEditorOpened) { GUILayout.BeginHorizontal (); }
+								
+								bool isSelected = (ir == selectedIR);
+								GUIStyle yearStyle = (isSelected) ? entrySelected : entry;
+								if (GUILayout.Button (ir.year.ToString (), yearStyle, GUILayout.MaxWidth (yearWidth), GUILayout.Height (entryHeight)))
+								{
+									// Handle click
+									HandleInventarisationResultClicked (ir);
+								}
+								isOver |= CheckGUILayoutMouseOver (yearWidth);
+								
+								// Graph toggle button
+								if (graphEditorOpened) 
+								{
+									GUILayout.Space (1);
+									
+									// Toggle button
+									string toggleBtnLabel = (ir.selected) ? "<b> X</b>" : null;
+									if (GUILayout.Button (toggleBtnLabel, entry, GUILayout.MaxWidth (yearToggleBtnWidth), GUILayout.Height (entryHeight))) { 
+										ir.selected = !ir.selected;
+									} 
+									isOver |= CheckGUILayoutMouseOver (yearToggleBtnWidth);
+								}
+								
+								if (graphEditorOpened) { GUILayout.EndHorizontal (); }
+								GUILayout.Space (1);
+							}
+							else break;
+						}
+						GUILayout.EndVertical (); // ~ Column
+						GUILayout.Space (1);
+					}
+
+					GUILayout.EndHorizontal (); // ~ For use of columns
+					GUILayout.EndArea ();
 				}
 			}
 			selectedIR = newSelectedIR;
@@ -435,6 +404,39 @@ namespace Ecosim.GameCtrl.GameButtons
 			return isOver;*/
 		}
 
+		private void HandleInventarisationResultClicked (Progression.InventarisationResult ir)
+		{
+			InventarisationAction ia = (InventarisationAction)GameControl.self.scene.actions.GetAction (ir.actionId);
+			InventarisationResultWindow irw = new InventarisationResultWindow (this, ir, ia);
+			if (windows.ContainsKey (ir)) {
+				windows [ir].Close ();
+			}
+			// On request: close all open windows...
+			List<InventarisationResultWindow> tmpCopy = new List<InventarisationResultWindow> (windows.Values);
+			foreach (InventarisationResultWindow w in tmpCopy) {
+				w.Close ();
+			}
+			windows.Add (ir, irw);
+		}
+
+		private bool CheckGUILayoutMouseOver ()
+		{
+			return CheckGUILayoutMouseOver (0f);
+		}
+
+		private bool CheckGUILayoutMouseOver (float overrideWidth)
+		{
+			// Check if we have a mouse over, we set the width manually
+			// because if we would have a scollbar this would not be taken
+			// into account in the mouse over check. This principle
+			// also applies to other mouse over checks.
+			Rect uiRect = GUILayoutUtility.GetLastRect ();
+			if (overrideWidth > 0f) uiRect.width = overrideWidth;
+			bool isOver = uiRect.Contains (Event.current.mousePosition);
+			CameraControl.MouseOverGUI |= isOver;
+			return isOver;
+		}
+
 		private void RetrieveInventarisations ()
 		{
 			if (inventarisations != null) return;
@@ -480,6 +482,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			name = button.name;
 			selectedIR = null;
 			selectedInvName = null;
+			selectedINV = null;
 			inventarisations = null;
 			windows = new Dictionary<Progression.InventarisationResult, InventarisationResultWindow> ();
 		}
