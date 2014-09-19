@@ -9,6 +9,7 @@ using Ecosim.SceneData;
  */
 public class ShowReports : MonoBehaviour
 {
+	private static ShowReports self = null;
 	private static volatile bool hasQueue = false;
 	private bool isShowing = false;
 
@@ -20,6 +21,20 @@ public class ShowReports : MonoBehaviour
 
 	public static void NotifyQueueChange () {
 		hasQueue = true;
+	}
+
+	public static void CancelCurrentQuestionnaire () {
+		if (self != null && self.currentQuestionnaire != null) {
+			// Nullify and dispose
+			self.currentQuestionnaire = null;
+			self.questionnaireWindow.Dispose ();
+			self.questionnaireWindow = null;
+		}
+	}
+
+	void Awake ()
+	{
+		self = this;
 	}
 
 	void OnGUI () 

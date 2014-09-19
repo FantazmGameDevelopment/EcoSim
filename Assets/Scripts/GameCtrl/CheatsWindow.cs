@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using Ecosim;
 using Ecosim.SceneData;
 using Ecosim.SceneData.Action;
@@ -56,16 +57,26 @@ public class CheatsWindow : GameWindow
 				else {
 					// Check all cheatsactions if we have a valid cheat
 					bool correctCheat = false;
+					string cheatMessage = null;
 					foreach (BasicAction action in GameControl.self.scene.actions.EnumerateActions ()) {
 						if (action is CheatsAction && action.isActive) {
 							CheatsAction ca = (CheatsAction)action;
-							bool correct = ca.HandleCheat (cheatInput);
-							if (!correctCheat && correct) correctCheat = correct;
+							string cheatMsg;
+							bool correct = ca.HandleCheat (cheatInput, out cheatMsg);
+							if (!string.IsNullOrEmpty (cheatMsg)) {
+								cheatMessage = cheatMsg;
+							}
+							if (!correctCheat && correct) {
+								correctCheat = correct;
+							}
 						}
 					}
 
 					if (correctCheat) {
 						response = "Correct password entered";
+						if (!string.IsNullOrEmpty (cheatMessage)) {
+							response = cheatMessage;
+						}
 					}
 					else {
 						response = "Incorrect password entered";
@@ -80,7 +91,7 @@ public class CheatsWindow : GameWindow
 			GUILayout.Space (1);
 			GUILayout.BeginHorizontal ();
 			{
-				GUILayout.Label (response, entry, GUILayout.Height (32), GUILayout.Width (this.width));
+				GUILayout.Label (response, entry, GUILayout.MinHeight (32), GUILayout.Width (this.width));
 			}
 			GUILayout.EndHorizontal ();
 		}

@@ -297,8 +297,8 @@ namespace Ecosim.SceneEditor
 
 							GUILayout.Label ("ID:" + (idx++), GUILayout.Width (30));
 
-							GUILayout.Label ("Name", GUILayout.Width (30));
-							c.name = GUILayout.TextField (c.name, GUILayout.MaxWidth (500));
+							GUILayout.Label ("Name", GUILayout.Width (50));
+							c.name = GUILayout.TextField (c.name, GUILayout.Width (200));
 
 							if (GUILayout.Button ("-", GUILayout.Width (20)))
 							{
@@ -311,8 +311,16 @@ namespace Ecosim.SceneEditor
 						GUILayout.BeginHorizontal ();
 						{
 							GUILayout.Space (54);
-							GUILayout.Label ("Cheat", GUILayout.Width (30));
-							c.body = GUILayout.TextField (c.body, GUILayout.MaxWidth (500));
+							GUILayout.Label ("Cheat", GUILayout.Width (50));
+							c.body = GUILayout.TextField (c.body, GUILayout.Width (220));
+						}
+						GUILayout.EndHorizontal ();
+						GUILayout.Space (3);
+						GUILayout.BeginHorizontal ();
+						{
+							GUILayout.Space (54);
+							GUILayout.Label ("Feedback", GUILayout.Width (50));
+							c.feedback = GUILayout.TextField (c.feedback, GUILayout.Width (220));
 						}
 						GUILayout.EndHorizontal ();
 

@@ -18,12 +18,14 @@ namespace Ecosim.SceneData.Action
 			public bool enabled;
 			public string name;
 			public string body;
+			public string feedback;
 
 			public Cheat () { }
 			public Cheat (string name, string body)
 			{
 				this.name = name;
 				this.body = body;
+				this.feedback = "Correct password entered";
 				this.enabled = true;
 			}
 
@@ -33,6 +35,7 @@ namespace Ecosim.SceneData.Action
 				writer.WriteAttributeString ("enabled", enabled.ToString ().ToLower ());
 				writer.WriteAttributeString ("name", name);
 				writer.WriteAttributeString ("body", body);
+				writer.WriteAttributeString ("feedback", feedback);
 				writer.WriteEndElement ();
 			}
 
@@ -40,9 +43,13 @@ namespace Ecosim.SceneData.Action
 			{
 				string name = reader.GetAttribute ("name");
 				string body = reader.GetAttribute ("body");
+
 				bool enabled = bool.Parse (reader.GetAttribute ("enabled"));
 				Cheat c = new Cheat (name, body);
 				c.enabled = enabled;
+				if (!string.IsNullOrEmpty (reader.GetAttribute ("feedback"))) {
+					c.feedback = reader.GetAttribute ("feedback");
+				}
 				return c;
 			}
 		}
@@ -66,8 +73,9 @@ namespace Ecosim.SceneData.Action
 			return "Cheats";
 		}
 
-		public bool HandleCheat (string cheat)
+		public bool HandleCheat (string cheat, out string msg)
 		{
+			msg = "";
 			bool cheatFound = false;
 			int idx = 0;
 			foreach (Cheat c in this.cheats) {
@@ -82,6 +90,7 @@ namespace Ecosim.SceneData.Action
 						if (cheatMI != null) {
 							try {
 								cheatMI.Invoke (ecoBase, null);
+								msg = c.feedback;
 							} catch (Exception e) {
 								Log.LogException (e);
 							}

@@ -9,6 +9,7 @@ using Ecosim.GameCtrl.GameButtons;
 
 public class GameControl : MonoBehaviour
 {
+	public const float GAME_BUTTON_TIMEOUT_DELAY = 1.25f;
 	
 	public GUISkin skin;
 	public Texture2D budgetIcon;
@@ -231,13 +232,13 @@ public class GameControl : MonoBehaviour
 			}
 			if (newActiveButton != null) {
 				activeButton = newActiveButton;
-				activeButtonTimeout = Time.timeSinceLevelLoad + 0.75f;
+				activeButtonTimeout = Time.timeSinceLevelLoad + GAME_BUTTON_TIMEOUT_DELAY;
 			} else if ((activeButton != null) && (activeButtonTimeout < Time.timeSinceLevelLoad)) {
 				activeButton = null;
 			}
 			if ((activeButton != null) && (activeButton.hdlr != null)) {
 				if (activeButton.hdlr.SelectRender (activeButton)) {
-					activeButtonTimeout = Time.timeSinceLevelLoad + 0.75f;
+					activeButtonTimeout = Time.timeSinceLevelLoad + GAME_BUTTON_TIMEOUT_DELAY;
 				}
 			}
 		}

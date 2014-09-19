@@ -48,7 +48,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			costStr = ui.cost.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 			action.StartSelecting (ui);
 			textHeight = 32;//(int) formatted.CalcHeight (new GUIContent (ui.description), winWidth) + 4;
-			inventarisationName = ui.description;
+			inventarisationName = ui.name;
 			durationInYears = 1;
 		}
 		

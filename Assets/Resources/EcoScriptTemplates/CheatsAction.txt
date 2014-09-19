@@ -14,7 +14,7 @@ void ProcessCheat3 ()
 }
 
 // If you have more cheats, just add a new method called
-// ProcessCheatX ()
+// void ProcessCheatX ()
 // { 
 // 		// Process cheat with ID X
 // } 

@@ -17,10 +17,8 @@ namespace Ecosim.GameCtrl.GameButtons
 		private bool formulasOpened = true;
 
 		private List<string> categories;
-		// Key = category
-		private Dictionary<string, List<Progression.VariableData>> variables;
-		// Key = category
-		private Dictionary<string, List<Progression.FormulaData>> formulas;
+		private Dictionary<string, List<Progression.VariableData>> variables; // Key = category name
+		private Dictionary<string, List<Progression.FormulaData>> formulas; // Key = category name
 		private Dictionary<string, bool> openedStates;
 
 		private Vector2 scrollPos;
@@ -69,6 +67,13 @@ namespace Ecosim.GameCtrl.GameButtons
 			categories.AddRange (variables.Keys);
 			categories.AddRange (formulas.Keys);
 			categories.Sort ();
+
+			// Sort Variables by their new name
+			foreach (KeyValuePair<string, List<Progression.VariableData>> pair in variables) {
+				pair.Value.Sort (delegate(Progression.VariableData x, Progression.VariableData y) {
+					return string.Compare (x.name, y.name);
+				});
+			}
 		}
 		
 		public override void Render ()
