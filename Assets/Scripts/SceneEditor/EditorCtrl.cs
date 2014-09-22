@@ -30,7 +30,21 @@ public class EditorCtrl : MonoBehaviour
 	public Texture2D questionMark;
 	public Texture2D editSmall;
 	public Texture2D viewSmall;
-	public Scene scene;
+
+	public System.Action<Scene> onSceneChanged;
+	private Scene _scene;
+	public Scene scene {
+		get {
+			return _scene;
+		}
+		set {
+			if (_scene != value) {
+				_scene = value;
+				if (onSceneChanged != null)
+					onSceneChanged (_scene);
+			}
+		}
+	}
 	public GUISkin skin;
 	public static EditorCtrl self;
 	Rect winAreaR;

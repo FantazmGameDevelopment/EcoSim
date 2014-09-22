@@ -37,6 +37,32 @@ public class ShowReports : MonoBehaviour
 		self = this;
 	}
 
+	void Start ()
+	{
+		EditorCtrl.self.onSceneChanged += OnSceneChanged;
+	}
+
+	void OnSceneChanged (Scene scene)
+	{
+		if (scene == null) 
+		{
+			hasQueue = false;
+			isShowing = false;
+
+			if (questionnaireWindow != null)
+				questionnaireWindow.Dispose ();
+			questionnaireWindow = null;
+			currentQuestionnaire = null;
+
+			if (reportWindow != null)
+				reportWindow.Dispose ();
+			reportWindow = null;
+			currentReport = null;
+
+			SetGameControlButtons (true);
+		}
+	}
+
 	void OnGUI () 
 	{
 		// TODO: Exception time; we should only come AFTER showArticles.cs
@@ -45,7 +71,10 @@ public class ShowReports : MonoBehaviour
 		GameControl ctrl = GameControl.self;
 		Scene scene = ctrl.scene;
 
-		if ((scene != null) && hasQueue && (!isShowing))
+		// Check for null scene
+		if (scene == null) return;
+
+		if (hasQueue && (!isShowing))
 		{
 			if (ctrl.hideToolBar || ctrl.hideSuccessionButton) {
 				// toolbar/succession button is hidden, apparently we're busy with something, wait till 
@@ -54,9 +83,7 @@ public class ShowReports : MonoBehaviour
 			}
 
 			isShowing = true;
-			//ctrl.hideToolBar = true;
-			ctrl.hideGameActions = true;
-			ctrl.hideSuccessionButton = true;
+			SetGameControlButtons (false);
 			GameControl.InterfaceChanged ();
 
 			object inQueue = scene.reports.CurrentInQueue ();
@@ -87,9 +114,8 @@ public class ShowReports : MonoBehaviour
 			else 
 			{
 				isShowing = false;
-				//ctrl.hideToolBar = false;
-				ctrl.hideGameActions = false;
-				ctrl.hideSuccessionButton = false;
+
+				SetGameControlButtons (true);
 				GameControl.InterfaceChanged ();
 
 				hasQueue = scene.reports.ToNextInQueue ();
@@ -133,6 +159,14 @@ public class ShowReports : MonoBehaviour
 
 		GUI.depth = this.questionnaireWindow.depth + 1;
 		this.reportWindow.Render ();
+	}
+
+	void SetGameControlButtons (bool enabled)
+	{
+		GameControl ctrl = GameControl.self;
+		//ctrl.hideToolBar = enabled;
+		ctrl.hideGameActions = !enabled;
+		ctrl.hideSuccessionButton = !enabled;
 	}
 
 	/*
