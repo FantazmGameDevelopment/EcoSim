@@ -627,6 +627,7 @@ namespace Ecosim.SceneData
 
 			vegetation = GetData <VegetationData> (VEGETATION_ID);
 			heightMap = GetData <HeightMap> (HEIGHTMAP_ID);
+			calculatedWaterHeightMap = GetData <HeightMap> (CALCULATED_WATERHEIGHTMAP_ID);
 			waterHeightMap = GetData <HeightMap> (WATERHEIGHTMAP_ID);
 			canals = GetData <BitMap2> (CANAL_ID);
 			successionArea = GetData <BitMap1> (SUCCESSION_ID);
