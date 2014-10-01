@@ -52,6 +52,11 @@ public class RenderOverviewTiles : MonoBehaviour
 		TerrainMgr.self.UpdateQualitySettings (-1);
 		overviewCamera.enabled = true;
 		yield return 0;
+		TerrainMgr.self.CheckCellsForOverviewRendering ();
+		while (TerrainMgr.IsRendering) {
+			yield return 0;
+		}
+		yield return 0;
 		TerrainMgr.self.followPosition = Vector3.zero;
 		TerrainMgr.self.ForceRedraw();
 		for (int y = 0; y < cheight; y ++) {

@@ -80,7 +80,20 @@ public class TerrainMgr : MonoBehaviour
 		return cell2;
 		
 	}
-	
+
+	public void CheckCellsForOverviewRendering ()
+	{
+		if (cache.Count == 0) {
+			for (int y = 0; y < cellGrid.GetLength (0); y++) {
+				for (int x = 0; x < cellGrid.GetLength (1); x++) {
+					if (cellGrid [y, x] == null) {
+						CreateCellAt (x, y);
+					}
+				}
+			}
+		}
+	}
+
 	public void DestroyCellAt (int cx, int cy)
 	{
 		if (!IsInRange (cx, cy))

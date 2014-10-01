@@ -71,7 +71,14 @@ namespace Ecosim.SceneData
 
 		public void SetupDefaultActions ()
 		{
-			AddAction (new SuccessionAction (scene, 0));
+			// We create a default script for the succession action
+			// so the Compiler has something to compile so it does not 
+			// generate errors
+			SuccessionAction sa = new SuccessionAction (scene, 0);
+			if (sa.Script == null) {
+				sa.CreateDefaultScript ();
+			}
+			AddAction (sa);
 			AddAction (new PlantsAction (scene, 1));
 			AddAction (new AnimalsAction (scene, 2));
 		}
