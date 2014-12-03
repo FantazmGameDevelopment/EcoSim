@@ -636,10 +636,12 @@ namespace Ecosim.SceneData
 
 			// Default variables
 			foreach (string s in predefinedVariables) {
-				if (s.EndsWith ("Count")) {
-					variables.Add (s, 0);
-				} else {
-					variables.Add (s, "");
+				if (!variables.ContainsKey (s)) {
+					if (s.EndsWith ("Count")) {
+						variables.Add (s, 0);
+					} else {
+						variables.Add (s, "");
+					}
 				}
 			}
 		}

@@ -157,7 +157,7 @@ public class ShowReports : MonoBehaviour
 			});
 		}
 
-		GUI.depth = this.questionnaireWindow.depth + 1;
+		GUI.depth = this.reportWindow.depth + 1;
 		this.reportWindow.Render ();
 	}
 

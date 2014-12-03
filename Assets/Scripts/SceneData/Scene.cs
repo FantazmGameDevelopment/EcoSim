@@ -183,17 +183,26 @@ namespace Ecosim.SceneData
 			return scene;
 		}
 		
-		public static Scene CreateNewScene (string name, int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, AnimalType[] animalTypes, ActionObjectsGroup[] actionObjectGroups, CalculatedData.Calculation[] calculations)
+		public static Scene CreateNewScene (string name, int width, int height, 
+		                                    SuccessionType[] successionTypes, 
+		                                    PlantType[] plantTypes, 
+		                                    AnimalType[] animalTypes, 
+		                                    ActionObjectsGroup[] actionObjectGroups, 
+		                                    CalculatedData.Calculation[] calculations, 
+		                                    ActionMgr actionMgr, 
+		                                    ManagedDictionary<string, object> variables)
 		{
 			Scene scene = new Scene (name, width, height, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
 			scene.assets = new ExtraAssets (scene);
-			scene.actions = new ActionMgr (scene);
+			scene.actions = (actionMgr!=null) ? new ActionMgr (scene, actionMgr) : new ActionMgr (scene);
 			scene.reports = new ReportsMgr (scene);
 			scene.buildings = new Buildings (scene);
 			scene.roads = new Roads (scene);
 			scene.progression = new Progression (scene);
 			scene.exporter = new ExportMgr (scene);
 			scene.articles = new Articles (scene);
+
+			if (variables != null) { scene.progression.variables = variables; }
 			
 			// add the basic data to progression
 			// we start with land at 2m above absolute 0

@@ -318,14 +318,14 @@ namespace Ecosim.SceneEditor
 			GUILayout.EndVertical ();
 		}
 
-		IEnumerable<bool> CONewScene (int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, AnimalType[] animalTypes, ActionObjectsGroup[] actionObjectGroups, CalculatedData.Calculation[] calculations)
+		IEnumerable<bool> CONewScene (int width, int height, SuccessionType[] successionTypes, PlantType[] plantTypes, AnimalType[] animalTypes, ActionObjectsGroup[] actionObjectGroups, CalculatedData.Calculation[] calculations, ActionMgr actionMgr, ManagedDictionary<string, object> variables)
 		{
 			// we do two yield as we're lazy and ask for moveNext, thus already
 			// advancing on first iteration. The return value actually doesn't
 			// matter as we don't look at it.
 			yield return true;
 			yield return true;
-			scene = Scene.CreateNewScene (sceneName, width, height, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations);
+			scene = Scene.CreateNewScene (sceneName, width, height, successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations, actionMgr, variables);
 			yield return true;
 			TerrainMgr.self.SetupTerrain (scene);
 			CameraControl.SetupCamera (scene);
@@ -343,6 +343,8 @@ namespace Ecosim.SceneEditor
 		private bool reuseVegetation = true;
 		private bool reusePlants = true;
 		private bool reuseAnimals = true;
+		private bool reuseActions = true;
+		private bool reuseVariables = true;
 		private bool reuseActionObjectGroups = true;
 		private bool reuseResearchPoints = true;
 		private bool reuseCalculations = false;
@@ -391,6 +393,14 @@ namespace Ecosim.SceneEditor
 					if ((scene != null) && reuseAnimals) {
 						animalTypes = scene.animalTypes;
 					}
+					ActionMgr actionMgr = null;
+					if ((scene != null) && reuseActions) {
+						actionMgr = scene.actions;
+					}
+					ManagedDictionary<string, object> variables = null;
+					if ((scene != null) && reuseVariables) {
+						variables = scene.progression.variables;
+					}
 					ActionObjectsGroup[] actionObjectGroups = null;
 					if ((scene != null) && reuseActionObjectGroups) {
 						actionObjectGroups = scene.actionObjectGroups;
@@ -400,7 +410,7 @@ namespace Ecosim.SceneEditor
 						calculations = scene.calculations;
 					}
 
-					coRoutine = CONewScene (sizes [newWidthIndex], sizes [newHeightIndex], successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations).GetEnumerator ();
+					coRoutine = CONewScene (sizes [newWidthIndex], sizes [newHeightIndex], successionTypes, plantTypes, animalTypes, actionObjectGroups, calculations, actionMgr, variables).GetEnumerator ();
 				}
 			}
 			GUILayout.FlexibleSpace ();
@@ -410,6 +420,8 @@ namespace Ecosim.SceneEditor
 				reuseVegetation = GUILayout.Toggle (reuseVegetation, "Use current vegetation");
 				reusePlants = GUILayout.Toggle (reusePlants, "Use current plants");
 				reuseAnimals = GUILayout.Toggle (reuseAnimals, "Use current animals");
+				reuseActions = GUILayout.Toggle (reuseActions, "Use current actions");
+				reuseVariables = GUILayout.Toggle (reuseVariables, "Use current variables");
 				// FIXME: Something goes wrong if we reuse the calculations? Check this some time.
 				//reuseCalculations = GUILayout.Toggle (reuseCalculations, "Use current Calculated data calculations");
 			}

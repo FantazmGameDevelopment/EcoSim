@@ -137,6 +137,15 @@ public class CameraControl : MonoBehaviour
 			pos.z = scene.height * TerrainMgr.TERRAIN_SCALE * 0.5f;
 			self.nearTransform.position = pos;
 		}
+
+		// Start the game in an angle
+		SwitchToNear ();
+		self.nearCamera.transform.rotation = Quaternion.identity;
+		Vector3 newPos = self.nearCamera.transform.localPosition;
+		newPos -= self.nearCamera.transform.forward * ((TerrainMgr.CELL_SIZE * TerrainMgr.TERRAIN_SCALE) * 0.65f);
+		newPos.y = 750f;
+		self.nearCamera.transform.localPosition = newPos;
+		self.nearCamera.transform.Rotate (new Vector3 (35f, 0f, 0f), Space.Self);
 	}
 	
 	public static void DisableCamera ()

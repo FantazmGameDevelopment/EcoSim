@@ -280,7 +280,12 @@ public class GameMenu : MonoBehaviour
 		int x = 0;
 		int slotNr = 0;
 		foreach (SaveGame s in saveGames) {
-			string slotName = (s == null) ? "<Empty>" : (s.sceneName + '\n' + "<size=12>" + s.playerInfo.firstName + ' ' + s.playerInfo.familyName + "</size>");
+			string slotName = (s == null) ? "<Empty>" : 
+				(s.sceneName + '\n' + 
+				 "<size=12>" + 
+				 	s.playerInfo.firstName + ' ' + s.playerInfo.familyName + 
+				 	'\n' + s.date.ToString ("HH:mm dd-MM-yyyy") +
+				 "</size>");
 			if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310 + 207 * x, hheight + 33 * index, 206, 65),
 				slotName, styleDarkNormal, styleDarkOver)) {
 				// scene = Scene.StartNewGame (loadScene.sceneName, slotNr, player);
@@ -318,7 +323,7 @@ public class GameMenu : MonoBehaviour
 		int x = 0;
 		int slotNr = 0;
 		foreach (SaveGame s in saveGames) {
-			string slotName = (s == null) ? "<Empty>" : (s.sceneName + '\n' + "<size=12>" + s.playerInfo.firstName + ' ' + s.playerInfo.familyName + "</size>");
+			string slotName = (s == null) ? "<Empty>" : (s.sceneName + '\n' + "<size=12>" + s.playerInfo.firstName + ' ' + s.playerInfo.familyName + '\n' + s.date.ToString ("HH:mm dd-MM-yyyy") + "</size>");
 			if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310 + 207 * x, hheight + 33 * index, 206, 65),
 				slotName, styleDarkNormal, styleDarkOver)) {
 				// scene = Scene.StartNewGame (loadScene.sceneName, slotNr, player);

@@ -22,6 +22,7 @@ namespace Ecosim.SceneData
 		public int year;
 		public long budget;
 		public bool gameEnded = false;
+		public System.DateTime date;
 		public PlayerInfo playerInfo;
 		
 		SaveGame ()
@@ -41,7 +42,6 @@ namespace Ecosim.SceneData
 			budget = scene.progression.budget;
 			gameEnded = scene.progression.gameEnded;
 			playerInfo = scene.playerInfo;
-				
 		}
 
 		void Load (XmlTextReader reader)
@@ -75,6 +75,7 @@ namespace Ecosim.SceneData
 							saveGame.Load (reader);
 						}
 					}
+					saveGame.date = File.GetLastWriteTimeUtc (path);
 					return saveGame;
 				} finally {
 					reader.Close ();

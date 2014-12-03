@@ -27,7 +27,17 @@ namespace Ecosim.SceneData
 			typeof(ConversionAction),
 			typeof(ActionObjectAction)
 		};
-		
+
+		public ActionMgr (Scene scene, ActionMgr mgr)
+		{
+			this.scene = scene;
+			this.actionQueue = new List<BasicAction> (mgr.actionQueue);
+			this.actionsByID = new Dictionary<int, BasicAction> (mgr.actionsByID);
+			this.uiButtons = new List<UserInteraction> (mgr.uiButtons);
+			this.uiGroups = new Dictionary<string, UserInteractionGroup> (mgr.uiGroups);
+			this.lastId = mgr.lastId;
+		}
+
 		public ActionMgr (Scene scene)
 		{
 			this.scene = scene;
@@ -39,9 +49,9 @@ namespace Ecosim.SceneData
 			SetupDefaultActions ();
 		}
 		
-		List<BasicAction> actionQueue;
+		private List<BasicAction> actionQueue;
 		private Dictionary<int, BasicAction> actionsByID;
-		List<UserInteraction> uiButtons;
+		private List<UserInteraction> uiButtons;
 		public int lastId = 0;
 		public Dictionary<string, UserInteractionGroup> uiGroups;
 		
