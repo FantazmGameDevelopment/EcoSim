@@ -84,14 +84,20 @@ namespace Ecosim.GameCtrl.GameButtons
 				Rect graphRect = new Rect (x, y, graphEditorWidth, entryHeight);
 
 				// Label
-				graphRect.width = colWidth + yearWidth - 135;
+				graphRect.width = colWidth + yearWidth - 175;
 				isOver |= SimpleGUI.Label (graphRect, "Graph Editor", header);  
 				graphRect.x += graphRect.width + 1;
 
-				graphRect.width = 135;
+				graphRect.width = 175 - 33;
 				isOver |= SimpleGUI.CheckMouseOver (graphRect); 
 				if (SimpleGUI.Button (graphRect, ((graphEditorOpened)?"Hide Functions":"Show Functions"), entry, entrySelected)) {
 					graphEditorOpened = !graphEditorOpened;
+				}
+				graphRect.x += graphRect.width + 1;
+				graphRect.width = 32;
+				isOver |= SimpleGUI.CheckMouseOver (graphRect); 
+				if (SimpleGUI.Button (graphRect, " ?", entry, entrySelected)) {
+					new ExportGraphInfoWindow ();
 				}
 				
 				// Show graph editor controls

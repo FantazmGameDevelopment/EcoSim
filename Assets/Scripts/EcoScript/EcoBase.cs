@@ -109,6 +109,14 @@ namespace Ecosim.EcoScript
 			scene.progression.AddMessage (text);
 		}
 
+		public void ShowArticleByName (string name) {
+			name = name.ToLower ().Trim ();
+			foreach (KeyValuePair<int, Articles.Article> p in scene.articles.articles) {
+				if (p.Value.description.ToLower ().Trim () == name)
+					scene.progression.AddMessage (p.Key);
+			}
+		}
+
 		public void MakeReport (string text) {
 			scene.progression.AddReport (text);
 		}

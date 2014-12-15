@@ -345,7 +345,8 @@ public class GameMenu : MonoBehaviour
 			}
 		}
 		SimpleGUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
-			"Progress is automatically saved at the start of each year.", styleLightNormal);
+		    "Pick a game slot to automatically save your game at the start of each new year.", styleLightNormal);
+			//"Progress is automatically saved at the start of each year.", styleLightNormal);
 	}
 	
 	void StartNewGame2 (int mx, int my)

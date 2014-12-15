@@ -61,11 +61,13 @@ namespace Ecosim.SceneData
 		
 		private void Load (XmlTextReader reader) {
 			bool skipReadHack = false;
+			List<Article> unidentifiedArticles = new List<Article> ();
+
 			while (skipReadHack || reader.Read()) {
 				skipReadHack = false;
 				XmlNodeType nType = reader.NodeType;
 				if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "article")) {
-					int id = int.Parse(reader.GetAttribute ("id"));
+					int id = (!string.IsNullOrEmpty (reader.GetAttribute ("id")))?int.Parse(reader.GetAttribute ("id")):-1;
 					if (id >= nextArticleId) {
 						nextArticleId = id + 1;
 					}
@@ -74,9 +76,11 @@ namespace Ecosim.SceneData
 					Article article = new Article(id);
 					article.text = text;
 					article.description = descr;
-					articles.Add (id, article);
+					if (id < 0) unidentifiedArticles.Add (article);
+					else articles.Add (id, article);
 					// IOUtil.ReadUntilEndElement (reader, "article");
 					skipReadHack = true;
+
 				}
 				else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "encyclopedia")) {
 					int id = int.Parse(reader.GetAttribute ("id"));
@@ -97,6 +101,14 @@ namespace Ecosim.SceneData
 				else if ((nType == XmlNodeType.EndElement) && (reader.Name.ToLower () == "articles")) {
 					break;
 				}
+			}
+
+			foreach (Article a in unidentifiedArticles) {
+				Article newA = new Article (nextArticleId);
+				newA.description = a.description;
+				newA.text = a.text;
+				articles.Add (newA.id, newA);
+				nextArticleId++;
 			}
 			
 		}

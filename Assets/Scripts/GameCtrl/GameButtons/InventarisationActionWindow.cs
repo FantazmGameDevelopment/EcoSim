@@ -54,8 +54,9 @@ namespace Ecosim.GameCtrl.GameButtons
 		
 		public override void Render ()
 		{
-			if (totalCost != ui.estimatedTotalCostForYear * durationInYears) {
-				totalCost = ui.estimatedTotalCostForYear * durationInYears;
+			long newTotalCost = ui.estimatedTotalCostForYear * durationInYears;
+			if (totalCost != newTotalCost) {
+				totalCost = newTotalCost;
 				int nrTiles = (ui.cost == 0)?0:((int) (totalCost / ui.cost / durationInYears));
 				totalCostStr = totalCost.ToString ("#,##0\\.-", CultureInfo.GetCultureInfo ("en-GB"));
 				totalTilesStr = nrTiles.ToString ("#,##0", CultureInfo.GetCultureInfo ("en-GB"));
@@ -74,7 +75,8 @@ namespace Ecosim.GameCtrl.GameButtons
 			SimpleGUI.Label (new Rect (xOffset + 353, yOffset + textHeight + 67, 32, 32), "x", entry);
 
 			// Amount of years
-			SimpleGUI.Label (new Rect (xOffset, yOffset + textHeight + 100, 263, 32), "Duration (years)", entry); 
+			string label = "Duration (years)";// (GameControl.self.scene.progression.yearsPerTurn == 1)?"Duration (years)":"Duration (turns)";
+			SimpleGUI.Label (new Rect (xOffset, yOffset + textHeight + 100, 263, 32), label, entry); 
 			string years = SimpleGUI.TextField (new Rect (xOffset + 264, yOffset + textHeight + 100, 88, 32), durationInYears.ToString(), header);
 			SimpleGUI.Label (new Rect (xOffset + 353, yOffset + textHeight + 100, 32, 32), "x", entry);
 
@@ -113,7 +115,7 @@ namespace Ecosim.GameCtrl.GameButtons
 				// Create a new active inventarisation
 				Scene scene = GameControl.self.scene;
 				int startYear = scene.progression.year;
-				int lastYear = startYear + durationInYears;
+				int lastYear = startYear + (durationInYears * scene.progression.yearsPerTurn);
 				string name = inventarisationName;
 				string areaName = action.invAreaName;
 				int actionId = action.id;

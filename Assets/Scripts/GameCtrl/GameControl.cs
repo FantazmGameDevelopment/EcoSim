@@ -331,21 +331,28 @@ public class GameControl : MonoBehaviour
 		isProcessing = true;
 		yield return 0;
 
-		#pragma warning disable 162
-		isWorking = true;
-		if (GameSettings.SUCCESSION_IN_BG_THREAD) {
-			ThreadPool.QueueUserWorkItem (WorkThread, null);
-		}
-		else {
-			WorkThread(null);
-		}
-		#pragma warning restore 162
+		for (int i = 0; i < scene.progression.yearsPerTurn; i++)
+		{
+			yield return 0;
+
+			#pragma warning disable 162
+			isWorking = true;
+			if (GameSettings.SUCCESSION_IN_BG_THREAD) {
+				ThreadPool.QueueUserWorkItem (WorkThread, null);
+			}
+			else {
+				WorkThread(null);
+			}
+			#pragma warning restore 162
+			
+			while (isWorking) {
+				yield return 0;
+			}
 		
-		while (isWorking) {
+			scene.progression.Advance ();
+
 			yield return 0;
 		}
-		
-		scene.progression.Advance ();
 		
 		TerrainMgr.self.ForceRedraw ();
 		
