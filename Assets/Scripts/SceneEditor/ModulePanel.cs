@@ -150,8 +150,8 @@ namespace Ecosim.SceneEditor
 					yearStr = scene.progression.startYear.ToString ();
 				}
 				GUILayout.EndHorizontal ();
-				EcoGUI.IntField ("Years per turn", ref scene.progression.yearsPerTurn, 100f, 80f);
-				if (scene.progression.yearsPerTurn < 1) scene.progression.yearsPerTurn = 1;
+				EcoGUI.IntField ("Years per cycle", ref scene.progression.yearsPerCycle, 100f, 80f);
+				if (scene.progression.yearsPerCycle < 1) scene.progression.yearsPerCycle = 1;
 
 				RenderBudget ();
 				

@@ -8,7 +8,13 @@ public class IntroScreen : MonoBehaviour
 	public Texture2D banner;
 	public Texture2D info;
 	public Transform spinnerT;
-	
+
+	public int bannerOffset = 50;
+	public int bannerTextOffset = 5;
+	public int bannerTextXOffset = 0;
+	public int bannerTextWidthOffset = 0;
+	public int infoOffset = 50;
+
 	public GUIStyle boxStyle;
 	
 	void Awake ()
@@ -20,9 +26,9 @@ public class IntroScreen : MonoBehaviour
 	{
 		int hheight = Screen.height / 2;
 		int hwidth = Screen.width / 2;
-		GUI.Label (new Rect (hwidth - 310, hheight + 33 * -3 - 154, 620, 153), banner, GUIStyle.none);
-		GUI.Label (new Rect (hwidth - 310, hheight + 33 * -3, 620, 32), isStarted?"Loading...":"Press any key...", boxStyle);
-		GUI.Label (new Rect (hwidth - info.width / 2, hheight + 33 * 0, info.width, info.height), info, GUIStyle.none);
+		GUI.Label (new Rect (hwidth - (banner.width*0.5f), bannerOffset, banner.width, banner.height), banner, GUIStyle.none);
+		GUI.Label (new Rect (hwidth - (banner.width*0.5f) + bannerTextXOffset + bannerTextWidthOffset, bannerOffset + banner.height + bannerTextOffset, banner.width - (bannerTextWidthOffset*2f), 32), isStarted?"Loading...":"Press any key...", boxStyle);
+		GUI.Label (new Rect (hwidth - info.width / 2, Screen.height - info.height - infoOffset, info.width, info.height), info, GUIStyle.none);
 		
 		if (Event.current.type == EventType.KeyDown)
 		{

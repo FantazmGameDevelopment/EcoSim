@@ -331,7 +331,7 @@ public class GameControl : MonoBehaviour
 		isProcessing = true;
 		yield return 0;
 
-		for (int i = 0; i < scene.progression.yearsPerTurn; i++)
+		for (int i = 0; i < scene.progression.yearsPerCycle; i++)
 		{
 			yield return 0;
 

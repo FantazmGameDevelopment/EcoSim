@@ -543,7 +543,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 			editorWidth = 400;
 		}
 		width = Screen.width * 0.5f;
-		height = (messageLines + messageTitleLines + 1) * 50f;
+		height = (messageLines + messageTitleLines + 1) * 60f;
 		height = Mathf.Clamp (height, 0f, Screen.height * 0.75f);
 
 		// Check x y offsets

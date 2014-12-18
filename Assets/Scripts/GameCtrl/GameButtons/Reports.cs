@@ -55,7 +55,7 @@ namespace Ecosim.GameCtrl.GameButtons
 		{
 			RetrieveInventarisations ();
 
-			int colWidth = 164;
+			int colWidth = 250;
 			int yearWidth = 80;
 			int yearToggleBtnWidth = 32;
 			int graphEditorWidth = 150;
@@ -206,7 +206,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			if (inventarisations.Count == 0) 
 			{
 				//y = y + ((graphEditorOpened) ? (entryHeight + 1) : 0);
-				SimpleGUI.Label (new Rect (x, y + (entryHeight + 1), 197, entryHeight), "No reports available", entry);
+				SimpleGUI.Label (new Rect (x, y + (entryHeight + 1), colWidth, entryHeight), "No reports available", entry);
 			} 
 			else 
 			{

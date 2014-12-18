@@ -90,7 +90,7 @@ public class GameMenu : MonoBehaviour
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index - 154, 620, 153), banner, GUIStyle.none);
+		GUI.Label (new Rect (xOffset + hwidth - (banner.width*0.5f), hheight + 33 * index - banner.height, banner.width, banner.height), banner, GUIStyle.none);
 		if (scene != null) {
 			if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 				"Back to game", styleDarkNormal, styleDarkOver)) {

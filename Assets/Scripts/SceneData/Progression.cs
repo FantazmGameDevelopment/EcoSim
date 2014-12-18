@@ -48,7 +48,7 @@ namespace Ecosim.SceneData
 		public long expenses = 0; // only used for get purposes
 		public int year = 0; // year of this progression
 		public int startYear = 2013; // not really progression, but for determining first progression data
-		public int yearsPerTurn = 1;
+		public int yearsPerCycle = 1;
 
 		private bool _gameEnded = false;
 		public bool gameEnded {
@@ -1015,8 +1015,8 @@ namespace Ecosim.SceneData
 		{
 			dataDict = new Dictionary<string, DataInfo> ();
 			startYear = int.Parse (reader.GetAttribute ("startyear"));
-			if (!string.IsNullOrEmpty (reader.GetAttribute ("yearsperturn"))) {
-				yearsPerTurn = int.Parse (reader.GetAttribute ("yearsperturn"));
+			if (!string.IsNullOrEmpty (reader.GetAttribute ("yearspercycle"))) {
+				yearsPerCycle = int.Parse (reader.GetAttribute ("yearspercycle"));
 			}
 			budget = long.Parse (reader.GetAttribute ("budget"));
 			if (!string.IsNullOrEmpty (reader.GetAttribute ("yearbudget"))) {
@@ -1359,7 +1359,7 @@ namespace Ecosim.SceneData
 			writer.WriteAttributeString ("budget", budget.ToString ());
 			writer.WriteAttributeString ("yearbudget", yearBudget.ToString ());
 			writer.WriteAttributeString ("startyear", startYear.ToString ());
-			writer.WriteAttributeString ("yearsperturn", yearsPerTurn.ToString ());
+			writer.WriteAttributeString ("yearspercycle", yearsPerCycle.ToString ());
 			writer.WriteAttributeString ("allowresearch", allowResearch ? "true" : "false");
 			writer.WriteAttributeString ("allowmeasures", allowMeasures ? "true" : "false");
 			writer.WriteAttributeString ("gameended", gameEnded ? "true" : "false");
