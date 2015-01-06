@@ -10,6 +10,15 @@ public class SaveFileDialog
 
 	public delegate void ResultDelegate (bool ok, string url);
 
+	public static bool SystemDialogAvailable ()
+	{
+#if UNITY_STANDALONE_OSX
+		return false;
+#else
+		return true;
+#endif
+	}
+
 	public static IEnumerator Show (string fileName, string filters, ResultDelegate onResult)
 	{
 		// If we're in full screen we switch back to non-fullscreen
@@ -25,6 +34,17 @@ public class SaveFileDialog
 			yield return new WaitForEndOfFrame ();
 		}
 
+
+
+#if UNITY_STANDALONE_OSX
+		string url = string.Format ("{0}{1}{2}_{3}.{4}", 
+				                            System.Environment.GetFolderPath (System.Environment.SpecialFolder.Desktop),
+				                            System.IO.Path.DirectorySeparatorChar,
+				                            fileName,
+				                            System.DateTime.Now.ToString ("HHmmssms"),
+				                            filters.Substring (filters.LastIndexOf(".")+1));
+				bool result = true;
+#else
 		// Save to .txt
 		System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();
 		sfd.Filter = filters;
@@ -33,6 +53,7 @@ public class SaveFileDialog
 		// Check result
 		bool result = (sfd.ShowDialog () == System.Windows.Forms.DialogResult.OK);
 		string url = sfd.FileName;
+#endif
 
 		// Check if we we're fullscreen and reset it
 		if (fullscreen) 

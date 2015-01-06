@@ -166,11 +166,14 @@ public class ReportWindow : ReportBaseWindow
 		
 		GUILayout.BeginHorizontal ();
 		{
-			GUILayout.Label ("", headerLight, GUILayout.Width (width - 2 - (80 * 2)), defaultOption);
+			int saveWidth = (SaveFileDialog.SystemDialogAvailable ()) ? 80 : 135;
+			GUILayout.Label ("", headerLight, GUILayout.Width (width - 2 - (saveWidth + 80)), defaultOption);
 
 			// Save
 			GUILayout.Space (1);
-			if (GUILayout.Button ("Save", button, GUILayout.Width (80), defaultOption)) 
+			string saveName = (SaveFileDialog.SystemDialogAvailable ()) ? "Save" : "Save to Desktop";
+
+			if (GUILayout.Button (saveName, button, GUILayout.Width (saveWidth), defaultOption)) 
 			{
 				DoSave ();
 			}
@@ -192,7 +195,10 @@ public class ReportWindow : ReportBaseWindow
 
 	private void DoSave ()
 	{
-		instance.StartCoroutine (SaveFileDialog.Show (string.Format ("report_{0}", this.report.id), "txt files (*.txt)|*.txt", delegate(bool ok, string url)
+		MonoBehaviour mb = instance;
+		if (mb == null) mb = GameControl.self;
+
+		mb.StartCoroutine (SaveFileDialog.Show (string.Format ("report_{0}", this.report.id), "txt files (*.txt)|*.txt", delegate(bool ok, string url)
 		{
 			if (!ok) return;
 

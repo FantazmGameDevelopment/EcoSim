@@ -168,7 +168,7 @@ namespace Ecosim.GameCtrl.GameButtons
 
 				// Setup cost and save UI
 				float width = this.width + 65;
-				int saveBtnWidth = 150;
+				int saveBtnWidth = (SaveFileDialog.SystemDialogAvailable ())?150:220;
 				int costTextWidth = 150;
 
 				GUILayout.BeginArea (new Rect (xOffset, yOffset + 33, width, Mathf.Min (600f, Screen.height - (yOffset + 33))));
@@ -270,8 +270,9 @@ namespace Ecosim.GameCtrl.GameButtons
 						GUILayout.Space (1);
 
 						// Check if we have enough budget
+						string saveName = (SaveFileDialog.SystemDialogAvailable ()) ? "Export and save..." : "Export and save to Desktop";
 						GUI.enabled = enoughBudget;
-						if (GUILayout.Button ("Export and save...", entry, GUILayout.Width (saveBtnWidth))) 
+						if (GUILayout.Button (saveName, entry, GUILayout.Width (saveBtnWidth))) 
 						{
 							totalExportCosts = totalCosts;
 							DoExport ();

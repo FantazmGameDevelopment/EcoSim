@@ -21,7 +21,7 @@ public class CheatsWindow : GameWindow
 	{
 		this.canCloseManually = true;
 
-		this.textArea = GameControl.self.skin.FindStyle ("TextArea B16-75");
+		this.textArea = GameControl.self.skin.FindStyle ("TextArea B16-100");
 		this.cheatInput = "Enter password here...";
 	}
 

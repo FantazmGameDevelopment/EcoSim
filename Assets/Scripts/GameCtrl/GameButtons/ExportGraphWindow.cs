@@ -155,17 +155,22 @@ namespace Ecosim.GameCtrl
 			// Graph Rect
 			Rect graphRect = new Rect (xOffset + (titleHeight + 1), yOffset, WindowWidth - (titleHeight + 1), titleHeight);
 
+			int saveWidth = (SaveFileDialog.SystemDialogAvailable ()) ? 120 : 135;
+
 			// Title
 			Rect titleRect = graphRect;
-			titleRect.width -= (120f + 1f) * 1f;
+			titleRect.width -= (saveWidth + 1f) * 1f;
 			GUI.Label (titleRect, "Graph", title);
 
 			// Save Button
 			bool doSave = false;
 			Rect saveRect = titleRect;
 			saveRect.x += saveRect.width + 1;
-			saveRect.width = 120f;
-			if (SimpleGUI.Button (saveRect, "Save...", entry, entrySelected)) 
+
+			string saveName = (SaveFileDialog.SystemDialogAvailable ()) ? "Save..." : "Save to Desktop";
+			saveRect.width = saveWidth;
+
+			if (SimpleGUI.Button (saveRect, saveName, entry, entrySelected)) 
 			{
 				if (saveGraph == false)
 				{
@@ -193,12 +198,14 @@ namespace Ecosim.GameCtrl
 					preSaveQuality = QualitySettings.GetQualityLevel ();
 					QualitySettings.SetQualityLevel (5, true);
 
-					instance.StartCoroutine (SaveFileDialog.Show ("ecosim graph", "png (*.png)|*.png", delegate(bool ok, string url) {
+					MonoBehaviour mb = instance;
+					if (mb == null) mb = GameControl.self;
+					mb.StartCoroutine (SaveFileDialog.Show ("ecosim graph", "png (*.png)|*.png", delegate(bool ok, string url) {
 						if (ok) {
 							// We mark "save" as true so the OnPostRender can handle the save
 							saveGraph = true;
 							savePath = url;
-							instance.StartCoroutine ( RenderAndSaveGraph () );
+							mb.StartCoroutine ( RenderAndSaveGraph () );
 						}
 					}));
 				}

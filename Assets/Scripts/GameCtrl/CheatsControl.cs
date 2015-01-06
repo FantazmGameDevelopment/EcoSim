@@ -17,9 +17,9 @@ public class CheatsControl : MonoBehaviour
 		if (e.type == EventType.KeyDown)
 		{
 			// Check cheats keyboard combination
-			if (e.control &&
+			if (e.alt &&
 			    e.shift &&
-			    e.keyCode == KeyCode.Home)
+			    e.keyCode == KeyCode.C)
 			{
 				// Check if we have a cheats action
 				bool enabled = false;

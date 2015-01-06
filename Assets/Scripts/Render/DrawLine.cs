@@ -60,11 +60,17 @@ public class Drawing
 			
 		// Set the rotation for the line.
 		//  The angle was calculated with pointA as the origin.
-		GUIUtility.RotateAroundPivot(angle, pointA);
+		GUIUtility.RotateAroundPivot (angle, pointA);
 
 		// Offset the current matrix so the line is correctly aligned
 		Matrix4x4 currentMatrix = GUI.matrix;
-		currentMatrix[0,3] += (pointB.x - pointA.x) * 0.5f;
+		float offset = (pointB.x - pointA.x);
+#if (!UNITY_STANDALONE_OSX) || UNITY_EDITOR
+		offset *= 0.5f;
+#elif UNITY_STANDALONE_OSX
+		offset *= 0f;
+#endif
+		currentMatrix [0, 3] += offset;
 		GUI.matrix = currentMatrix;
 
 		// Finally, draw the actual line.

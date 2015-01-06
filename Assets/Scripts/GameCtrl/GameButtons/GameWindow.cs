@@ -24,7 +24,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			if (black != null) return; // already did stuff below
 			black = GameControl.self.skin.FindStyle ("BGBlack");
 			white = GameControl.self.skin.FindStyle ("BGWhite");
-			title = GameControl.self.skin.FindStyle ("ArialB16-75");
+			title = GameControl.self.skin.FindStyle ("ArialB16-95");
 			titleNoText = GameControl.self.skin.FindStyle ("75");
 			header = GameControl.self.skin.FindStyle ("ArialB16-50");
 			entry = GameControl.self.skin.FindStyle ("Arial16-75");

@@ -84,13 +84,20 @@ public class GameMenu : MonoBehaviour
 	};
 	
 	volatile State state = State.Main;
-	
+
+	void RenderBanner (int index)
+	{
+		int hheight = sHeight / 2;
+		int hwidth = sWidth / 2;
+		GUI.Label (new Rect (xOffset + hwidth - (banner.width*0.5f), hheight + 33 * index - banner.height, banner.width, banner.height), banner, GUIStyle.none);
+	}
+
 	void MainCtrl (int mx, int my)
 	{
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - (banner.width*0.5f), hheight + 33 * index - banner.height, banner.width, banner.height), banner, GUIStyle.none);
+		RenderBanner (index);
 		if (scene != null) {
 			if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 				"Back to game", styleDarkNormal, styleDarkOver)) {
@@ -158,7 +165,7 @@ public class GameMenu : MonoBehaviour
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index - 154, 620, 153), banner, GUIStyle.none);
+		RenderBanner (index);
 		if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 			"Back", styleDarkNormal, styleDarkOver)) {
 			state = State.Main;
@@ -270,7 +277,7 @@ public class GameMenu : MonoBehaviour
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index - 154, 620, 153), banner, GUIStyle.none);
+		RenderBanner (index);
 		if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 			"Back", styleDarkNormal, styleDarkOver)) {
 			state = State.Main;
@@ -313,7 +320,7 @@ public class GameMenu : MonoBehaviour
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index - 154, 620, 153), banner, GUIStyle.none);
+		RenderBanner (index);
 		if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 			"Back", styleDarkNormal, styleDarkOver)) {
 			state = State.LoadNew2;
@@ -354,7 +361,7 @@ public class GameMenu : MonoBehaviour
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index - 154, 620, 153), banner, GUIStyle.none);
+		RenderBanner (index);
 		if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 			"Back", styleDarkNormal, styleDarkOver)) {
 			state = State.LoadNew;
@@ -390,7 +397,7 @@ public class GameMenu : MonoBehaviour
 		int hheight = sHeight / 2;
 		int hwidth = sWidth / 2;
 		int index = -3;
-		GUI.Label (new Rect (xOffset + hwidth - 310, hheight + 33 * index - 154, 620, 153), banner, GUIStyle.none);
+		RenderBanner (index);
 		if (SimpleGUI.Button (new Rect (xOffset + hwidth - 310, hheight + 33 * index++, 620, 32),
 			"Back", styleDarkNormal, styleDarkOver)) {
 			state = State.Main;

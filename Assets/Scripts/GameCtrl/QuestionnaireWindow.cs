@@ -422,7 +422,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 				
 				GUILayout.BeginHorizontal ();
 				{
-					GUILayout.Label ("", headerLight, GUILayout.Width (width - 162), defaultOption);
+					int saveWidth = (SaveFileDialog.SystemDialogAvailable ()) ? 80 : 135;
+
+					GUILayout.Label ("", headerLight, GUILayout.Width (width - (2 + 80 + saveWidth)), defaultOption);
 					GUILayout.Space (1);
 					RenderSaveButton (qs, passed);
 					GUILayout.Space (1);
@@ -475,7 +477,9 @@ public class QuestionnaireWindow : ReportBaseWindow
 	}
 	private void RenderSaveButton (Progression.QuestionnaireState qs, bool passed)
 	{
-		if (GUILayout.Button ("Save", button, GUILayout.Width (80), defaultOption)) 
+		string saveName = (SaveFileDialog.SystemDialogAvailable ()) ? "Save" : "Save to Desktop";
+		int saveWidth = (SaveFileDialog.SystemDialogAvailable ()) ? 80 : 135;
+		if (GUILayout.Button (saveName, button, GUILayout.Width (saveWidth), defaultOption)) 
 		{
 			GameControl.self.StartCoroutine (SaveFileDialog.Show ("questionnaire_" + this.questionnaire.id, "txt files (*.txt)|*.txt", delegate(bool ok, string url) 
 			{
