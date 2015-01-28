@@ -328,18 +328,19 @@ namespace Ecosim.SceneData.Action
 				else return (data.rnd.NextDouble () < 0.5f) ? 0 : 1;
 			});
 
-			// Place the direction with the same dir as the previous direction at the bottom,
-			// we want to check this one for last
+			// Place the inverted direction with the same dir as the previous direction at the bottom,
+			// we want to check this one for last. Because we preferably don't want to animal to walk backwards.
+			Vector2 prevDir = data.prevDir.dir * -1f;
 			foreach (Direction d in possibleDirs) 
 			{
-				if (d.dir == data.prevDir.dir) 
+				if (d.dir == prevDir) 
 				{
 					possibleDirs.Remove (d);
 					possibleDirs.Add (d);
 					break;
 				}
 			}
-			
+
 			// Check all directions, from the highest chance to the lowest
 			Direction newDir = null;
 			for (int i = 0; i < possibleDirs.Count; i++) 

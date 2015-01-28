@@ -333,7 +333,7 @@ public class CameraControl : MonoBehaviour
 		}
 		if (alt != altWasOn) {
 			altWasOn = alt;
-			compassT.gameObject.SetActive (alt);
+			//compassT.gameObject.SetActive (alt);
 		}
 		if (Input.GetKeyDown (KeyCode.Escape)) {
 			SwitchToFar ();

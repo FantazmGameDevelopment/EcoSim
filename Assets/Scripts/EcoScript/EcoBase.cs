@@ -413,13 +413,15 @@ namespace Ecosim.EcoScript
 			{
 				this.variable = variable;
 				this.obj = obj;
-				
+
 				System.Type type = obj.GetType ();
 				fieldInfo = type.GetField (field);
 				if (fieldInfo == null) {
 					PropertyInfo pi = type.GetProperty (field);
-					setMethodInfo = pi.GetSetMethod ();
-					getMethodInfo = pi.GetGetMethod ();
+					if (pi != null) {
+						setMethodInfo = pi.GetSetMethod ();
+						getMethodInfo = pi.GetGetMethod ();
+					}
 				}
 			}
 			

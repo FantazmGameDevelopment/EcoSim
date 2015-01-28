@@ -317,7 +317,7 @@ namespace Ecosim.SceneData
 				float calculatedValue = (float)calculation.offset;
 				foreach (Calculation.ParameterCalculation p in calculation.calculations) {
 					if (p.data != null) {
-					int dataVal = p.data.Get (x, y);
+						int dataVal = p.data.Get (x, y);
 						if (dataVal > 0) {
 							calculatedValue += (float)dataVal * p.multiplier;
 						}
