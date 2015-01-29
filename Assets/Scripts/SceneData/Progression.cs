@@ -360,6 +360,22 @@ namespace Ecosim.SceneData
 			}
 		}
 
+		public class PriceClass
+		{
+			public static string XML_ELEMENT = "priceclass";
+			
+			public string name;
+			public int cost;
+			public int iconId;
+			
+			public PriceClass ()
+			{
+				this.name = "Price class";
+				this.cost = 100;
+				this.iconId = 0;
+			}
+		}
+
 		/**
 		 * Stores a message/article/report. Messages can be derived from articles using id
 		 * or created on the fly using a text string. The text stored in the Message class
@@ -464,6 +480,7 @@ namespace Ecosim.SceneData
 		public bool showVariablesInGame;
 		public List<ActionTaken> actionsTaken;
 		public List<VariableYearBudget> variableYearBudgets;
+		public List<PriceClass> priceClasses;
 		Dictionary<string, DataInfo> dataDict;
 		List<ActionState> actionStates;
 
@@ -611,7 +628,8 @@ namespace Ecosim.SceneData
 			reports = new List<Message> ();
 			inventarisations = new List<InventarisationResult> ();
 			activeInventarisations = new List<Inventarisation> ();
-			researchPoints = new List<ResearchPoint>();
+			researchPoints = new List<ResearchPoint> ();
+			priceClasses = new List<PriceClass> ();
 		}
 		
 		public void CreateBasicData ()
@@ -1152,6 +1170,16 @@ namespace Ecosim.SceneData
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == "action")) {
 						LoadActionState (reader);
 					} 
+					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == PriceClass.XML_ELEMENT)) {
+						string name = reader.GetAttribute ("name");
+						int cost = int.Parse (reader.GetAttribute ("cost"));
+						int iconid = int.Parse (reader.GetAttribute ("iconid"));
+						this.priceClasses.Add (new PriceClass () {
+							cost = cost,
+							iconId = iconid,
+							name = name
+						});
+					} 
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == QuestionnaireState.XML_ELEMENT)) {
 						LoadQuestionnaireState (reader);
 					}
@@ -1482,6 +1510,15 @@ namespace Ecosim.SceneData
 						writer.WriteEndElement ();
 					}
 				}
+				writer.WriteEndElement ();
+			}
+
+			// Write price classes
+			foreach (PriceClass pc in this.priceClasses) {
+				writer.WriteStartElement (PriceClass.XML_ELEMENT);
+				writer.WriteAttributeString ("name", pc.name);
+				writer.WriteAttributeString ("cost", pc.cost.ToString ());
+				writer.WriteAttributeString ("iconid", pc.iconId.ToString ());
 				writer.WriteEndElement ();
 			}
 			

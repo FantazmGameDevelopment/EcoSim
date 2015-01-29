@@ -21,8 +21,13 @@ namespace Ecosim.SceneEditor.Helpers
 		private Areas currentArea;
 
 		private int currentTargetAreaIndex = -1;
+		private int currentPriceClassIndex = -1;
+
 		private bool targetAreasOpened = false;
+		private bool purchaseAreasOpened = false;
+
 		private Vector2 targetAreasScrollPos;
+		private Vector2 priceClassesScrollPos;
 
 		public HandleAreas (EditorCtrl ctrl, MapsPanel parent, Scene scene) : base(ctrl, parent, scene)
 		{
@@ -35,6 +40,8 @@ namespace Ecosim.SceneEditor.Helpers
 
 			if (scene.progression.targetAreas > 0)
 				currentTargetAreaIndex = 1;
+			if (this.scene.progression.priceClasses.Count > 0)
+				this.currentPriceClassIndex = 0;
 			UpdateCurrentArea ();
 		}
 		
@@ -100,7 +107,7 @@ namespace Ecosim.SceneEditor.Helpers
 				break;
 			case Areas.Purchasable :
 				// TODO: Areas.Purchasable
-				maxParamValue = 10;
+				maxParamValue = scene.progression.priceClasses.Count;
 				break;
 			}
 
@@ -123,10 +130,90 @@ namespace Ecosim.SceneEditor.Helpers
 
 		private bool HandlePurchasable ()
 		{
-			// TODO: The user should be able to make price classes or use the value (0...255) * cost multiplier
-			GUILayout.Label ("Under construction...");
+			// TODO: The user should be able to make price classes (or use the value (0...255) * cost multiplier) <- for later
 
-			return false;
+			GUILayout.BeginVertical (ctrl.skin.box);
+			{
+				EcoGUI.skipHorizontal = true;
+				GUILayout.BeginHorizontal ();
+				{
+					EcoGUI.Foldout ("Prices (" + scene.progression.priceClasses.Count + ")", ref purchaseAreasOpened);
+					GUILayout.FlexibleSpace ();
+
+					GUILayout.Space (10);
+					if (GUILayout.Button ("+", GUILayout.Width (20)))
+					{
+						this.scene.progression.priceClasses.Add (new Progression.PriceClass ());
+						this.currentPriceClassIndex = scene.progression.priceClasses.Count - 1;
+						this.UpdateCurrentArea ();
+					}
+				}
+				GUILayout.EndHorizontal ();
+				EcoGUI.skipHorizontal = false;
+
+				GUILayout.Space (5);
+				if (this.purchaseAreasOpened)
+				{
+					this.priceClassesScrollPos = GUILayout.BeginScrollView (this.priceClassesScrollPos);
+					{
+						for (int i = 0; i < this.scene.progression.priceClasses.Count; i++) 
+						{
+							GUILayout.BeginVertical (ctrl.skin.box);
+							{
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Space (2);
+									GUILayout.Label ("Price class value " + (i+1).ToString());
+									GUILayout.FlexibleSpace ();
+
+									if (i == this.scene.progression.priceClasses.Count - 1) {
+										if (GUILayout.Button ("-", GUILayout.Width (20))) {
+											this.scene.progression.priceClasses.RemoveAt (i);
+
+											// Remove values from the map
+											Data map = this.GetAreaData (Areas.Purchasable);
+											foreach (ValueCoordinate vc in map.EnumerateNotZero ()) {
+												if (vc.v == (i+1)) map.Set (vc, 0);
+											}
+											this.UpdateCurrentArea ();
+											break;
+										}
+									}
+								}
+								GUILayout.EndHorizontal ();
+
+								Progression.PriceClass pc = this.scene.progression.priceClasses[i];
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Space (2);
+									GUILayout.Label ("Name", GUILayout.Width (80));
+									pc.name = GUILayout.TextField (pc.name);
+								}
+								GUILayout.EndHorizontal ();
+								EcoGUI.IntField ("Cost per tile", ref pc.cost, 80);
+
+								GUILayout.BeginHorizontal ();
+								{
+									GUILayout.Space (2);
+									GUILayout.Label ("Icon", GUILayout.Width (80));
+									if (GUILayout.Button (this.scene.assets.icons [pc.iconId], tabNormal)) {
+										this.ctrl.StartIconSelection (pc.iconId, newIndex => {
+											pc.iconId = newIndex;
+										});
+									}
+									GUILayout.FlexibleSpace ();
+								}
+								GUILayout.EndHorizontal ();
+							}
+							GUILayout.EndVertical ();
+						}
+					}
+					GUILayout.EndScrollView ();
+				}
+			}
+			GUILayout.EndVertical ();
+
+			return this.scene.progression.priceClasses.Count > 0;
 		}
 
 		private bool HandleTarget ()
