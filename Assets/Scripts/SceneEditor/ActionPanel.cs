@@ -146,6 +146,11 @@ namespace Ecosim.SceneEditor
 			}
 		}
 
+		void HandlePurchaseLandAction (PurchaseLandAction action)
+		{
+
+		}
+
 		void HandleResearchPointAction (ResearchPointAction action)
 		{
 			// TODO: Create an editor where the module builder can create their own string without using the script
@@ -519,6 +524,8 @@ namespace Ecosim.SceneEditor
 						HandleActionObjectAction ((ActionObjectAction)action);
 					} else if (action is CheatsAction) {
 						HandleCheatsAction ((CheatsAction)action);
+					} else if (action is PurchaseLandAction) {
+						HandlePurchaseLandAction ((PurchaseLandAction)action);
 					}
 					GUILayout.BeginHorizontal ();
 					GUILayout.Label ("Script", GUILayout.Width (80));

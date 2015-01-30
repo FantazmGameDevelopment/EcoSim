@@ -22,6 +22,7 @@ namespace Ecosim.SceneData
 			typeof(MarkerAction),
 			typeof(DialogAction),
 			typeof(ScriptAction),
+			typeof(PurchaseLandAction),
 			typeof(CheatsAction),
 			typeof(WaterAction),
 			typeof(ConversionAction),

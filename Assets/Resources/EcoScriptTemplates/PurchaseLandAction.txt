@@ -1,0 +1,20 @@
+void SaveProgress() {
+}
+
+void LoadProgress(bool initScene) {
+}
+
+void PrepareSuccession() {
+}
+
+void DoSuccession() {
+}
+
+void FinalizeSuccession() {
+}
+
+void MeasureTaken (string name, string group, int count) {
+}
+
+void ResearchConducted (string name, string group, int count) {
+}
