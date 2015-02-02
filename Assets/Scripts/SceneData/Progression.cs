@@ -366,13 +366,15 @@ namespace Ecosim.SceneData
 			
 			public string name;
 			public int cost;
-			public int iconId;
+			public int normalIconId;
+			public int selectedIconId;
 			
 			public PriceClass ()
 			{
 				this.name = "Price class";
 				this.cost = 100;
-				this.iconId = 0;
+				this.normalIconId = 0;
+				this.selectedIconId = 0;
 			}
 		}
 
@@ -1173,10 +1175,14 @@ namespace Ecosim.SceneData
 					else if ((nType == XmlNodeType.Element) && (reader.Name.ToLower () == PriceClass.XML_ELEMENT)) {
 						string name = reader.GetAttribute ("name");
 						int cost = int.Parse (reader.GetAttribute ("cost"));
-						int iconid = int.Parse (reader.GetAttribute ("iconid"));
+						int niconid = (!string.IsNullOrEmpty (reader.GetAttribute ("niconid"))) ? 
+							int.Parse (reader.GetAttribute ("niconid")) : 0;
+						int siconid = (!string.IsNullOrEmpty (reader.GetAttribute ("siconid"))) ? 
+							int.Parse (reader.GetAttribute ("siconid")) : 0;
 						this.priceClasses.Add (new PriceClass () {
 							cost = cost,
-							iconId = iconid,
+							normalIconId = niconid,
+							selectedIconId = siconid,
 							name = name
 						});
 					} 
@@ -1518,7 +1524,8 @@ namespace Ecosim.SceneData
 				writer.WriteStartElement (PriceClass.XML_ELEMENT);
 				writer.WriteAttributeString ("name", pc.name);
 				writer.WriteAttributeString ("cost", pc.cost.ToString ());
-				writer.WriteAttributeString ("iconid", pc.iconId.ToString ());
+				writer.WriteAttributeString ("niconid", pc.normalIconId.ToString ());
+				writer.WriteAttributeString ("siconid", pc.selectedIconId.ToString ());
 				writer.WriteEndElement ();
 			}
 			

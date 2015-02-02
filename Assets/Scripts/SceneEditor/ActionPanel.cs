@@ -148,7 +148,41 @@ namespace Ecosim.SceneEditor
 
 		void HandlePurchaseLandAction (PurchaseLandAction action)
 		{
+			GUILayout.BeginHorizontal ();
+			{
+				GUILayout.Label ("Area name", GUILayout.Width (80));
+				action.areaName = GUILayout.TextField (action.areaName, GUILayout.Width (140));
+				GUILayout.FlexibleSpace ();
+			}
+			GUILayout.EndHorizontal ();
 
+			GUILayout.BeginHorizontal ();
+			{
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Label ("Invalid indicator", GUILayout.Width (80));
+					if (GUILayout.Button (scene.assets.icons [action.invalidTileIconId], tabNormal)) {
+						ctrl.StartIconSelection (action.invalidTileIconId, newIndex => {
+							action.invalidTileIconId = newIndex;
+						});
+					}
+					//GUILayout.FlexibleSpace ();
+				}
+				GUILayout.EndHorizontal ();
+				GUILayout.Space (10);
+				GUILayout.BeginHorizontal ();
+				{
+					GUILayout.Label ("Undo indicator", GUILayout.Width (80));
+					if (GUILayout.Button (scene.assets.icons [action.undoTileIconId], tabNormal)) {
+						ctrl.StartIconSelection (action.undoTileIconId, newIndex => {
+							action.undoTileIconId = newIndex;
+						});
+					}
+					GUILayout.FlexibleSpace ();
+				}
+				GUILayout.EndHorizontal ();
+			}
+			GUILayout.EndHorizontal ();
 		}
 
 		void HandleResearchPointAction (ResearchPointAction action)

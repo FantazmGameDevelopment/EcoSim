@@ -10,7 +10,48 @@ void PrepareSuccession() {
 void DoSuccession() {
 }
 
-void FinalizeSuccession() {
+void FinalizeSuccession() 
+{
+	// Loop through all UIs
+	foreach (UserInteraction ui in action.uiList) {
+		// Substract the cost for this item for this year...
+		budget -= ui.estimatedTotalCostForYear;
+		// Set cost to 0 (don't do it for ongoing measures)
+		ui.estimatedTotalCostForYear = 0;
+	}
+	
+	// Delete area data
+	if (progression.HasData (AREA)) {
+		// Convert selection to managed/succession
+		Data selection = progression.GetData (AREA);
+		Data managedArea = progression.managedArea;
+		Data successionArea = progression.successionArea;
+		
+		// It's selected if the value is larger than the
+		// price classes count
+		int priceClassesCount = progression.priceClasses.Count;
+		foreach (ValueCoordinate vc in selection.EnumerateNotZero ()) {
+			if (vc.v - priceClassesCount >= 1) {
+				
+				// Convert to managed area, 
+				// remove line if unwanted
+				managedArea.Set (vc, 1);
+				
+				// Convert to succession area,
+				// remove this line if not wanted
+				successionArea.Set (vc, 1);
+			} 
+		}
+	
+		// As we don't do ongoing measures here, just delete it
+		selection.Clear ();
+	}
+}
+
+bool CanSelectTile (int x, int y, UserInteraction ui) {
+	// The editor already makes sure that you can't
+	// purchase any land that is already managed
+	return true;
 }
 
 void MeasureTaken (string name, string group, int count) {

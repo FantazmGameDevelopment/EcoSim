@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Collections.Generic;
 using System.Xml;
@@ -14,12 +15,20 @@ namespace Ecosim.SceneData.Action
 	{
 		public const string XML_ELEMENT = "purchaseland";
 
+		public EditData.NotifyTileChanged OnTileChanged;
+
+		public string areaName;
+		public int invalidTileIconId;
+		public int undoTileIconId;
+
 		private EditData edit;
 		private Data selectedArea;
 		private GridTextureSettings areaGrid = null;
 		private Texture2D areaTex = null;
 		private Material areaMat = null;
 		private Material selectedAreaMat = null;
+
+		private MethodInfo canSelectTileMI = null;
 
 		public PurchaseLandAction (Scene scene, int id) : base(scene, id)
 		{
@@ -28,9 +37,49 @@ namespace Ecosim.SceneData.Action
 		public PurchaseLandAction (Scene scene) : base(scene, scene.actions.lastId)
 		{
 			UserInteraction ui = new UserInteraction (this);
-			uiList.Add (ui);
+			this.areaName = "area" + this.id.ToString ();
+			this.uiList.Add (ui);
+		}
+
+		~PurchaseLandAction ()
+		{
+			if (this.areaMat != null) {
+				UnityEngine.Object.Destroy (this.areaMat);
+			}
+			if (this.selectedAreaMat != null) {
+				UnityEngine.Object.Destroy (this.selectedAreaMat);
+			}
+			if (this.areaTex != null) {
+				UnityEngine.Object.Destroy (this.areaTex);
+			}			
+		}
+
+		/**
+		 * Overriden CompileScript to add constants
+		 */
+		public override bool CompileScript ()
+		{
+			Dictionary <string, string> consts = new Dictionary<string, string> ();
+			consts.Add ("string AREA", "\"" + areaName + "\"");
+			return CompileScript (consts);
+		}
+
+		protected override void UnlinkEcoBase ()
+		{
+			base.UnlinkEcoBase ();
+			canSelectTileMI = null;
 		}
 		
+		protected override void LinkEcoBase ()
+		{
+			base.LinkEcoBase ();
+			if (ecoBase != null) {
+				canSelectTileMI = ecoBase.GetType ().GetMethod ("CanSelectTile",
+	                BindingFlags.NonPublic | BindingFlags.Instance, null,
+	                new Type[] { typeof(int), typeof(int), typeof(UserInteraction) }, null);
+			}
+		}
+
 		public override string GetDescription ()
 		{
 			return "Handle Purchase Land";
@@ -44,6 +93,14 @@ namespace Ecosim.SceneData.Action
 		public override int GetMaxUICount ()
 		{
 			return 1;
+		}
+
+		public bool CanSelectTile (int x, int y, UserInteraction ui)
+		{
+			if (canSelectTileMI != null) {
+				return (bool)canSelectTileMI.Invoke (ecoBase, new object[] { x, y, ui });
+			}
+			return true;
 		}
 
 		public override void DoSuccession ()
@@ -60,8 +117,12 @@ namespace Ecosim.SceneData.Action
 		public void StartSelecting (UserInteraction ui)
 		{
 			// New selected area
-			this.selectedArea = new SparseBitMap8 (this.scene);
-			this.scene.progression.AddData ("purchaseland" + UnityEngine.Time.realtimeSinceStartup, this.selectedArea);
+			if (this.selectedArea == null && this.scene.progression.HasData (this.areaName))
+				this.selectedArea = this.scene.progression.GetData (this.areaName);
+			else if (this.selectedArea == null) {
+				this.selectedArea = new SparseBitMap8 (this.scene);
+				this.scene.progression.AddData (this.areaName, this.selectedArea);
+			}
 
 			// Get the selectable area
 			Data selectableArea = new BitMap16 (this.scene);
@@ -71,70 +132,46 @@ namespace Ecosim.SceneData.Action
 			foreach (ValueCoordinate vc in selectableArea.EnumerateNotZero ()) {
 				if (this.scene.progression.managedArea.Get (vc) > 0) {
 					selectableArea.Set (vc, 0);
+					continue;
 				}
+				// Update selectable area
+				if (this.selectedArea.Get (vc) == 0)
+					this.selectedArea.Set (vc, vc.v);
 			}
+
+			// Get price classes count for choosing correct icons
+			int priceClasses = this.scene.progression.priceClasses.Count;
 
 			// Create edit data
-			this.edit = EditData.CreateEditData ("action", this.selectedArea, selectedArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
+			this.edit = EditData.CreateEditData ("action", this.selectedArea, selectableArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) 
+			{
+				// Show undo icon
 				if (shift) return 0;
-				return ui.index + 1;
-			}, this.areaGrid);
-			this.edit.SetFinalBrushFunction (delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				if (shift) return 0;
-				return 1; //CanSelectTile (x, y, ui) ? (ui.index + 1) : -1;
+				// Show selected icon
+				return this.CanSelectTile (x,y,ui) ? selectableArea.Get (x,y) + priceClasses : this.invalidTileIconId;
+			}, 
+			this.areaGrid);
+
+			// Final brush
+			this.edit.SetFinalBrushFunction (delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) 
+			{
+				// Show default icon
+				if (shift) return selectableArea.Get (x,y);
+				// Show selected icon
+				return this.CanSelectTile (x,y,ui) ? selectableArea.Get (x,y) + priceClasses : -1;
 			});
+
+			// Set area mode selection
 			this.edit.SetModeAreaSelect ();
 
-			// TODO
-			/*edit.AddTileChangedHandler (delegate (int x, int y, int oldV, int newV) {
-				if ((oldV > 0) && (oldV <= uiList.Count)) {
-					uiList [oldV - 1].estimatedTotalCostForYear -= uiList [oldV - 1].cost;
-				}
-				if ((newV > 0) && (newV <= uiList.Count)) {
-					uiList [newV - 1].estimatedTotalCostForYear += uiList [newV - 1].cost;
+			// Set tile changed handler
+			this.edit.AddTileChangedHandler (delegate(int x, int y, int oldV, int newV) 
+			{
+				// Update
+				if (this.OnTileChanged != null) {
+					this.OnTileChanged (x,y,oldV,newV);
 				}
 			});
-			 */ 
-
-			// Setup unique area name
-			/*invAreaName = "_" + this.areaName + "_" + (scene.progression.activeInventarisations.Count).ToString();
-			selectedArea = new SparseBitMap8 (scene);
-			scene.progression.AddData (invAreaName, selectedArea);
-			
-			// Get the "selectable area"
-			Data selectableArea = scene.progression.managedArea;
-			if (ecoBase != null) {
-				MethodInfo getSelectableAreaMI = ecoBase.GetType ().GetMethod ("GetSelectableArea",
-				                                                               BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof (UserInteraction) }, null);
-				if (getSelectableAreaMI != null) {
-					try {
-						Data newSelectableArea = (Data)getSelectableAreaMI.Invoke (ecoBase, new object[] { ui });
-						if (newSelectableArea != null) {
-							selectableArea = newSelectableArea;
-						}
-					} catch (System.Exception ex) { }
-				}
-			}
-			
-			edit = EditData.CreateEditData ("action", selectedArea, selectableArea, delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				if (shift)
-					return 0;
-				return CanSelectTile (x, y, ui) ? (ui.index + 1) : invalidAreaIndex;
-			}, areaGrid);			
-			edit.SetFinalBrushFunction (delegate(int x, int y, int currentVal, float strength, bool shift, bool ctrl) {
-				if (shift)
-					return 0;
-				return CanSelectTile (x, y, ui) ? (ui.index + 1) : -1;
-			});
-			edit.SetModeAreaSelect ();
-			edit.AddTileChangedHandler (delegate (int x, int y, int oldV, int newV) {
-				if ((oldV > 0) && (oldV <= uiList.Count)) {
-					uiList [oldV - 1].estimatedTotalCostForYear -= uiList [oldV - 1].cost;
-				}
-				if ((newV > 0) && (newV <= uiList.Count)) {
-					uiList [newV - 1].estimatedTotalCostForYear += uiList [newV - 1].cost;
-				}
-			});*/
 		}
 		
 		/**
@@ -144,42 +181,54 @@ namespace Ecosim.SceneData.Action
 		 */
 		public void FinishSelecting (UserInteraction ui, bool isCanceled)
 		{
-			/*if (!isCanceled) {
+			// Check if not cancelled
+			if (!isCanceled) {
+
 				// make selection permanent
-				edit.CopyData (selectedArea);
+				this.edit.CopyData (this.selectedArea);
 				
-				// Save the selected area in progression
-				//scene.progression.AddData (invAreaName, selectedArea);
-				
-				// Remember the last taken researche values
+				// Remember the last taken measure values
+				// Convert selected area to managed area
 				int selectedTilesCount = 0;
-				foreach (ValueCoordinate vc in selectedArea.EnumerateNotZero()) {
+				foreach (ValueCoordinate vc in this.selectedArea.EnumerateNotZero()) {
 					selectedTilesCount++;
 				}
-				
+
 				// Save predefined variables
-				scene.progression.variables [Progression.PredefinedVariables.lastResearch.ToString()] = this.description;
-				scene.progression.variables [Progression.PredefinedVariables.lastResearchGroup.ToString()] = "Inventarisation";
-				scene.progression.variables [Progression.PredefinedVariables.lastResearchCount.ToString()] = selectedTilesCount;
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasure.ToString()] = this.GetDescription ();
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureGroup.ToString()] = "Area";
+				scene.progression.variables [Progression.PredefinedVariables.lastMeasureCount.ToString()] = selectedTilesCount;
 			}
-			
-			edit.Delete ();
-			edit = null;
-			//RecalculateEstimates (false);
-			
-			// Fire the research conducted methods
+
+			// Delete
+			this.edit.Delete ();
+			this.edit = null;
+
+			// Fire the measure taken methods
 			if (!isCanceled) {
-				scene.actions.ResearchConducted ();
-			}*/
+				scene.actions.MeasureTaken ();
+			}
 		}
 
 		public override void UpdateReferences ()
 		{
+			// Destroy references first
+			if (this.areaMat != null) {
+				UnityEngine.Object.DestroyImmediate (this.areaMat);
+			}
+			if (this.selectedAreaMat != null) {
+				UnityEngine.Object.DestroyImmediate (this.selectedAreaMat);
+			}
+			if (this.areaTex != null) {
+				UnityEngine.Object.DestroyImmediate (this.areaTex);
+			}
+
 			// Area grid
-			int gridSize = this.scene.progression.priceClasses.Count;
+			int gridSize = this.scene.progression.priceClasses.Count + 2;
 			this.areaTex = new Texture2D (gridSize * 32, gridSize * 32, TextureFormat.RGBA32, false, true);
 			this.areaTex.filterMode = FilterMode.Point;
 			this.areaTex.wrapMode = TextureWrapMode.Clamp;
+			this.areaTex.alphaIsTransparency = true;
 			this.areaGrid = new GridTextureSettings (true, 0, gridSize, areaMat, true, selectedAreaMat);
 
 			this.areaMat = new Material (EcoTerrainElements.GetMaterial ("MapGrid100"));
@@ -187,15 +236,18 @@ namespace Ecosim.SceneData.Action
 
 			// Icons
 			List<Texture2D> icons = new List<Texture2D> ();
-			//icons.Add (scene.assets.GetIcon (gridIconId));
+			icons.Add (this.scene.assets.GetIcon (this.undoTileIconId));
 			foreach (Progression.PriceClass pc in this.scene.progression.priceClasses) {
-				icons.Add (this.scene.assets.GetIcon (pc.iconId));
+				icons.Add (this.scene.assets.GetIcon (pc.normalIconId));
 			}
+			foreach (Progression.PriceClass pc in this.scene.progression.priceClasses) {
+				icons.Add (this.scene.assets.GetIcon (pc.selectedIconId));
+			}
+			icons.Add (this.scene.assets.GetIcon (this.invalidTileIconId));
 
 			this.scene.assets.CopyTexures (icons.ToArray (), areaTex, null);
 			icons.Clear ();
 
-			// TODO this.scene.assets.CopyTexure (scene.assets.GetIcon (invalidTileIconId), areaTex, null, 32 * (gridSize - 1), 32 * (gridSize - 1));
 			this.areaMat.mainTexture = this.areaTex;
 			this.selectedAreaMat.mainTexture = this.areaTex;
 
@@ -206,6 +258,13 @@ namespace Ecosim.SceneData.Action
 		{
 			int id = int.Parse (reader.GetAttribute ("id"));
 			PurchaseLandAction action = new PurchaseLandAction (scene, id);
+			action.areaName = reader.GetAttribute ("areaname");
+			if (string.IsNullOrEmpty (action.areaName))
+				action.areaName = "action" + id;
+			action.undoTileIconId = (!string.IsNullOrEmpty (reader.GetAttribute ("undotileid"))) ?
+				int.Parse (reader.GetAttribute ("undotileid")) : 0;
+			action.invalidTileIconId = (!string.IsNullOrEmpty (reader.GetAttribute ("invalidtileid"))) ?
+				int.Parse (reader.GetAttribute ("invalidtileid")) : 0;
 			if (!reader.IsEmptyElement) {
 				while (reader.Read()) {
 					XmlNodeType nType = reader.NodeType;
@@ -222,8 +281,11 @@ namespace Ecosim.SceneData.Action
 		public override void Save (XmlTextWriter writer)
 		{
 			writer.WriteStartElement (XML_ELEMENT);
-			writer.WriteAttributeString ("id", id.ToString ());
-			foreach (UserInteraction ui in uiList) {
+			writer.WriteAttributeString ("id", this.id.ToString ());
+			writer.WriteAttributeString ("areaname", this.areaName.ToString ());
+			writer.WriteAttributeString ("undotileid", this.undoTileIconId.ToString ());
+			writer.WriteAttributeString ("invalidtileid", this.invalidTileIconId.ToString ());
+			foreach (UserInteraction ui in this.uiList) {
 				ui.Save (writer);
 			}
 			writer.WriteEndElement ();

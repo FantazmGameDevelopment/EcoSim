@@ -194,14 +194,31 @@ namespace Ecosim.SceneEditor.Helpers
 
 								GUILayout.BeginHorizontal ();
 								{
-									GUILayout.Space (2);
-									GUILayout.Label ("Icon", GUILayout.Width (80));
-									if (GUILayout.Button (this.scene.assets.icons [pc.iconId], tabNormal)) {
-										this.ctrl.StartIconSelection (pc.iconId, newIndex => {
-											pc.iconId = newIndex;
-										});
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Space (2);
+										GUILayout.Label ("Normal Icon", GUILayout.Width (80));
+										if (GUILayout.Button (this.scene.assets.icons [pc.normalIconId], tabNormal)) {
+											this.ctrl.StartIconSelection (pc.normalIconId, newIndex => {
+												pc.normalIconId = newIndex;
+											});
+										}
+										//GUILayout.FlexibleSpace ();
 									}
-									GUILayout.FlexibleSpace ();
+									GUILayout.EndHorizontal ();
+									GUILayout.Space (10);
+									GUILayout.BeginHorizontal ();
+									{
+										GUILayout.Space (2);
+										GUILayout.Label ("Selected Icon", GUILayout.Width (80));
+										if (GUILayout.Button (this.scene.assets.icons [pc.selectedIconId], tabNormal)) {
+											this.ctrl.StartIconSelection (pc.selectedIconId, newIndex => {
+												pc.selectedIconId = newIndex;
+											});
+										}
+										GUILayout.FlexibleSpace ();
+									}
+									GUILayout.EndHorizontal ();
 								}
 								GUILayout.EndHorizontal ();
 							}

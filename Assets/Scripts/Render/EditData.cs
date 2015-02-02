@@ -22,6 +22,7 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 
 	private event RightMouseButtonHndlr rmbHndlr;
 	public event NotifyTileChanged tileChangeHndlr;
+	public event System.Action tilesChangeHndlr;
 
 	EditDataCell[,] cells;
 	Scene scene;
@@ -78,10 +79,25 @@ public class EditData : MonoBehaviour, NotifyTerrainChange
 	{
 		tileChangeHndlr += hndlr;
 	}
+
+	/**
+	 * Notifies when tiles have changed.
+	 */
+	public void AddTilesChangedHandler (System.Action hndlr)
+	{
+		tilesChangeHndlr += hndlr;
+	}
 	
 	public bool HasTileChangedEventHandler ()
 	{
 		return (tileChangeHndlr != null);
+	}
+
+	public void FireTilesChangedEvent ()
+	{
+		if (tilesChangeHndlr != null) {
+			tilesChangeHndlr ();
+		}
 	}
 	
 	public void FireTileChangedEvent (int x, int y, int oldV, int newV)
