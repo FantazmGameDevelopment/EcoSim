@@ -1,9 +1,7 @@
 void SaveProgress() {
-   LogDebug ("Bye, mom! class " + this.GetType ().ToString ());
 }
 
 void LoadProgress(bool initScene) {
-   LogDebug ("Hi, mom!" + initScene + " class " + this.GetType ().ToString ());
 }
 
 void PrepareSuccession() {

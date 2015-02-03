@@ -228,7 +228,6 @@ namespace Ecosim.SceneData.Action
 			this.areaTex = new Texture2D (gridSize * 32, gridSize * 32, TextureFormat.RGBA32, false, true);
 			this.areaTex.filterMode = FilterMode.Point;
 			this.areaTex.wrapMode = TextureWrapMode.Clamp;
-			this.areaTex.alphaIsTransparency = true;
 			this.areaGrid = new GridTextureSettings (true, 0, gridSize, areaMat, true, selectedAreaMat);
 
 			this.areaMat = new Material (EcoTerrainElements.GetMaterial ("MapGrid100"));
