@@ -44,6 +44,8 @@ public class AnimalMgr : MonoBehaviour, NotifyTerrainChange
 	private Scene scene;
 	public bool editMode = false;
 	public static AnimalMgr self;
+
+	[System.NonSerialized] public bool doRefresh = false;
 	
 	void Awake ()
 	{
@@ -54,6 +56,17 @@ public class AnimalMgr : MonoBehaviour, NotifyTerrainChange
 	{
 		TerrainMgr.AddListener (this);
 	}
+
+	void Update ()
+	{
+		if (this.doRefresh) {
+			this.doRefresh = false;
+
+			Debug.LogWarning ("Forcing Refresh");
+			this.ForceRefresh ();
+			Debug.Log ("Refresh finished");
+		}
+	}
 	
 	void OnDestroy ()
 	{
@@ -61,7 +74,8 @@ public class AnimalMgr : MonoBehaviour, NotifyTerrainChange
 		TerrainMgr.RemoveListener (this);
 	}
 	
-	public void ForceRefresh() {
+	public void ForceRefresh() 
+	{
 		DeleteAnimals ();
 		TerrainMgr.RemoveListener (this);
 		SceneChanged (scene);

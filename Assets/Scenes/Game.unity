@@ -18561,6 +18561,8 @@ MonoBehaviour:
     prefab: {fileID: 100070, guid: ba6f39b0f6b9d46a180e364292357b06, type: 2}
   - name: Schaap
     prefab: {fileID: 100000, guid: 547ba1c44e05444e283292ca39def06d, type: 2}
+  - name: AfrikaanseKoe
+    prefab: {fileID: 163188, guid: 079d5bd5a00fd7d429a6a27e7223552b, type: 2}
   buildings:
   - name: apartement_mod1_1a
     category: 0

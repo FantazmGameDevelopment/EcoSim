@@ -8,6 +8,8 @@ public class Cow: Animal {
 	
 	public Animation anim;
 	public float walkSpeed = 1.0f;
+
+	public bool useAnimLengthForWait = false;
 	
 	const string A_EAT = "grazen";
 	const string A_CHEW = "herkauw";
@@ -35,9 +37,13 @@ public class Cow: Animal {
 				anim.Play(A_CHEW);
 				yield return new WaitForSeconds(1f);
 				AudioSource.PlayClipAtPoint(clips[Random.Range(0, clips.Length)], transform.position);
-				yield return new WaitForSeconds(5f);
+				if (this.useAnimLengthForWait) {
+					yield return new WaitForSeconds(anim[A_CHEW].length - 1f);
+				} else {
+					yield return new WaitForSeconds(5f);
+				}
 			}
-			else if (rnd < 0.6f) {
+			else if (walkSpeed <= 0 || rnd < 0.6f) {
 				anim.Play(A_EAT);
 				yield return new WaitForSeconds(anim[A_EAT].length);
 			}

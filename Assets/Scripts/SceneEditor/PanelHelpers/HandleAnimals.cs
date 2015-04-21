@@ -7,18 +7,13 @@ namespace Ecosim.SceneEditor.Helpers
 {
 	public class HandleAnimals : PanelHelper
 	{
-	
-//		readonly MapsPanel parent;
 		readonly EditorCtrl ctrl;
-//		readonly Scene scene;
 		string[] animalNames;
 		int index = 0;
 		
 		public HandleAnimals (EditorCtrl ctrl, MapsPanel parent, Scene scene)
 		{
 			this.ctrl = ctrl;
-//			this.parent = parent;
-//			this.scene = scene;
 			
 			List<string> animalNamesList = new List<string> ();
 			foreach (EcoTerrainElements.AnimalPrototype ap in EcoTerrainElements.self.animals) {

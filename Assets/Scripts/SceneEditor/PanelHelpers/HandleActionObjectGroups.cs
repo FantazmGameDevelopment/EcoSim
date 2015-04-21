@@ -274,8 +274,9 @@ namespace Ecosim.SceneEditor.Helpers
 												{
 													GUILayout.Space (2);
 													GUILayout.Label ((aObjIndex++).ToString(), GUILayout.Width (40));
-													if (aObj.building == null)
-														Debug.LogWarning (aObj.buildingId);
+													if (aObj.building == null) {
+														aObj.RetrieveBuilding (scene);
+													}
 													GUILayout.Label (string.Format ("'{0}' [{1}]", aObj.building.name, aObj.buildingId));
 													GUILayout.FlexibleSpace ();
 
