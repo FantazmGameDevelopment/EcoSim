@@ -182,6 +182,9 @@ public class EditBuildings : MonoBehaviour, NotifyTerrainChange
 	
 	protected virtual void ActivateDeactivateRendering (GameObject go, bool active)
 	{
+		if (go == null)
+			return;
+
 		foreach (Component c in go.GetComponentsInChildren<MeshRenderer>()) {
 			MeshRenderer mr = (MeshRenderer)c;
 			mr.enabled = active;

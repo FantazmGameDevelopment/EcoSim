@@ -37,7 +37,7 @@ namespace Ecosim.GameCtrl.GameButtons
 			SimpleGUI.Label (new Rect (xOffset + 65, yOffset, winWidth - 65, 32), ui.name, title);
 			SimpleGUI.Label (new Rect (xOffset, yOffset + 33, winWidth, 65), ui.description, formatted);
 			SimpleGUI.Label (new Rect (xOffset, yOffset + 99, 263, 32), "Selected objects", entry);
-			SimpleGUI.Label (new Rect (xOffset + 264, yOffset + 99, 88, 32), "0", entry);
+			SimpleGUI.Label (new Rect (xOffset + 264, yOffset + 99, 88, 32), (ui.cost != 0) ? (ui.estimatedTotalCostForYear / ui.cost).ToString () : "", entry);
 			SimpleGUI.Label (new Rect (xOffset + 353, yOffset + 99, 32, 32), "", entry);
 			SimpleGUI.Label (new Rect (xOffset, yOffset + 132, 263, 32), "Cost per object", entry);
 			SimpleGUI.Label (new Rect (xOffset + 264, yOffset + 132, 88, 32), costStr, entry);
