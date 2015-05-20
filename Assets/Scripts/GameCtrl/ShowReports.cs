@@ -66,7 +66,17 @@ public class ShowReports : MonoBehaviour
 	void OnGUI () 
 	{
 		// TODO: Exception time; we should only come AFTER showArticles.cs
-		if (ShowArticles.HasUnreadMessages) return;
+		if (ShowArticles.HasUnreadMessages) {
+			// Check if we were showing before we had unread articles
+			// This generates a loop where no articles and reports are shown
+			// and no 
+			if (isShowing) {
+				isShowing = false;
+				SetGameControlButtons (true);
+				GameControl.InterfaceChanged ();
+			}
+			return;
+		}
 
 		GameControl ctrl = GameControl.self;
 		Scene scene = ctrl.scene;
