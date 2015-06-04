@@ -20,6 +20,7 @@ namespace Ecosim.SceneData.Action
 		private long backupEstimate;
 
 		private List<ActionObject> selectedObjects = new List<ActionObject>();
+		public int selectedObjectsCount { get { return selectedObjects.Count; } }
 
 		private MethodInfo processInfluencesMI;
 		

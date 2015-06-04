@@ -214,7 +214,8 @@ namespace Ecosim.GameCtrl.GameButtons
 
 		void RenderVariable (Progression.VariableData vd)
 		{
-			if (!vd.enabled) return;
+			if (!vd.enabled || !scene.progression.variables.ContainsKey (vd.variable))
+				return;
 
 			// Check for list
 			object val = scene.progression.variables [vd.variable];

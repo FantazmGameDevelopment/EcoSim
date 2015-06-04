@@ -279,7 +279,6 @@ namespace Ecosim.SceneEditor.Helpers
 
 														// The building could not be found.. remove it from the list
 														if (aObj.building == null) {
-															Debug.LogError ("ERROR!");
 															List<ActionObject> aos = new List<ActionObject> (gs.group.actionObjects);
 															aos.Remove (aObj);
 															gs.group.actionObjects = aos.ToArray ();

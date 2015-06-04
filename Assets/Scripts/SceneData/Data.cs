@@ -297,8 +297,8 @@ namespace Ecosim.SceneData
 		 * the same as original data)
 		 */
 		public virtual Data CloneAndResize(Progression targetProgression, int offsetX, int offsetY) {
-			System.Reflection.ConstructorInfo cinfo = GetType().GetConstructor(new Type[] { typeof(int), typeof(int) });
-//			UnityEngine.Debug.LogWarning ("cinfo = " + cinfo + " my type = " + GetType());
+			System.Reflection.ConstructorInfo cinfo = GetType().GetConstructor(new Type[] { typeof(Scene) });
+			//UnityEngine.Debug.LogWarning ("cinfo = " + cinfo + " my type = " + GetType());
 			Data newData = (Data) cinfo.Invoke(new object[] { scene });
 			
 			int newWidth = targetProgression.scene.width;

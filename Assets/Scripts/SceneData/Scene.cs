@@ -547,16 +547,15 @@ namespace Ecosim.SceneData
 			newScene.exporter = ExportMgr.Load (newScenePath, newScene);
 			reports.Save (newScenePath);
 			newScene.reports = ReportsMgr.Load (newScenePath, newScene);
-			assets.Save (newScenePath);
 			articles.Save (newScenePath);
+			newScene.articles = Articles.Load (newScenePath, newScene);
+			assets.Save (newScenePath);
 			newScene.assets = ExtraAssets.Load (newScenePath, newScene);
-			
 			roads.SaveAndClip (newScenePath, offsetX, offsetY, newWidth, newHeight);
 			newScene.roads = Roads.Load (newScenePath, newScene);
-			
 			buildings.SaveAndClip (newScenePath, offsetX, offsetY, newWidth, newHeight);
 			newScene.buildings = Buildings.Load (newScenePath, newScene);
-			
+
 			newScene.Save (newSceneName);
 			return newScene;
 		}
