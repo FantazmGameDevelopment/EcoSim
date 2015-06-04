@@ -276,6 +276,15 @@ namespace Ecosim.SceneEditor.Helpers
 													GUILayout.Label ((aObjIndex++).ToString(), GUILayout.Width (40));
 													if (aObj.building == null) {
 														aObj.RetrieveBuilding (scene);
+
+														// The building could not be found.. remove it from the list
+														if (aObj.building == null) {
+															Debug.LogError ("ERROR!");
+															List<ActionObject> aos = new List<ActionObject> (gs.group.actionObjects);
+															aos.Remove (aObj);
+															gs.group.actionObjects = aos.ToArray ();
+															break;
+														}
 													}
 													GUILayout.Label (string.Format ("'{0}' [{1}]", aObj.building.name, aObj.buildingId));
 													GUILayout.FlexibleSpace ();
