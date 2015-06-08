@@ -148,10 +148,11 @@ public class ShowReports : MonoBehaviour
 				this.currentQuestionnaire = null;
 				this.questionnaireWindow.Dispose ();
 				this.questionnaireWindow = null;
-			});
+			},
+			ReportBaseWindow.defaultIcon);
 		}
 
-		GUI.depth = this.questionnaireWindow.depth + 1;
+		//GUI.depth = this.questionnaireWindow.depth + 1;
 		this.questionnaireWindow.Render ();
 	}
 
@@ -164,10 +165,11 @@ public class ShowReports : MonoBehaviour
 				this.currentReport = null;
 				this.reportWindow.Dispose ();
 				this.reportWindow = null;
-			});
+			},
+			ReportBaseWindow.defaultIcon);
 		}
 
-		GUI.depth = this.reportWindow.depth + 1;
+		//GUI.depth = this.reportWindow.depth + 1;
 		this.reportWindow.Render ();
 	}
 

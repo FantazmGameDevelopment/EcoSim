@@ -38,8 +38,18 @@ public class ReportBaseWindow : GameWindow
 		button = GameControl.self.skin.FindStyle ("Arial16-95"); // -> Make this one darker
 		//formatted = GameControl.self.skin.FindStyle ("Arial16-50-formatted");
 	}
-	
-	public ReportBaseWindow (System.Action onFinished) : base(-1, -1, 650, null)
+
+	public static Texture2D defaultIcon { 
+		get { 
+			/*foreach (GameButton gb in GameControl.self.buttons) {
+				if (gb.name == "Reports")
+					return gb.icon;
+			}*/
+			return null;
+		} 
+	}
+
+	public ReportBaseWindow (System.Action onFinished, Texture2D icon) : base(-1, -1, 650, icon)
 	{
 		this.onFinished = onFinished;
 		this.canCloseManually = false;
@@ -52,13 +62,18 @@ public class ReportBaseWindow : GameWindow
 		if (EditorCtrl.self.isOpen) {
 			editorWidth = 400;
 		}
-		width = 650;//Screen.width * 0.65;
-		height = Screen.height * 0.5f;
+		this.UpdateWidthAndHeight ();
 		left = this.xOffset;// ((Screen.width - width) * 0.5f) + editorWidth;
 		top = this.yOffset;//(Screen.height - height) * 0.5f;
 		defaultOption = GUILayout.MinWidth (0);//GUILayout.MinHeight (28f);//GUILayout.ExpandHeight (true);
 
 		base.Render ();
+	}
+
+	protected virtual void UpdateWidthAndHeight ()
+	{
+		width = 650;//Screen.width * 0.65;
+		height = Screen.height * 0.5f;
 	}
 
 	public virtual void Dispose ()

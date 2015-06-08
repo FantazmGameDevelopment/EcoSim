@@ -18,7 +18,7 @@ public class ReportWindow : ReportBaseWindow
 
 	private Vector2 scrollPos;
 
-	public ReportWindow (Report report, System.Action onFinished) : base (onFinished)
+	public ReportWindow (Report report, System.Action onFinished, Texture2D icon) : base (onFinished, icon)
 	{
 		this.scene = EditorCtrl.self.scene;
 		this.report = report;
@@ -63,16 +63,23 @@ public class ReportWindow : ReportBaseWindow
 				}
 			}
 		}
+
+		this.height = Screen.height * 0.85f;
+		this.yOffset = (int)((Screen.height - height) * 0.5f);
+	}
+
+	protected override void UpdateWidthAndHeight ()
+	{
+		base.UpdateWidthAndHeight ();
+
+		height = Screen.height * 0.85f;
 	}
 	
 	public override void Render ()
 	{
 		base.Render ();
 
-		height = Screen.height * 0.85f;
-		top = (Screen.height - height) * 0.5f;
-
-		Rect areaRect = new Rect (left, top, width + 20, height);
+		Rect areaRect = new Rect (left + 32, top, width - 32, height);
 		GUILayout.BeginArea (areaRect); 
 		//{
 		CameraControl.MouseOverGUI |= areaRect.Contains (Input.mousePosition);

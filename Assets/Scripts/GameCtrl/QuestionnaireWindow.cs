@@ -25,7 +25,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 	private bool messageIsDragging;
 	private Vector2 messageMouseDragPosition;
 
-	public QuestionnaireWindow (Questionnaire questionnaire, System.Action onFinished) : base (onFinished)
+	public QuestionnaireWindow (Questionnaire questionnaire, System.Action onFinished, Texture2D icon) : base (onFinished, icon)
 	{
 		this.questionnaire = questionnaire;
 
@@ -291,7 +291,7 @@ public class QuestionnaireWindow : ReportBaseWindow
 	private void RenderQuestionStart (Question question)
 	{
 		Questionnaire q = questionnaire;
-		Rect areaRect = new Rect (left, top, width + 20, height);
+		Rect areaRect = new Rect (left + 32, top, width, height);
 		GUILayout.BeginArea (areaRect);
 		CameraControl.MouseOverGUI |= areaRect.Contains (Input.mousePosition);
 		scrollPosition = GUILayout.BeginScrollView (scrollPosition);
