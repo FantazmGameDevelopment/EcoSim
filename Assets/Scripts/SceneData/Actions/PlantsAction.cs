@@ -271,7 +271,14 @@ namespace Ecosim.SceneData.Action
 			// Handle spawns
 			if (!skipNormalSpawnLogic)
 			{
-				ThreadPool.QueueUserWorkItem (HandleSpawnedSeeds);
+				#pragma warning disable 162
+				if (GameSettings.PLANTS_LOGIC_MULTITHREADED) {
+					ThreadPool.QueueUserWorkItem (HandleSpawnedSeeds);
+				}
+				else {
+					HandleSpawnedSeeds (null);
+				}
+				#pragma warning restore 162
 			}
 		}
 		
