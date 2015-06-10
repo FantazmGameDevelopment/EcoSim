@@ -75,7 +75,7 @@ namespace Ecosim.SceneData
 							saveGame.Load (reader);
 						}
 					}
-					saveGame.date = File.GetLastWriteTimeUtc (path);
+					saveGame.date = File.GetLastWriteTime (path);
 					return saveGame;
 				} finally {
 					reader.Close ();
