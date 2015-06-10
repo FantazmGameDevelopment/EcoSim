@@ -14,7 +14,7 @@ namespace Ecosim
 	
 	public static class GameSettings
 	{
-		public const string VERSION_STR = "0.1.55";
+		public const string VERSION_STR = "0.1.57";
 		public const bool MULTITHREAD_RENDERING = false; // in current unity version true gives corruption of data
 		public static bool SUCCESSION_IN_BG_THREAD = true;
 		public static bool VEGETATION_SUCCESSION_MULTITHREADED = false;
