@@ -65,7 +65,9 @@ public class Drawing
 		// Offset the current matrix so the line is correctly aligned
 		Matrix4x4 currentMatrix = GUI.matrix;
 		float offset = (pointB.x - pointA.x);
-#if (!UNITY_STANDALONE_OSX) || UNITY_EDITOR
+#if UNITY_STANDALONE_LINUX
+		offset *= 0f;
+#elif (!UNITY_STANDALONE_OSX) || UNITY_EDITOR
 		offset *= 0.5f;
 #elif UNITY_STANDALONE_OSX
 		offset *= 0f;

@@ -12,7 +12,7 @@ public class SaveFileDialog
 
 	public static bool SystemDialogAvailable ()
 	{
-#if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
 		return false;
 #else
 		return true;
@@ -36,14 +36,15 @@ public class SaveFileDialog
 
 
 
-#if UNITY_STANDALONE_OSX
+#if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
 		string url = string.Format ("{0}{1}{2}_{3}.{4}", 
 				                            System.Environment.GetFolderPath (System.Environment.SpecialFolder.Desktop),
 				                            System.IO.Path.DirectorySeparatorChar,
 				                            fileName,
 				                            System.DateTime.Now.ToString ("HHmmssms"),
 				                            filters.Substring (filters.LastIndexOf(".")+1));
-				bool result = true;
+		Debug.Log("Exporting data to: " + url);
+		bool result = true;
 #else
 		// Save to .txt
 		System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog ();

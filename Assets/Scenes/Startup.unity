@@ -73,6 +73,7 @@ NavMeshSettings:
     minRegionArea: 2
     widthInaccuracy: 16.666666
     heightInaccuracy: 10
+    tileSizeHint: 0
   m_NavMesh: {fileID: 0}
 --- !u!1 &63954442
 GameObject:
@@ -168,7 +169,7 @@ MonoBehaviour:
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Font: {fileID: 0}
+    m_Font: {fileID: 12800000, guid: e4fc6ab04888e014fa92b45b0b774072, type: 3}
     m_FontSize: 18
     m_FontStyle: 0
     m_Alignment: 0
@@ -280,6 +281,49 @@ Transform:
   - {fileID: 1548761373}
   m_Father: {fileID: 0}
   m_RootOrder: 2
+--- !u!1 &1335455013
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1335455015}
+  - 114: {fileID: 1335455014}
+  m_Layer: 0
+  m_Name: LinuxFontFixer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1335455014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1335455013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17fe04cc3c605614fae40533cd94af48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultFont: {fileID: 12800000, guid: e4fc6ab04888e014fa92b45b0b774072, type: 3}
+  skins:
+  - {fileID: 11400000, guid: 9e4ed0e301ffc4f0691c3313607e96ce, type: 2}
+  - {fileID: 11400000, guid: 87c31e95966a041d8b4bbf44c77ae8ee, type: 2}
+--- !u!4 &1335455015
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1335455013}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.95927429, y: -9.45304871, z: -9.12622643}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
 --- !u!1001 &1354389284
 Prefab:
   m_ObjectHideFlags: 0
@@ -301,7 +345,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -.707106829
+      value: -.707106888
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
       propertyPath: m_LocalRotation.y
@@ -313,7 +357,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
       propertyPath: m_LocalRotation.w
-      value: .707106709
+      value: .707106769
       objectReference: {fileID: 0}
     - target: {fileID: 2300000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -334,6 +378,10 @@ Prefab:
     - target: {fileID: 400000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
       propertyPath: m_LocalScale.x
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 0a77648730b1c453b8abbfe2adeb14f7, type: 3}
@@ -446,8 +494,8 @@ Camera:
   m_GameObject: {fileID: 1659777156}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 3
-  m_BackGroundColor: {r: .192156866, g: .301960796, b: .474509805, a: .0196078438}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
